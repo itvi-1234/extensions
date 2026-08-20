@@ -20,6 +20,8 @@ can read.
   Go, Java, and Python declaration packages.
 - `env-configuration/` - workload configuration input vocabulary, plus Go,
   Java, and Python declaration packages.
+- `aws-s3/` - design-checkpoint extension candidate for Amazon S3 resource and
+  service demand. It is not yet a published or authoritative AWS extension.
 
 ## Local Validation
 

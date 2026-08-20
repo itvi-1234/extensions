@@ -1,0 +1,146 @@
+{
+  "expectedS3TransferVersion": "0.19.2",
+  "service": "s3",
+  "botocoreMapping": {
+    "distribution": "botocore",
+    "mapping": "botocore.aws.s3"
+  },
+  "calls": [
+    {
+      "name": "managed-upload",
+      "entrypoints": [
+        {"symbol": "s3transfer.S3Transfer.upload_file", "receiverContext": {"constructor": "s3transfer.S3Transfer", "arguments": {"config": {"position": 1, "keyword": "config"}}}, "arguments": {"fileobj": {"position": 0, "keyword": "filename"}, "bucket": {"position": 1, "keyword": "bucket"}, "key": {"position": 2, "keyword": "key"}, "extraArgs": {"position": 4, "keyword": "extra_args"}}},
+        {"symbol": "s3transfer.manager.TransferManager.upload", "receiverContext": {"constructor": "s3transfer.manager.TransferManager", "arguments": {"config": {"position": 1, "keyword": "config"}}}, "arguments": {"fileobj": {"position": 0, "keyword": "fileobj"}, "bucket": {"position": 1, "keyword": "bucket"}, "key": {"position": 2, "keyword": "key"}, "extraArgs": {"position": 3, "keyword": "extra_args"}}},
+        {"symbol": "s3transfer.crt.CRTTransferManager.upload", "arguments": {"fileobj": {"position": 0, "keyword": "fileobj"}, "bucket": {"position": 1, "keyword": "bucket"}, "key": {"position": 2, "keyword": "key"}, "extraArgs": {"position": 3, "keyword": "extra_args"}}}
+      ],
+      "arguments": ["fileobj", "bucket", "key", "extraArgs", "config"],
+      "implementations": [
+        {
+          "name": "classic",
+          "selection": "classic transfer manager selected by boto3 configuration and environment",
+          "executionPaths": [
+            {
+              "name": "single-part",
+              "selection": "transfer manager chooses a single request",
+              "operationRefs": [
+                {"operation": "PutObject", "usage": "always-on-path", "inputBindings": {"Bucket": "bucket", "Key": "key"}}
+              ]
+            },
+            {
+              "name": "multipart-success",
+              "selection": "transfer manager chooses multipart and completes successfully",
+              "operationRefs": [
+                {"operation": "CreateMultipartUpload", "usage": "always-on-path", "inputBindings": {"Bucket": "bucket", "Key": "key"}},
+                {"operation": "UploadPart", "usage": "one-or-more", "inputBindings": {"Bucket": "bucket", "Key": "key"}},
+                {"operation": "CompleteMultipartUpload", "usage": "always-on-path", "inputBindings": {"Bucket": "bucket", "Key": "key"}}
+              ]
+            },
+            {
+              "name": "multipart-abort",
+              "selection": "multipart transfer fails after creation and cleanup is attempted",
+              "operationRefs": [
+                {"operation": "CreateMultipartUpload", "usage": "always-on-path", "inputBindings": {"Bucket": "bucket", "Key": "key"}},
+                {"operation": "UploadPart", "usage": "zero-or-more-before-failure", "inputBindings": {"Bucket": "bucket", "Key": "key"}},
+                {"operation": "AbortMultipartUpload", "usage": "failure-recovery", "inputBindings": {"Bucket": "bucket", "Key": "key"}}
+              ]
+            }
+          ]
+        },
+        {
+          "name": "crt",
+          "operationRefs": [
+            {"operation": "PutObject", "usage": "managed-request", "inputBindings": {"Bucket": "bucket", "Key": "key"}}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "managed-download",
+      "entrypoints": [
+        {"symbol": "s3transfer.S3Transfer.download_file", "receiverContext": {"constructor": "s3transfer.S3Transfer", "arguments": {"config": {"position": 1, "keyword": "config"}}}, "arguments": {"bucket": {"position": 0, "keyword": "bucket"}, "key": {"position": 1, "keyword": "key"}, "fileobj": {"position": 2, "keyword": "filename"}, "extraArgs": {"position": 3, "keyword": "extra_args"}}},
+        {"symbol": "s3transfer.manager.TransferManager.download", "receiverContext": {"constructor": "s3transfer.manager.TransferManager", "arguments": {"config": {"position": 1, "keyword": "config"}}}, "arguments": {"bucket": {"position": 0, "keyword": "bucket"}, "key": {"position": 1, "keyword": "key"}, "fileobj": {"position": 2, "keyword": "fileobj"}, "extraArgs": {"position": 3, "keyword": "extra_args"}}},
+        {"symbol": "s3transfer.crt.CRTTransferManager.download", "arguments": {"bucket": {"position": 0, "keyword": "bucket"}, "key": {"position": 1, "keyword": "key"}, "fileobj": {"position": 2, "keyword": "fileobj"}, "extraArgs": {"position": 3, "keyword": "extra_args"}}}
+      ],
+      "arguments": ["bucket", "key", "fileobj", "extraArgs", "config"],
+      "implementations": [
+        {
+          "name": "classic",
+          "operationRefs": [
+            {"operation": "HeadObject", "usage": "metadata-discovery", "inputBindings": {"Bucket": "bucket", "Key": "key"}},
+            {"operation": "GetObject", "usage": "always", "inputBindings": {"Bucket": "bucket", "Key": "key"}}
+          ]
+        },
+        {
+          "name": "crt",
+          "operationRefs": [
+            {"operation": "GetObject", "usage": "managed-request", "inputBindings": {"Bucket": "bucket", "Key": "key"}}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "managed-copy",
+      "entrypoints": [
+        {"symbol": "s3transfer.manager.TransferManager.copy", "receiverContext": {"constructor": "s3transfer.manager.TransferManager", "arguments": {"config": {"position": 1, "keyword": "config"}}}, "arguments": {"copySource": {"position": 0, "keyword": "copy_source"}, "bucket": {"position": 1, "keyword": "bucket"}, "key": {"position": 2, "keyword": "key"}, "extraArgs": {"position": 3, "keyword": "extra_args"}, "sourceClient": {"position": 5, "keyword": "source_client"}}}
+      ],
+      "arguments": ["copySource", "bucket", "key", "extraArgs", "sourceClient", "config"],
+      "implementations": [
+        {
+          "name": "classic",
+          "selection": "copy is implemented only by the classic transfer manager",
+          "commonOperationRefs": [
+            {"operation": "HeadObject", "usage": "metadata-discovery", "inputBindings": {"Bucket": "copySource.Bucket", "Key": "copySource.Key"}}
+          ],
+          "executionPaths": [
+            {
+              "name": "single-request-success",
+              "selection": "source size is below the multipart copy threshold",
+              "operationRefs": [
+                {"operation": "CopyObject", "usage": "always-on-path", "inputBindings": {"Bucket": "bucket", "Key": "key", "CopySource": "copySource"}}
+              ]
+            },
+            {
+              "name": "multipart-success",
+              "selection": "source size meets the multipart copy threshold and completion succeeds",
+              "operationRefs": [
+                {"operation": "CreateMultipartUpload", "usage": "always-on-path", "inputBindings": {"Bucket": "bucket", "Key": "key"}},
+                {"operation": "UploadPartCopy", "usage": "one-or-more", "inputBindings": {"Bucket": "bucket", "Key": "key", "CopySource": "copySource"}},
+                {"operation": "CompleteMultipartUpload", "usage": "always-on-path", "inputBindings": {"Bucket": "bucket", "Key": "key"}},
+                {"operation": "GetObjectTagging", "usage": "conditional", "when": {"argument": "extraArgs", "path": "TaggingDirective", "equals": "COPY"}, "inputBindings": {"Bucket": "copySource.Bucket", "Key": "copySource.Key"}},
+                {"operation": "PutObjectTagging", "usage": "conditional", "whenAll": [{"argument": "extraArgs", "path": "TaggingDirective", "in": ["COPY", "REPLACE"]}, {"derived": "resolved tag set is non-empty"}], "inputBindings": {"Bucket": "bucket", "Key": "key"}},
+                {"operation": "ListObjectAnnotations", "usage": "conditional", "when": {"argument": "extraArgs", "path": "AnnotationDirective", "equals": "COPY"}, "inputBindings": {"Bucket": "copySource.Bucket", "Key": "copySource.Key"}},
+                {"operation": "GetObjectAnnotation", "usage": "zero-or-more", "whenAll": [{"argument": "extraArgs", "path": "AnnotationDirective", "equals": "COPY"}, {"derived": "source annotation list is non-empty"}], "inputBindings": {"Bucket": "copySource.Bucket", "Key": "copySource.Key"}},
+                {"operation": "PutObjectAnnotation", "usage": "zero-or-more", "whenAll": [{"argument": "extraArgs", "path": "AnnotationDirective", "equals": "COPY"}, {"derived": "source annotation list is non-empty"}], "inputBindings": {"Bucket": "bucket", "Key": "key"}}
+              ]
+            },
+            {
+              "name": "multipart-abort",
+              "selection": "multipart copy fails after creation and cleanup is attempted",
+              "operationRefs": [
+                {"operation": "CreateMultipartUpload", "usage": "always-on-path", "inputBindings": {"Bucket": "bucket", "Key": "key"}},
+                {"operation": "UploadPartCopy", "usage": "zero-or-more-before-failure", "inputBindings": {"Bucket": "bucket", "Key": "key", "CopySource": "copySource"}},
+                {"operation": "AbortMultipartUpload", "usage": "failure-recovery", "inputBindings": {"Bucket": "bucket", "Key": "key"}}
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "managed-delete",
+      "entrypoints": [
+        {"symbol": "s3transfer.manager.TransferManager.delete", "arguments": {"bucket": {"position": 0, "keyword": "bucket"}, "key": {"position": 1, "keyword": "key"}, "extraArgs": {"position": 2, "keyword": "extra_args"}}},
+        {"symbol": "s3transfer.crt.CRTTransferManager.delete", "arguments": {"bucket": {"position": 0, "keyword": "bucket"}, "key": {"position": 1, "keyword": "key"}, "extraArgs": {"position": 2, "keyword": "extra_args"}}}
+      ],
+      "arguments": ["bucket", "key", "extraArgs"],
+      "implementations": [
+        {
+          "name": "classic-or-crt",
+          "operationRefs": [
+            {"operation": "DeleteObject", "usage": "always", "inputBindings": {"Bucket": "bucket", "Key": "key"}}
+          ]
+        }
+      ]
+    }
+  ]
+}

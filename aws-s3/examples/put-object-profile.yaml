@@ -1,0 +1,19 @@
+apiVersion: runtimeconditions.io/v1alpha1
+kind: RuntimeConditionsProfile
+
+metadata:
+  name: boto3-s3-put-object
+
+workload:
+  uri: urn:runtimeconditions:sdk-fixture:s3-python-direct-client
+
+extensions:
+  - https://runtimeconditions.io/extensions/aws-s3/v1alpha1/runtimeconditions.extension.yaml
+
+conditions:
+  - name: s3-client
+    kind: aws.s3
+    interface:
+      type: bucket
+      operations:
+        - name: PutObject
