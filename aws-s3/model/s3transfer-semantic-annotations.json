@@ -1,5 +1,4 @@
 {
-  "expectedS3TransferVersion": "0.19.2",
   "service": "s3",
   "botocoreMapping": {
     "distribution": "botocore",

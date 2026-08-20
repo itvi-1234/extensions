@@ -1,5 +1,4 @@
 {
-  "expectedBoto3Version": "1.43.70",
   "service": "s3",
   "dependencies": {
     "botocore": {

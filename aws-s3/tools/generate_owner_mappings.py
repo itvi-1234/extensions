@@ -330,8 +330,6 @@ def botocore_mapping(
 
 
 def s3transfer_mapping(annotations: dict[str, Any], version: str, operations: set[str]) -> dict[str, Any]:
-    if annotations.get("expectedS3TransferVersion") != version:
-        raise ValueError("s3transfer annotation version does not match generated distribution version")
     calls = []
     for call in annotations.get("calls", []):
         declared_arguments = set(call.get("arguments", []))
@@ -374,8 +372,6 @@ def boto3_mapping(
     version: str,
     known_calls: dict[str, set[str]],
 ) -> dict[str, Any]:
-    if annotations.get("expectedBoto3Version") != version:
-        raise ValueError("boto3 wrapper annotation version does not match generated distribution version")
     referenced_calls = {
         item["call"] for item in annotations.get("clientWrappers", [])
     }

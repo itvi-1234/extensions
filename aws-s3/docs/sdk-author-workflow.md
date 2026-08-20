@@ -114,6 +114,7 @@ and measured results are in
 
 ## Normal maintenance
 
+- Distribution versions are derived from immutable source and written into generated metadata. They are not maintained in semantic overlays, so a routine release does not manufacture an authored version-only diff.
 - An unchanged operation set regenerates without service-semantic work.
 - An added or removed service operation stops at the fingerprint gate for a
   concise semantic review.
