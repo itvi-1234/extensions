@@ -1,22 +1,12 @@
-# AWS S3 Extension Candidate
+# AWS S3 extension candidate
 
 ## Status
 
-**Design checkpoint — not yet a published or authoritative AWS extension.**
+**Authoritative-model maintenance experiment — not yet an AWS-published extension.**
 
-This directory contains a reviewable Runtime Conditions extension candidate for
-the Amazon S3 API. It replaces the assumptions in the older
-`spec/examples/extensions/aws-object-store` example for this investigation; it
-does not modify or endorse that example.
-
-The candidate is deliberately AWS-specific. A downstream adapter can decide
-that a compatible implementation satisfies the contract, but the extension
-does not generalize or rename the S3 interface for another provider.
+This directory contains an AWS-specific Runtime Conditions extension, its externally maintained Smithy semantics, generated language-neutral service mapping, and owner-aligned Python SDK mappings. A downstream adapter may fulfill the requirement with a compatible implementation, but the extension vocabulary describes Amazon S3 rather than a generic object store.
 
 ## Condition shape
-
-The extension owns one vendor-specific integration kind and three S3 resource
-surfaces:
 
 ```yaml
 kind: aws.s3
@@ -26,136 +16,56 @@ interface:
     - name: PutObject
 ```
 
-This says that the workload needs an S3 bucket and invokes the canonical S3
-`PutObject` operation against it. It does not name the bucket, select an AWS
-account or Region, prescribe credentials, or declare environment-variable
-names.
+This says that the workload requires an S3 bucket and invokes the canonical S3 `PutObject` operation against it. It does not name the bucket, select an AWS account or Region, prescribe credentials, or declare environment-variable names.
 
-```yaml
-kind: aws.s3
-interface:
-  type: service
-  operations:
-    - name: CreateBucket
-```
+Service-level operations use `interface.type: service`. `WriteGetObjectResponse` uses `interface.type: object_lambda` because its request route and token context are not an ordinary bucket identity.
 
-This says that the workload needs service-level S3 access. It does not claim
-that a bucket already exists. `ListBuckets` and `ListDirectoryBuckets` have the
-same interface type.
+Operation entries identify canonical S3 API operations, not IAM actions. An adapter may translate operations and source-proven request features into permissions, provisioning behavior, and platform-specific bindings.
 
-```yaml
-kind: aws.s3
-interface:
-  type: object_lambda
-  operations:
-    - name: WriteGetObjectResponse
-```
+## Authoritative semantic source
 
-This represents the S3 Object Lambda invocation context required by
-`WriteGetObjectResponse`, which is neither an ordinary bucket identifier nor
-account-wide S3 access.
+AWS's public [`api-models-aws`](https://github.com/aws/api-models-aws) Smithy repository is the authoritative API inventory. [`model/runtimeconditions.smithy.yaml`](model/runtimeconditions.smithy.yaml) applies the small Runtime Conditions semantic overlay without modifying AWS's generated model.
 
-The operation entries identify canonical S3 API operations invoked by the
-workload. They are not authorization declarations. Some operation names happen
-to match IAM action suffixes, but the relationship is not one-to-one. An AWS
-adapter may translate each operation and any proven request features into IAM
-actions.
+The compiler under [`../smithy-runtime-conditions`](../smithy-runtime-conditions/) produces both:
 
-## Why canonical operations are the selected minimum
+- [`releases/0.1.0/runtimeconditions.extension.yaml`](releases/0.1.0/runtimeconditions.extension.yaml), the immutable `0.1.0` extension semantic release; and
+- [`model/generated/s3-service-mapping.yaml`](model/generated/s3-service-mapping.yaml), the language-neutral projection consumed by SDK-language mapping generators.
 
-The alternatives considered were:
+The accepted authoritative model contains 112 canonical S3 operations: 108 bucket operations, three service operations, and one Object Lambda response operation. Seven additional Condition templates represent secondary S3 buckets in request inputs.
 
-| Representation | Benefit | Why it is not sufficient as the minimum |
-| --- | --- | --- |
-| Broad capabilities such as `read`, `write`, `list`, `admin` | Small, approachable vocabulary | Loses distinctions needed for least-privilege fulfillment and requires a second hand-maintained taxonomy |
-| IAM actions | Direct input to one AWS policy system | One API operation can require several conditional actions, and several operations map to differently named actions |
-| HTTP methods and routes | Mechanically available from the service model | Does not express S3 semantics and is complicated by S3 endpoint and addressing variants |
-| Desired features such as versioning or encryption | Describes resource state directly | Calling a read or update operation does not necessarily prove that the workload requires the feature to be preconfigured |
-| Resource type without operations | Very simple adopter output | Says that a bucket exists but not what the workload must be able to do with it |
+The earlier botocore-derived extension listed 116 operations. The four additional names—`GetBucketLifecycle`, `GetBucketNotification`, `PutBucketLifecycle`, and `PutBucketNotification`—are deprecated botocore compatibility surfaces absent from the authoritative Smithy operation closure. They now remain in [`model/botocore-sdk-annotations.yaml`](model/botocore-sdk-annotations.yaml) and resolve to their canonical extension operations instead of expanding extension vocabulary.
 
-Canonical operation names preserve exactly what the SDK call proves and let an
-adapter apply current AWS fulfillment knowledge. Each operation is an object
-rather than a bare string so source/destination roles and future operation-level
-requirements can be added without replacing the profile shape.
+## One extension, many SDK mappings
 
-## Full service-operation mapping
+The extension does not enumerate supported languages or SDK releases. Each mapping identifies its exact owning distribution version and exact target extension release.
 
-The generated service and owner-aligned SDK mappings cover every operation in
-the botocore 1.43.70 S3 model:
+- [`mappings/botocore/runtimeconditions.sdk-mapping.yaml`](mappings/botocore/runtimeconditions.sdk-mapping.yaml) owns Python low-level client methods, paginators, waiters, and terminal Condition templates.
+- [`mappings/s3transfer/runtimeconditions.sdk-mapping.yaml`](mappings/s3transfer/runtimeconditions.sdk-mapping.yaml) owns managed-transfer calls and execution paths.
+- [`mappings/boto3/runtimeconditions.sdk-mapping.yaml`](mappings/boto3/runtimeconditions.sdk-mapping.yaml) owns factories, resources, relations, and handwritten wrappers.
 
-- 116 canonical low-level client operations;
-- 123 S3 Condition templates, including seven secondary S3 bucket references;
-- eight botocore paginators and four botocore waiters;
-- boto3's 18 modeled resources, 71 resource actions, 37 relations, four
-  collections, and six resource waiters;
-- 17 handwritten boto3 managed-transfer wrapper surfaces;
-- nine public s3transfer entrypoints over four logical transfer calls, with
-  explicit classic, CRT, multipart-success, and multipart-abort paths.
+The tested Python graph contains 116 botocore SDK methods aligned to 112 canonical Smithy operations, eight paginators, four waiters, 18 boto3 resources, 71 resource actions, 37 relations, four collections, six resource waiters, 17 managed-transfer wrapper surfaces, and nine public s3transfer entrypoints.
 
-`PutObject` is still the first end-to-end profiler acceptance case, but it is no
-longer the limit of the mapping artifacts. See:
+An older SDK may use a subset of operations in this extension release. A newer SDK operation that cannot be aligned after applying reviewed SDK compatibility aliases stops with `extension-review-required`.
 
-- [`model/generated/s3-service-mapping.json`](model/generated/s3-service-mapping.json)
-  for the complete language-neutral mapping;
-- [`mappings/botocore/runtimeconditions.sdk-mapping.json`](mappings/botocore/runtimeconditions.sdk-mapping.json)
-  for the low-level client operation owner;
-- [`mappings/s3transfer/runtimeconditions.sdk-mapping.json`](mappings/s3transfer/runtimeconditions.sdk-mapping.json)
-  for managed-transfer behavior;
-- [`mappings/boto3/runtimeconditions.sdk-mapping.json`](mappings/boto3/runtimeconditions.sdk-mapping.json)
-  for boto3 factories, resource behavior, and handwritten wrappers;
-- [`model/semantic-annotations.json`](model/semantic-annotations.json) for the
-  reviewed service semantic layer;
-- [`model/boto3-wrapper-annotations.json`](model/boto3-wrapper-annotations.json)
-  and [`model/s3transfer-semantic-annotations.json`](model/s3transfer-semantic-annotations.json)
-  for the reviewed handwritten layers.
+## Maintenance automation
 
-Complete S3 operation coverage does not mean that every possible dependency
-nested in every request is already expressible. Some request shapes can refer
-to KMS keys, IAM roles, SNS topics, SQS queues, Lambda functions, or S3 Tables.
-Those mappings must align with their own extensions. The S3 mapping does not
-invent that missing vocabulary.
+[`maintenance/smithy.yaml`](maintenance/smithy.yaml) declares the authoritative model, overlay, generated release, and accepted service mapping. [`.github/workflows/smithy-maintenance.yml`](../.github/workflows/smithy-maintenance.yml) checks the public model daily, validates pull requests, retains evidence, and creates one deduplicated issue when extension review is required.
 
-## Authentication and workload configuration
+[`evidence/smithy-history/history.md`](evidence/smithy-history/history.md) inventories the public S3 model history. The first 24 model-changing commits produced six distinct operation inventories and five operation-set transitions, establishing concrete historical extension-review points without claiming that every model-only change is semantically irrelevant.
 
-The S3 extension does not currently depend on the Environment Configuration
-extension. AWS SDKs support explicit client settings, environment variables,
-shared files, workload identity, instance/container providers, and other
-credential mechanisms with defined precedence. An SDK call alone does not prove
-that any particular environment variable is a workload requirement.
+## Human-authored inputs
 
-Optional environment-variable settings remain a possible additive extension,
-but adding every supported AWS variable to every S3 Condition would create
-noise and could incorrectly tell a platform to wire inputs the application does
-not use. The deeper analysis is in [`docs/design.md`](docs/design.md).
+- [`model/runtimeconditions.smithy.yaml`](model/runtimeconditions.smithy.yaml) owns S3 interface classification, resource identity paths, source/destination roles, secondary buckets, extension identity, and the reviewed operation fingerprint.
+- [`model/botocore-sdk-annotations.yaml`](model/botocore-sdk-annotations.yaml) owns deprecated Python SDK compatibility aliases absent from authoritative Smithy vocabulary.
+- [`model/boto3-wrapper-annotations.yaml`](model/boto3-wrapper-annotations.yaml) owns handwritten boto3 surfaces absent from its resource model.
+- [`model/s3transfer-semantic-annotations.yaml`](model/s3transfer-semantic-annotations.yaml) owns public transfer entrypoints and implementation paths absent from the service model.
 
-## Files
+Generated YAML is not a line-by-line human review surface. Maintainers review the overlay diff, focused model summary, representative profile changes, and adapter-facing impact.
 
-- [`aws-s3-v1alpha1.yaml`](aws-s3-v1alpha1.yaml) is the machine-readable
-  extension candidate.
-- [`docs/api-analysis.md`](docs/api-analysis.md) records the S3 API inventory
-  and resource-boundary findings.
-- [`docs/design.md`](docs/design.md) explains the Condition shape, alternatives,
-  configuration boundary, and deferred cross-service dependencies.
-- [`docs/sdk-author-workflow.md`](docs/sdk-author-workflow.md) states exactly
-  what an SDK maintainer would add and maintain.
-- [`docs/validation.md`](docs/validation.md) records the performed checks and
-  profiler limitations.
-- [`examples/put-object-profile.yaml`](examples/put-object-profile.yaml) is the
-  expected output for the first boto3 end-to-end acceptance test.
+## Authentication and configuration
 
-## Decisions at this checkpoint
+Creating or calling an AWS SDK client does not prove a workload-facing environment-variable convention, credential source, Region, account, or endpoint. Those concerns remain absent until application source or a separate additive extension proves a portable requirement.
 
-- Accepted: `kind: aws.s3` identifies the AWS S3 integration.
-- Accepted: `interface.type` distinguishes `bucket`, `service`, and
-  `object_lambda` demand.
-- Recommended: keep those resource surfaces separate; `CreateBucket` must not
-  imply that a pre-existing bucket should be provisioned.
-- Recommended: use canonical operation objects as the minimum adapter-facing
-  detail.
-- Deferred: add configuration only when application source or a separate
-  additive extension proves a workload-facing input mechanism.
-- Implemented in static metadata: the entire canonical S3 operation list and
-  the recursively owned boto3/botocore/s3transfer dependency graph.
+## Remaining boundary
 
-No SDK or profiler should treat the candidate format as stable until the
-remaining recommendations have been reviewed.
+Some S3 request shapes refer to KMS keys, IAM roles, SNS topics, SQS queues, Lambda functions, or S3 Tables. Those are potential cross-service Runtime Conditions, but the S3 extension cannot own their vocabulary. They become expressible only after the corresponding extensions and reviewed cross-service traits exist.

@@ -1,79 +1,41 @@
 # S3 semantic inputs and generated owner mappings
 
-This directory separates reviewed service and wrapper semantics from mechanical
-SDK output.
+This directory separates authoritative AWS service semantics from language-specific SDK behavior and generated artifacts.
 
 ## Reviewed inputs
 
-[`semantic-annotations.json`](semantic-annotations.json) supplies the
-extension meaning that cannot be safely inferred from AWS's service model:
+[`runtimeconditions.smithy.yaml`](runtimeconditions.smithy.yaml) is an external YAML-serialized Smithy AST overlay. It applies Runtime Conditions traits to AWS's `com.amazonaws.s3#AmazonS3` service and the small set of operations requiring classification, identity, role, or secondary-resource exceptions.
 
-- ordinary bucket, service-level, and Object Lambda scope;
-- source/destination roles;
-- secondary S3 bucket identities nested in request shapes;
-- the reviewed service identity, operation count, and operation-set digest.
+[`botocore-sdk-annotations.yaml`](botocore-sdk-annotations.yaml) maps four deprecated botocore compatibility operations to canonical Smithy operations. These aliases are Python SDK surface, not extension vocabulary.
 
-[`boto3-wrapper-annotations.json`](boto3-wrapper-annotations.json) describes
-only public boto3 surfaces absent from its resource model: factories, aliases,
-handwritten managed-transfer wrappers, and handwritten resource loads.
+[`boto3-wrapper-annotations.yaml`](boto3-wrapper-annotations.yaml) describes only public boto3 factories, aliases, handwritten managed-transfer wrappers, and handwritten resource loads absent from generated SDK models.
 
-[`s3transfer-semantic-annotations.json`](s3transfer-semantic-annotations.json)
-describes public transfer entrypoints, argument bindings, classic/CRT
-implementations, mutually exclusive execution paths, and conditional service
-operations.
+[`s3transfer-semantic-annotations.yaml`](s3transfer-semantic-annotations.yaml) describes public transfer entrypoints, argument bindings, classic and CRT implementations, mutually exclusive execution paths, and conditional service operations.
 
-The annotations do not contain coverage percentages or unresolved profiler
-observations. Runtime branch selectors and predicates describe SDK execution
-semantics; consuming tools decide how to handle application ambiguity.
+The overlays do not contain profiler coverage percentages, unresolved application observations, fixed environment variables, credentials, Regions, endpoints, or adapter policy.
 
 ## Generated outputs
 
-[`generated/s3-service-mapping.json`](generated/s3-service-mapping.json) is
-language-neutral and contains all 116 canonical operations and 123 S3
-Condition templates.
+[`generated/s3-service-mapping.yaml`](generated/s3-service-mapping.yaml) is generated from AWS's authoritative Smithy model plus the reviewed service overlay. It contains 112 canonical operations and 119 S3 Condition templates.
 
-The owner generator then produces three independently versioned artifacts:
+[`generated/smithy-review.md`](generated/smithy-review.md) is the focused generation summary. It records exact upstream provenance, semantic digests, interface counts, and operation-set changes without requiring review of generated YAML.
 
-- botocore owns canonical client operations, paginators, and waiters;
-- s3transfer owns managed-transfer calls and their execution paths;
-- boto3 owns client/resource factories, the complete resource graph, and its
-  handwritten wrappers.
-
-References across those files identify the target distribution, mapping, and
-operation/waiter/call. The generated files are review output, not handwritten
-inputs.
+The owner generator then produces three independently versioned Python artifacts under `../mappings`: botocore owns low-level client surfaces, s3transfer owns managed-transfer behavior, and boto3 owns factories, resources, and handwritten wrappers.
 
 ## Regeneration
 
-Use pinned official boto3, botocore, and s3transfer source trees. From the
-`runtimeconditions` workspace root, generate the language-neutral service
-mapping first:
+Obtain a full or history-capable checkout of `https://github.com/aws/api-models-aws.git`, then run:
 
 ```sh
-python3 extensions/aws-s3/tools/generate_mappings.py \
-  --service-model /absolute/path/to/botocore-1.43.70/botocore/data/s3/2006-03-01/service-2.json \
-  --annotations extensions/aws-s3/model/semantic-annotations.json \
-  --service-output extensions/aws-s3/model/generated/s3-service-mapping.json
+python3 extensions/smithy-runtime-conditions/tools/run_maintenance.py \
+  --manifest extensions/aws-s3/maintenance/smithy.yaml \
+  --models-root /absolute/path/to/api-models-aws \
+  --extensions-root extensions \
+  --output /tmp/aws-s3-extension-maintenance
 ```
 
-Then generate all owner artifacts:
+The accepted semantic digests must match the candidate semantic digests. Candidate bytes may differ only in upstream provenance when a newer authoritative model remains semantically compatible; provenance-only drift does not mutate the immutable accepted release or require a new version. An operation or shape change not covered by the reviewed overlay produces `extension-review-required`, and the runner never edits or approves the overlay.
 
-```sh
-python3 extensions/aws-s3/tools/generate_owner_mappings.py \
-  --service-mapping extensions/aws-s3/model/generated/s3-service-mapping.json \
-  --paginator-model /absolute/path/to/botocore-1.43.70/botocore/data/s3/2006-03-01/paginators-1.json \
-  --waiter-model /absolute/path/to/botocore-1.43.70/botocore/data/s3/2006-03-01/waiters-2.json \
-  --resource-model /absolute/path/to/boto3-1.43.70/boto3/data/s3/2006-03-01/resources-1.json \
-  --boto3-wrappers extensions/aws-s3/model/boto3-wrapper-annotations.json \
-  --s3transfer-annotations extensions/aws-s3/model/s3transfer-semantic-annotations.json \
-  --botocore-output extensions/aws-s3/mappings/botocore/runtimeconditions.sdk-mapping.json \
-  --s3transfer-output extensions/aws-s3/mappings/s3transfer/runtimeconditions.sdk-mapping.json \
-  --boto3-output extensions/aws-s3/mappings/boto3/runtimeconditions.sdk-mapping.json \
-  --botocore-version 1.43.70 \
-  --s3transfer-version 0.19.2 \
-  --boto3-version 1.43.70
-```
+Generate Python owner mappings from pinned SDK sources with [`../tools/generate_owner_mappings.py`](../tools/generate_owner_mappings.py). The generator requires the authoritative service mapping, the botocore service/paginator/waiter models, the boto3 resource model, all three reviewed SDK overlays, and exact distribution versions.
 
-Both generators use only the Python standard library and read SDK files as
-data. Run the recursive and pinned-source validation commands documented in
-[`../docs/validation.md`](../docs/validation.md) before packaging.
+Both compilers read models as static data and never import or execute the SDK packages whose metadata they generate.

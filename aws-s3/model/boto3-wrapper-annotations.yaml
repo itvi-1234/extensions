@@ -1,0 +1,358 @@
+service: s3
+dependencies:
+  botocore:
+    distribution: botocore
+    mapping: botocore.aws.s3
+  s3transfer:
+    distribution: s3transfer
+    mapping: s3transfer.aws.s3
+aliases:
+- symbol: boto3.Session
+  target: boto3.session.Session
+clientFactories:
+- symbols:
+  - boto3.client
+  serviceSelector:
+    position: 0
+    keyword: service_name
+- symbols:
+  - boto3.Session.client
+  - boto3.session.Session.client
+  serviceSelector:
+    position: 0
+    keyword: service_name
+resourceFactories:
+- symbols:
+  - boto3.resource
+  serviceSelector:
+    position: 0
+    keyword: service_name
+- symbols:
+  - boto3.Session.resource
+  - boto3.session.Session.resource
+  serviceSelector:
+    position: 0
+    keyword: service_name
+clientWrappers:
+- method: upload_file
+  call: managed-upload
+  arguments:
+    fileobj:
+      position: 0
+      keyword: Filename
+    bucket:
+      position: 1
+      keyword: Bucket
+    key:
+      position: 2
+      keyword: Key
+    extraArgs:
+      position: 3
+      keyword: ExtraArgs
+    config:
+      position: 5
+      keyword: Config
+- method: download_file
+  call: managed-download
+  arguments:
+    bucket:
+      position: 0
+      keyword: Bucket
+    key:
+      position: 1
+      keyword: Key
+    fileobj:
+      position: 2
+      keyword: Filename
+    extraArgs:
+      position: 3
+      keyword: ExtraArgs
+    config:
+      position: 5
+      keyword: Config
+- method: copy
+  call: managed-copy
+  arguments:
+    copySource:
+      position: 0
+      keyword: CopySource
+    bucket:
+      position: 1
+      keyword: Bucket
+    key:
+      position: 2
+      keyword: Key
+    extraArgs:
+      position: 3
+      keyword: ExtraArgs
+    sourceClient:
+      position: 5
+      keyword: SourceClient
+    config:
+      position: 6
+      keyword: Config
+- method: upload_fileobj
+  call: managed-upload
+  arguments:
+    fileobj:
+      position: 0
+      keyword: Fileobj
+    bucket:
+      position: 1
+      keyword: Bucket
+    key:
+      position: 2
+      keyword: Key
+    extraArgs:
+      position: 3
+      keyword: ExtraArgs
+    config:
+      position: 5
+      keyword: Config
+- method: download_fileobj
+  call: managed-download
+  arguments:
+    bucket:
+      position: 0
+      keyword: Bucket
+    key:
+      position: 1
+      keyword: Key
+    fileobj:
+      position: 2
+      keyword: Fileobj
+    extraArgs:
+      position: 3
+      keyword: ExtraArgs
+    config:
+      position: 5
+      keyword: Config
+transferClassWrappers:
+- symbol: boto3.s3.transfer.S3Transfer.upload_file
+  call: managed-upload
+  receiverContext:
+    constructor: boto3.s3.transfer.S3Transfer
+    arguments:
+      config:
+        position: 1
+        keyword: config
+  arguments:
+    fileobj:
+      position: 0
+      keyword: filename
+    bucket:
+      position: 1
+      keyword: bucket
+    key:
+      position: 2
+      keyword: key
+    extraArgs:
+      position: 4
+      keyword: extra_args
+- symbol: boto3.s3.transfer.S3Transfer.download_file
+  call: managed-download
+  receiverContext:
+    constructor: boto3.s3.transfer.S3Transfer
+    arguments:
+      config:
+        position: 1
+        keyword: config
+  arguments:
+    bucket:
+      position: 0
+      keyword: bucket
+    key:
+      position: 1
+      keyword: key
+    fileobj:
+      position: 2
+      keyword: filename
+    extraArgs:
+      position: 3
+      keyword: extra_args
+resourceWrappers:
+  Bucket:
+  - method: upload_file
+    call: managed-upload
+    receiverArguments:
+      bucket: Name
+    arguments:
+      fileobj:
+        position: 0
+        keyword: Filename
+      key:
+        position: 1
+        keyword: Key
+      extraArgs:
+        position: 2
+        keyword: ExtraArgs
+      config:
+        position: 4
+        keyword: Config
+  - method: download_file
+    call: managed-download
+    receiverArguments:
+      bucket: Name
+    arguments:
+      key:
+        position: 0
+        keyword: Key
+      fileobj:
+        position: 1
+        keyword: Filename
+      extraArgs:
+        position: 2
+        keyword: ExtraArgs
+      config:
+        position: 4
+        keyword: Config
+  - method: copy
+    call: managed-copy
+    receiverArguments:
+      bucket: Name
+    arguments:
+      copySource:
+        position: 0
+        keyword: CopySource
+      key:
+        position: 1
+        keyword: Key
+      extraArgs:
+        position: 2
+        keyword: ExtraArgs
+      sourceClient:
+        position: 4
+        keyword: SourceClient
+      config:
+        position: 5
+        keyword: Config
+  - method: upload_fileobj
+    call: managed-upload
+    receiverArguments:
+      bucket: Name
+    arguments:
+      fileobj:
+        position: 0
+        keyword: Fileobj
+      key:
+        position: 1
+        keyword: Key
+      extraArgs:
+        position: 2
+        keyword: ExtraArgs
+      config:
+        position: 4
+        keyword: Config
+  - method: download_fileobj
+    call: managed-download
+    receiverArguments:
+      bucket: Name
+    arguments:
+      key:
+        position: 0
+        keyword: Key
+      fileobj:
+        position: 1
+        keyword: Fileobj
+      extraArgs:
+        position: 2
+        keyword: ExtraArgs
+      config:
+        position: 4
+        keyword: Config
+  Object:
+  - method: upload_file
+    call: managed-upload
+    receiverArguments:
+      bucket: BucketName
+      key: Key
+    arguments:
+      fileobj:
+        position: 0
+        keyword: Filename
+      extraArgs:
+        position: 1
+        keyword: ExtraArgs
+      config:
+        position: 3
+        keyword: Config
+  - method: download_file
+    call: managed-download
+    receiverArguments:
+      bucket: BucketName
+      key: Key
+    arguments:
+      fileobj:
+        position: 0
+        keyword: Filename
+      extraArgs:
+        position: 1
+        keyword: ExtraArgs
+      config:
+        position: 3
+        keyword: Config
+  - method: copy
+    call: managed-copy
+    receiverArguments:
+      bucket: BucketName
+      key: Key
+    arguments:
+      copySource:
+        position: 0
+        keyword: CopySource
+      extraArgs:
+        position: 1
+        keyword: ExtraArgs
+      sourceClient:
+        position: 3
+        keyword: SourceClient
+      config:
+        position: 4
+        keyword: Config
+  - method: upload_fileobj
+    call: managed-upload
+    receiverArguments:
+      bucket: BucketName
+      key: Key
+    arguments:
+      fileobj:
+        position: 0
+        keyword: Fileobj
+      extraArgs:
+        position: 1
+        keyword: ExtraArgs
+      config:
+        position: 3
+        keyword: Config
+  - method: download_fileobj
+    call: managed-download
+    receiverArguments:
+      bucket: BucketName
+      key: Key
+    arguments:
+      fileobj:
+        position: 0
+        keyword: Fileobj
+      extraArgs:
+        position: 1
+        keyword: ExtraArgs
+      config:
+        position: 3
+        keyword: Config
+handwrittenResourceActions:
+  Bucket:
+  - methods:
+    - load
+    operation: ListBuckets
+    parameterBindings: []
+  ObjectSummary:
+  - methods:
+    - load
+    operation: HeadObject
+    parameterBindings:
+    - target: Bucket
+      source: identifier
+      name: BucketName
+    - target: Key
+      source: identifier
+      name: Key

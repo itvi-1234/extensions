@@ -1,0 +1,6 @@
+schemaVersion: 1
+canonicalOperationAliases:
+  GetBucketLifecycle: GetBucketLifecycleConfiguration
+  GetBucketNotification: GetBucketNotificationConfiguration
+  PutBucketLifecycle: PutBucketLifecycleConfiguration
+  PutBucketNotification: PutBucketNotificationConfiguration

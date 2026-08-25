@@ -1,0 +1,1492 @@
+apiVersion: runtimeconditions.io/sdk-mapping/v1alpha1
+kind: RuntimeConditionsSDKMapping
+metadata:
+  name: botocore.aws.s3
+  distribution: botocore
+  distributionVersion: 1.43.70
+  language: python
+  service: s3
+  serviceId: S3
+  serviceShape: com.amazonaws.s3#AmazonS3
+  serviceVersion: '2006-03-01'
+  operationNamesSha256: 209771cb0915567090f615e18dacf594436fc6aadc2867f56535ae0db7935436
+  serviceMappingSemanticSha256: 54a92a0dc07c238ac56b125ca74f5bdcafa2741a45afd2440d91723dc865763d
+  sdkOperationCount: 116
+  sdkCanonicalOperationNamesSha256: 209771cb0915567090f615e18dacf594436fc6aadc2867f56535ae0db7935436
+dependencies:
+- kind: extension
+  id: https://runtimeconditions.io/extensions/aws-s3/0.1.0/runtimeconditions.extension.yaml
+  version: 0.1.0
+  semanticSha256: 1a505b63d55893c26f3ffe6cf3cd9f90f0b5bd7975fabe47ff444a3ed1e13c72
+extension:
+  id: https://runtimeconditions.io/extensions/aws-s3/0.1.0/runtimeconditions.extension.yaml
+  version: 0.1.0
+  semanticSha256: 1a505b63d55893c26f3ffe6cf3cd9f90f0b5bd7975fabe47ff444a3ed1e13c72
+operations:
+- name: AbortMultipartUpload
+  shapeId: com.amazonaws.s3#AbortMultipartUpload
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: AbortMultipartUpload
+    identity:
+      source: input
+      path: Bucket
+- name: CompleteMultipartUpload
+  shapeId: com.amazonaws.s3#CompleteMultipartUpload
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: CompleteMultipartUpload
+    identity:
+      source: input
+      path: Bucket
+- name: CopyObject
+  shapeId: com.amazonaws.s3#CopyObject
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: CopyObject
+      role: destination
+    identity:
+      source: input
+      path: Bucket
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: CopyObject
+      role: source
+    identity:
+      source: input
+      path: CopySource
+      encoding: s3-copy-source
+    conditional: true
+- name: CreateBucket
+  shapeId: com.amazonaws.s3#CreateBucket
+  conditions:
+  - kind: aws.s3
+    interfaceType: service
+    operation:
+      name: CreateBucket
+- name: CreateBucketMetadataConfiguration
+  shapeId: com.amazonaws.s3#CreateBucketMetadataConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: CreateBucketMetadataConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: CreateBucketMetadataTableConfiguration
+  shapeId: com.amazonaws.s3#CreateBucketMetadataTableConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: CreateBucketMetadataTableConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: CreateMultipartUpload
+  shapeId: com.amazonaws.s3#CreateMultipartUpload
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: CreateMultipartUpload
+    identity:
+      source: input
+      path: Bucket
+- name: CreateSession
+  shapeId: com.amazonaws.s3#CreateSession
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: CreateSession
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucket
+  shapeId: com.amazonaws.s3#DeleteBucket
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucket
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketAnalyticsConfiguration
+  shapeId: com.amazonaws.s3#DeleteBucketAnalyticsConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketAnalyticsConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketCors
+  shapeId: com.amazonaws.s3#DeleteBucketCors
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketCors
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketEncryption
+  shapeId: com.amazonaws.s3#DeleteBucketEncryption
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketEncryption
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketIntelligentTieringConfiguration
+  shapeId: com.amazonaws.s3#DeleteBucketIntelligentTieringConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketIntelligentTieringConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketInventoryConfiguration
+  shapeId: com.amazonaws.s3#DeleteBucketInventoryConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketInventoryConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketLifecycle
+  shapeId: com.amazonaws.s3#DeleteBucketLifecycle
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketLifecycle
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketMetadataConfiguration
+  shapeId: com.amazonaws.s3#DeleteBucketMetadataConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketMetadataConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketMetadataTableConfiguration
+  shapeId: com.amazonaws.s3#DeleteBucketMetadataTableConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketMetadataTableConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketMetricsConfiguration
+  shapeId: com.amazonaws.s3#DeleteBucketMetricsConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketMetricsConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketOwnershipControls
+  shapeId: com.amazonaws.s3#DeleteBucketOwnershipControls
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketOwnershipControls
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketPolicy
+  shapeId: com.amazonaws.s3#DeleteBucketPolicy
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketPolicy
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketReplication
+  shapeId: com.amazonaws.s3#DeleteBucketReplication
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketReplication
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketTagging
+  shapeId: com.amazonaws.s3#DeleteBucketTagging
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketTagging
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteBucketWebsite
+  shapeId: com.amazonaws.s3#DeleteBucketWebsite
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteBucketWebsite
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteObject
+  shapeId: com.amazonaws.s3#DeleteObject
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteObject
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteObjectAnnotation
+  shapeId: com.amazonaws.s3#DeleteObjectAnnotation
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteObjectAnnotation
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteObjectTagging
+  shapeId: com.amazonaws.s3#DeleteObjectTagging
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteObjectTagging
+    identity:
+      source: input
+      path: Bucket
+- name: DeleteObjects
+  shapeId: com.amazonaws.s3#DeleteObjects
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeleteObjects
+    identity:
+      source: input
+      path: Bucket
+- name: DeletePublicAccessBlock
+  shapeId: com.amazonaws.s3#DeletePublicAccessBlock
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: DeletePublicAccessBlock
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketAbac
+  shapeId: com.amazonaws.s3#GetBucketAbac
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketAbac
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketAccelerateConfiguration
+  shapeId: com.amazonaws.s3#GetBucketAccelerateConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketAccelerateConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketAcl
+  shapeId: com.amazonaws.s3#GetBucketAcl
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketAcl
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketAnalyticsConfiguration
+  shapeId: com.amazonaws.s3#GetBucketAnalyticsConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketAnalyticsConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketCors
+  shapeId: com.amazonaws.s3#GetBucketCors
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketCors
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketEncryption
+  shapeId: com.amazonaws.s3#GetBucketEncryption
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketEncryption
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketIntelligentTieringConfiguration
+  shapeId: com.amazonaws.s3#GetBucketIntelligentTieringConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketIntelligentTieringConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketInventoryConfiguration
+  shapeId: com.amazonaws.s3#GetBucketInventoryConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketInventoryConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketLifecycleConfiguration
+  shapeId: com.amazonaws.s3#GetBucketLifecycleConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketLifecycleConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketLocation
+  shapeId: com.amazonaws.s3#GetBucketLocation
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketLocation
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketLogging
+  shapeId: com.amazonaws.s3#GetBucketLogging
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketLogging
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketMetadataConfiguration
+  shapeId: com.amazonaws.s3#GetBucketMetadataConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketMetadataConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketMetadataTableConfiguration
+  shapeId: com.amazonaws.s3#GetBucketMetadataTableConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketMetadataTableConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketMetricsConfiguration
+  shapeId: com.amazonaws.s3#GetBucketMetricsConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketMetricsConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketNotificationConfiguration
+  shapeId: com.amazonaws.s3#GetBucketNotificationConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketNotificationConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketOwnershipControls
+  shapeId: com.amazonaws.s3#GetBucketOwnershipControls
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketOwnershipControls
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketPolicy
+  shapeId: com.amazonaws.s3#GetBucketPolicy
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketPolicy
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketPolicyStatus
+  shapeId: com.amazonaws.s3#GetBucketPolicyStatus
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketPolicyStatus
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketReplication
+  shapeId: com.amazonaws.s3#GetBucketReplication
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketReplication
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketRequestPayment
+  shapeId: com.amazonaws.s3#GetBucketRequestPayment
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketRequestPayment
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketTagging
+  shapeId: com.amazonaws.s3#GetBucketTagging
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketTagging
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketVersioning
+  shapeId: com.amazonaws.s3#GetBucketVersioning
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketVersioning
+    identity:
+      source: input
+      path: Bucket
+- name: GetBucketWebsite
+  shapeId: com.amazonaws.s3#GetBucketWebsite
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetBucketWebsite
+    identity:
+      source: input
+      path: Bucket
+- name: GetObject
+  shapeId: com.amazonaws.s3#GetObject
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetObject
+    identity:
+      source: input
+      path: Bucket
+- name: GetObjectAcl
+  shapeId: com.amazonaws.s3#GetObjectAcl
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetObjectAcl
+    identity:
+      source: input
+      path: Bucket
+- name: GetObjectAnnotation
+  shapeId: com.amazonaws.s3#GetObjectAnnotation
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetObjectAnnotation
+    identity:
+      source: input
+      path: Bucket
+- name: GetObjectAttributes
+  shapeId: com.amazonaws.s3#GetObjectAttributes
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetObjectAttributes
+    identity:
+      source: input
+      path: Bucket
+- name: GetObjectLegalHold
+  shapeId: com.amazonaws.s3#GetObjectLegalHold
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetObjectLegalHold
+    identity:
+      source: input
+      path: Bucket
+- name: GetObjectLockConfiguration
+  shapeId: com.amazonaws.s3#GetObjectLockConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetObjectLockConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: GetObjectRetention
+  shapeId: com.amazonaws.s3#GetObjectRetention
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetObjectRetention
+    identity:
+      source: input
+      path: Bucket
+- name: GetObjectTagging
+  shapeId: com.amazonaws.s3#GetObjectTagging
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetObjectTagging
+    identity:
+      source: input
+      path: Bucket
+- name: GetObjectTorrent
+  shapeId: com.amazonaws.s3#GetObjectTorrent
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetObjectTorrent
+    identity:
+      source: input
+      path: Bucket
+- name: GetPublicAccessBlock
+  shapeId: com.amazonaws.s3#GetPublicAccessBlock
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: GetPublicAccessBlock
+    identity:
+      source: input
+      path: Bucket
+- name: HeadBucket
+  shapeId: com.amazonaws.s3#HeadBucket
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: HeadBucket
+    identity:
+      source: input
+      path: Bucket
+- name: HeadObject
+  shapeId: com.amazonaws.s3#HeadObject
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: HeadObject
+    identity:
+      source: input
+      path: Bucket
+- name: ListBucketAnalyticsConfigurations
+  shapeId: com.amazonaws.s3#ListBucketAnalyticsConfigurations
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: ListBucketAnalyticsConfigurations
+    identity:
+      source: input
+      path: Bucket
+- name: ListBucketIntelligentTieringConfigurations
+  shapeId: com.amazonaws.s3#ListBucketIntelligentTieringConfigurations
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: ListBucketIntelligentTieringConfigurations
+    identity:
+      source: input
+      path: Bucket
+- name: ListBucketInventoryConfigurations
+  shapeId: com.amazonaws.s3#ListBucketInventoryConfigurations
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: ListBucketInventoryConfigurations
+    identity:
+      source: input
+      path: Bucket
+- name: ListBucketMetricsConfigurations
+  shapeId: com.amazonaws.s3#ListBucketMetricsConfigurations
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: ListBucketMetricsConfigurations
+    identity:
+      source: input
+      path: Bucket
+- name: ListBuckets
+  shapeId: com.amazonaws.s3#ListBuckets
+  conditions:
+  - kind: aws.s3
+    interfaceType: service
+    operation:
+      name: ListBuckets
+- name: ListDirectoryBuckets
+  shapeId: com.amazonaws.s3#ListDirectoryBuckets
+  conditions:
+  - kind: aws.s3
+    interfaceType: service
+    operation:
+      name: ListDirectoryBuckets
+- name: ListMultipartUploads
+  shapeId: com.amazonaws.s3#ListMultipartUploads
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: ListMultipartUploads
+    identity:
+      source: input
+      path: Bucket
+- name: ListObjectAnnotations
+  shapeId: com.amazonaws.s3#ListObjectAnnotations
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: ListObjectAnnotations
+    identity:
+      source: input
+      path: Bucket
+- name: ListObjectVersions
+  shapeId: com.amazonaws.s3#ListObjectVersions
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: ListObjectVersions
+    identity:
+      source: input
+      path: Bucket
+- name: ListObjects
+  shapeId: com.amazonaws.s3#ListObjects
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: ListObjects
+    identity:
+      source: input
+      path: Bucket
+- name: ListObjectsV2
+  shapeId: com.amazonaws.s3#ListObjectsV2
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: ListObjectsV2
+    identity:
+      source: input
+      path: Bucket
+- name: ListParts
+  shapeId: com.amazonaws.s3#ListParts
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: ListParts
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketAbac
+  shapeId: com.amazonaws.s3#PutBucketAbac
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketAbac
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketAccelerateConfiguration
+  shapeId: com.amazonaws.s3#PutBucketAccelerateConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketAccelerateConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketAcl
+  shapeId: com.amazonaws.s3#PutBucketAcl
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketAcl
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketAnalyticsConfiguration
+  shapeId: com.amazonaws.s3#PutBucketAnalyticsConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketAnalyticsConfiguration
+    identity:
+      source: input
+      path: Bucket
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketAnalyticsConfiguration
+      role: destination
+    identity:
+      source: input
+      path: AnalyticsConfiguration.StorageClassAnalysis.DataExport.Destination.S3BucketDestination.Bucket
+    conditional: true
+- name: PutBucketCors
+  shapeId: com.amazonaws.s3#PutBucketCors
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketCors
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketEncryption
+  shapeId: com.amazonaws.s3#PutBucketEncryption
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketEncryption
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketIntelligentTieringConfiguration
+  shapeId: com.amazonaws.s3#PutBucketIntelligentTieringConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketIntelligentTieringConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketInventoryConfiguration
+  shapeId: com.amazonaws.s3#PutBucketInventoryConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketInventoryConfiguration
+    identity:
+      source: input
+      path: Bucket
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketInventoryConfiguration
+      role: destination
+    identity:
+      source: input
+      path: InventoryConfiguration.Destination.S3BucketDestination.Bucket
+    conditional: true
+- name: PutBucketLifecycleConfiguration
+  shapeId: com.amazonaws.s3#PutBucketLifecycleConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketLifecycleConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketLogging
+  shapeId: com.amazonaws.s3#PutBucketLogging
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketLogging
+    identity:
+      source: input
+      path: Bucket
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketLogging
+      role: destination
+    identity:
+      source: input
+      path: BucketLoggingStatus.LoggingEnabled.TargetBucket
+    conditional: true
+- name: PutBucketMetricsConfiguration
+  shapeId: com.amazonaws.s3#PutBucketMetricsConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketMetricsConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketNotificationConfiguration
+  shapeId: com.amazonaws.s3#PutBucketNotificationConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketNotificationConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketOwnershipControls
+  shapeId: com.amazonaws.s3#PutBucketOwnershipControls
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketOwnershipControls
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketPolicy
+  shapeId: com.amazonaws.s3#PutBucketPolicy
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketPolicy
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketReplication
+  shapeId: com.amazonaws.s3#PutBucketReplication
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketReplication
+    identity:
+      source: input
+      path: Bucket
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketReplication
+      role: destination
+    identity:
+      source: input
+      path: ReplicationConfiguration.Rules[].Destination.Bucket
+      encoding: s3-bucket-arn
+    conditional: true
+- name: PutBucketRequestPayment
+  shapeId: com.amazonaws.s3#PutBucketRequestPayment
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketRequestPayment
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketTagging
+  shapeId: com.amazonaws.s3#PutBucketTagging
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketTagging
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketVersioning
+  shapeId: com.amazonaws.s3#PutBucketVersioning
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketVersioning
+    identity:
+      source: input
+      path: Bucket
+- name: PutBucketWebsite
+  shapeId: com.amazonaws.s3#PutBucketWebsite
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutBucketWebsite
+    identity:
+      source: input
+      path: Bucket
+- name: PutObject
+  shapeId: com.amazonaws.s3#PutObject
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutObject
+    identity:
+      source: input
+      path: Bucket
+- name: PutObjectAcl
+  shapeId: com.amazonaws.s3#PutObjectAcl
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutObjectAcl
+    identity:
+      source: input
+      path: Bucket
+- name: PutObjectAnnotation
+  shapeId: com.amazonaws.s3#PutObjectAnnotation
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutObjectAnnotation
+    identity:
+      source: input
+      path: Bucket
+- name: PutObjectLegalHold
+  shapeId: com.amazonaws.s3#PutObjectLegalHold
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutObjectLegalHold
+    identity:
+      source: input
+      path: Bucket
+- name: PutObjectLockConfiguration
+  shapeId: com.amazonaws.s3#PutObjectLockConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutObjectLockConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: PutObjectRetention
+  shapeId: com.amazonaws.s3#PutObjectRetention
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutObjectRetention
+    identity:
+      source: input
+      path: Bucket
+- name: PutObjectTagging
+  shapeId: com.amazonaws.s3#PutObjectTagging
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutObjectTagging
+    identity:
+      source: input
+      path: Bucket
+- name: PutPublicAccessBlock
+  shapeId: com.amazonaws.s3#PutPublicAccessBlock
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: PutPublicAccessBlock
+    identity:
+      source: input
+      path: Bucket
+- name: RenameObject
+  shapeId: com.amazonaws.s3#RenameObject
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: RenameObject
+    identity:
+      source: input
+      path: Bucket
+- name: RestoreObject
+  shapeId: com.amazonaws.s3#RestoreObject
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: RestoreObject
+    identity:
+      source: input
+      path: Bucket
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: RestoreObject
+      role: destination
+    identity:
+      source: input
+      path: RestoreRequest.OutputLocation.S3.BucketName
+    conditional: true
+- name: SelectObjectContent
+  shapeId: com.amazonaws.s3#SelectObjectContent
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: SelectObjectContent
+    identity:
+      source: input
+      path: Bucket
+- name: UpdateBucketMetadataAnnotationTableConfiguration
+  shapeId: com.amazonaws.s3#UpdateBucketMetadataAnnotationTableConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: UpdateBucketMetadataAnnotationTableConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: UpdateBucketMetadataInventoryTableConfiguration
+  shapeId: com.amazonaws.s3#UpdateBucketMetadataInventoryTableConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: UpdateBucketMetadataInventoryTableConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: UpdateBucketMetadataJournalTableConfiguration
+  shapeId: com.amazonaws.s3#UpdateBucketMetadataJournalTableConfiguration
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: UpdateBucketMetadataJournalTableConfiguration
+    identity:
+      source: input
+      path: Bucket
+- name: UpdateObjectEncryption
+  shapeId: com.amazonaws.s3#UpdateObjectEncryption
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: UpdateObjectEncryption
+    identity:
+      source: input
+      path: Bucket
+- name: UploadPart
+  shapeId: com.amazonaws.s3#UploadPart
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: UploadPart
+    identity:
+      source: input
+      path: Bucket
+- name: UploadPartCopy
+  shapeId: com.amazonaws.s3#UploadPartCopy
+  conditions:
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: UploadPartCopy
+      role: destination
+    identity:
+      source: input
+      path: Bucket
+  - kind: aws.s3
+    interfaceType: bucket
+    operation:
+      name: UploadPartCopy
+      role: source
+    identity:
+      source: input
+      path: CopySource
+      encoding: s3-copy-source
+    conditional: true
+- name: WriteGetObjectResponse
+  shapeId: com.amazonaws.s3#WriteGetObjectResponse
+  conditions:
+  - kind: aws.s3
+    interfaceType: object_lambda
+    operation:
+      name: WriteGetObjectResponse
+    identity:
+      source: input
+      path: RequestRoute
+python:
+  client:
+    surface: botocore.client.s3
+    methods:
+    - method: abort_multipart_upload
+      operation: AbortMultipartUpload
+    - method: complete_multipart_upload
+      operation: CompleteMultipartUpload
+    - method: copy_object
+      operation: CopyObject
+    - method: create_bucket
+      operation: CreateBucket
+    - method: create_bucket_metadata_configuration
+      operation: CreateBucketMetadataConfiguration
+    - method: create_bucket_metadata_table_configuration
+      operation: CreateBucketMetadataTableConfiguration
+    - method: create_multipart_upload
+      operation: CreateMultipartUpload
+    - method: create_session
+      operation: CreateSession
+    - method: delete_bucket
+      operation: DeleteBucket
+    - method: delete_bucket_analytics_configuration
+      operation: DeleteBucketAnalyticsConfiguration
+    - method: delete_bucket_cors
+      operation: DeleteBucketCors
+    - method: delete_bucket_encryption
+      operation: DeleteBucketEncryption
+    - method: delete_bucket_intelligent_tiering_configuration
+      operation: DeleteBucketIntelligentTieringConfiguration
+    - method: delete_bucket_inventory_configuration
+      operation: DeleteBucketInventoryConfiguration
+    - method: delete_bucket_lifecycle
+      operation: DeleteBucketLifecycle
+    - method: delete_bucket_metadata_configuration
+      operation: DeleteBucketMetadataConfiguration
+    - method: delete_bucket_metadata_table_configuration
+      operation: DeleteBucketMetadataTableConfiguration
+    - method: delete_bucket_metrics_configuration
+      operation: DeleteBucketMetricsConfiguration
+    - method: delete_bucket_ownership_controls
+      operation: DeleteBucketOwnershipControls
+    - method: delete_bucket_policy
+      operation: DeleteBucketPolicy
+    - method: delete_bucket_replication
+      operation: DeleteBucketReplication
+    - method: delete_bucket_tagging
+      operation: DeleteBucketTagging
+    - method: delete_bucket_website
+      operation: DeleteBucketWebsite
+    - method: delete_object
+      operation: DeleteObject
+    - method: delete_object_annotation
+      operation: DeleteObjectAnnotation
+    - method: delete_object_tagging
+      operation: DeleteObjectTagging
+    - method: delete_objects
+      operation: DeleteObjects
+    - method: delete_public_access_block
+      operation: DeletePublicAccessBlock
+    - method: get_bucket_abac
+      operation: GetBucketAbac
+    - method: get_bucket_accelerate_configuration
+      operation: GetBucketAccelerateConfiguration
+    - method: get_bucket_acl
+      operation: GetBucketAcl
+    - method: get_bucket_analytics_configuration
+      operation: GetBucketAnalyticsConfiguration
+    - method: get_bucket_cors
+      operation: GetBucketCors
+    - method: get_bucket_encryption
+      operation: GetBucketEncryption
+    - method: get_bucket_intelligent_tiering_configuration
+      operation: GetBucketIntelligentTieringConfiguration
+    - method: get_bucket_inventory_configuration
+      operation: GetBucketInventoryConfiguration
+    - method: get_bucket_lifecycle
+      sdkOperation: GetBucketLifecycle
+      operation: GetBucketLifecycleConfiguration
+    - method: get_bucket_lifecycle_configuration
+      operation: GetBucketLifecycleConfiguration
+    - method: get_bucket_location
+      operation: GetBucketLocation
+    - method: get_bucket_logging
+      operation: GetBucketLogging
+    - method: get_bucket_metadata_configuration
+      operation: GetBucketMetadataConfiguration
+    - method: get_bucket_metadata_table_configuration
+      operation: GetBucketMetadataTableConfiguration
+    - method: get_bucket_metrics_configuration
+      operation: GetBucketMetricsConfiguration
+    - method: get_bucket_notification
+      sdkOperation: GetBucketNotification
+      operation: GetBucketNotificationConfiguration
+    - method: get_bucket_notification_configuration
+      operation: GetBucketNotificationConfiguration
+    - method: get_bucket_ownership_controls
+      operation: GetBucketOwnershipControls
+    - method: get_bucket_policy
+      operation: GetBucketPolicy
+    - method: get_bucket_policy_status
+      operation: GetBucketPolicyStatus
+    - method: get_bucket_replication
+      operation: GetBucketReplication
+    - method: get_bucket_request_payment
+      operation: GetBucketRequestPayment
+    - method: get_bucket_tagging
+      operation: GetBucketTagging
+    - method: get_bucket_versioning
+      operation: GetBucketVersioning
+    - method: get_bucket_website
+      operation: GetBucketWebsite
+    - method: get_object
+      operation: GetObject
+    - method: get_object_acl
+      operation: GetObjectAcl
+    - method: get_object_annotation
+      operation: GetObjectAnnotation
+    - method: get_object_attributes
+      operation: GetObjectAttributes
+    - method: get_object_legal_hold
+      operation: GetObjectLegalHold
+    - method: get_object_lock_configuration
+      operation: GetObjectLockConfiguration
+    - method: get_object_retention
+      operation: GetObjectRetention
+    - method: get_object_tagging
+      operation: GetObjectTagging
+    - method: get_object_torrent
+      operation: GetObjectTorrent
+    - method: get_public_access_block
+      operation: GetPublicAccessBlock
+    - method: head_bucket
+      operation: HeadBucket
+    - method: head_object
+      operation: HeadObject
+    - method: list_bucket_analytics_configurations
+      operation: ListBucketAnalyticsConfigurations
+    - method: list_bucket_intelligent_tiering_configurations
+      operation: ListBucketIntelligentTieringConfigurations
+    - method: list_bucket_inventory_configurations
+      operation: ListBucketInventoryConfigurations
+    - method: list_bucket_metrics_configurations
+      operation: ListBucketMetricsConfigurations
+    - method: list_buckets
+      operation: ListBuckets
+    - method: list_directory_buckets
+      operation: ListDirectoryBuckets
+    - method: list_multipart_uploads
+      operation: ListMultipartUploads
+    - method: list_object_annotations
+      operation: ListObjectAnnotations
+    - method: list_object_versions
+      operation: ListObjectVersions
+    - method: list_objects
+      operation: ListObjects
+    - method: list_objects_v2
+      operation: ListObjectsV2
+    - method: list_parts
+      operation: ListParts
+    - method: put_bucket_abac
+      operation: PutBucketAbac
+    - method: put_bucket_accelerate_configuration
+      operation: PutBucketAccelerateConfiguration
+    - method: put_bucket_acl
+      operation: PutBucketAcl
+    - method: put_bucket_analytics_configuration
+      operation: PutBucketAnalyticsConfiguration
+    - method: put_bucket_cors
+      operation: PutBucketCors
+    - method: put_bucket_encryption
+      operation: PutBucketEncryption
+    - method: put_bucket_intelligent_tiering_configuration
+      operation: PutBucketIntelligentTieringConfiguration
+    - method: put_bucket_inventory_configuration
+      operation: PutBucketInventoryConfiguration
+    - method: put_bucket_lifecycle
+      sdkOperation: PutBucketLifecycle
+      operation: PutBucketLifecycleConfiguration
+    - method: put_bucket_lifecycle_configuration
+      operation: PutBucketLifecycleConfiguration
+    - method: put_bucket_logging
+      operation: PutBucketLogging
+    - method: put_bucket_metrics_configuration
+      operation: PutBucketMetricsConfiguration
+    - method: put_bucket_notification
+      sdkOperation: PutBucketNotification
+      operation: PutBucketNotificationConfiguration
+    - method: put_bucket_notification_configuration
+      operation: PutBucketNotificationConfiguration
+    - method: put_bucket_ownership_controls
+      operation: PutBucketOwnershipControls
+    - method: put_bucket_policy
+      operation: PutBucketPolicy
+    - method: put_bucket_replication
+      operation: PutBucketReplication
+    - method: put_bucket_request_payment
+      operation: PutBucketRequestPayment
+    - method: put_bucket_tagging
+      operation: PutBucketTagging
+    - method: put_bucket_versioning
+      operation: PutBucketVersioning
+    - method: put_bucket_website
+      operation: PutBucketWebsite
+    - method: put_object
+      operation: PutObject
+    - method: put_object_acl
+      operation: PutObjectAcl
+    - method: put_object_annotation
+      operation: PutObjectAnnotation
+    - method: put_object_legal_hold
+      operation: PutObjectLegalHold
+    - method: put_object_lock_configuration
+      operation: PutObjectLockConfiguration
+    - method: put_object_retention
+      operation: PutObjectRetention
+    - method: put_object_tagging
+      operation: PutObjectTagging
+    - method: put_public_access_block
+      operation: PutPublicAccessBlock
+    - method: rename_object
+      operation: RenameObject
+    - method: restore_object
+      operation: RestoreObject
+    - method: select_object_content
+      operation: SelectObjectContent
+    - method: update_bucket_metadata_annotation_table_configuration
+      operation: UpdateBucketMetadataAnnotationTableConfiguration
+    - method: update_bucket_metadata_inventory_table_configuration
+      operation: UpdateBucketMetadataInventoryTableConfiguration
+    - method: update_bucket_metadata_journal_table_configuration
+      operation: UpdateBucketMetadataJournalTableConfiguration
+    - method: update_object_encryption
+      operation: UpdateObjectEncryption
+    - method: upload_part
+      operation: UploadPart
+    - method: upload_part_copy
+      operation: UploadPartCopy
+    - method: write_get_object_response
+      operation: WriteGetObjectResponse
+    paginatorFactory:
+      method: get_paginator
+      selector:
+        position: 0
+        keyword: operation_name
+      items:
+      - name: list_buckets
+        terminalMethod: paginate
+        operation: ListBuckets
+      - name: list_directory_buckets
+        terminalMethod: paginate
+        operation: ListDirectoryBuckets
+      - name: list_multipart_uploads
+        terminalMethod: paginate
+        operation: ListMultipartUploads
+      - name: list_object_annotations
+        terminalMethod: paginate
+        operation: ListObjectAnnotations
+      - name: list_object_versions
+        terminalMethod: paginate
+        operation: ListObjectVersions
+      - name: list_objects
+        terminalMethod: paginate
+        operation: ListObjects
+      - name: list_objects_v2
+        terminalMethod: paginate
+        operation: ListObjectsV2
+      - name: list_parts
+        terminalMethod: paginate
+        operation: ListParts
+    waiterFactory:
+      method: get_waiter
+      selector:
+        position: 0
+        keyword: waiter_name
+      items:
+      - name: bucket_exists
+        terminalMethod: wait
+        operation: HeadBucket
+      - name: bucket_not_exists
+        terminalMethod: wait
+        operation: HeadBucket
+      - name: object_exists
+        terminalMethod: wait
+        operation: HeadObject
+      - name: object_not_exists
+        terminalMethod: wait
+        operation: HeadObject

@@ -5,21 +5,14 @@ from __future__ import annotations
 
 import argparse
 import ast
-import json
 import re
 from pathlib import Path
 from typing import Any, Iterable
 
+from serialization import read_document
+
 
 VERSION_PATTERN = re.compile(r'''__version__\s*=\s*['"]([^'"]+)['"]''')
-
-
-def read_json(path: Path) -> dict[str, Any]:
-    with path.open(encoding="utf-8") as stream:
-        value = json.load(stream)
-    if not isinstance(value, dict):
-        raise ValueError(f"{path}: expected a JSON object")
-    return value
 
 
 def version(root: Path, package: str) -> str:
@@ -238,17 +231,19 @@ def main() -> None:
     parser.add_argument("--botocore-source", type=Path, required=True)
     parser.add_argument("--s3transfer-source", type=Path, required=True)
     parser.add_argument("--boto3-annotations", type=Path, required=True)
+    parser.add_argument("--botocore-annotations", type=Path, required=True)
     parser.add_argument("--s3transfer-annotations", type=Path, required=True)
     parser.add_argument("--botocore-mapping", type=Path, required=True)
     parser.add_argument("--boto3-mapping", type=Path, required=True)
     parser.add_argument("--s3transfer-mapping", type=Path, required=True)
     args = parser.parse_args()
 
-    botocore_mapping = read_json(args.botocore_mapping)
-    boto3_mapping = read_json(args.boto3_mapping)
-    transfer_mapping = read_json(args.s3transfer_mapping)
-    boto3_annotations = read_json(args.boto3_annotations)
-    transfer_annotations = read_json(args.s3transfer_annotations)
+    botocore_mapping = read_document(args.botocore_mapping)
+    boto3_mapping = read_document(args.boto3_mapping)
+    transfer_mapping = read_document(args.s3transfer_mapping)
+    boto3_annotations = read_document(args.boto3_annotations)
+    botocore_annotations = read_document(args.botocore_annotations)
+    transfer_annotations = read_document(args.s3transfer_annotations)
 
     versions = {
         "botocore": version(args.botocore_source, "botocore"),
@@ -264,24 +259,32 @@ def main() -> None:
         if mappings[distribution].get("metadata", {}).get("distributionVersion") != installed_version:
             raise ValueError(f"{distribution}: mapping version does not match source")
 
-    service_model = read_json(
+    service_model = read_document(
         args.botocore_source / "botocore/data/s3/2006-03-01/service-2.json"
     )
     service_operations = set(service_model.get("operations", {}))
+    aliases = botocore_annotations.get("canonicalOperationAliases", {})
+    unknown_aliases = sorted(set(aliases) - service_operations)
+    if unknown_aliases:
+        raise ValueError(
+            "botocore alias annotations reference absent SDK operations: "
+            + ", ".join(unknown_aliases)
+        )
+    canonical_service_operations = {aliases.get(name, name) for name in service_operations}
     mapped_operations = {item["name"] for item in botocore_mapping.get("operations", [])}
-    if mapped_operations != service_operations:
-        raise ValueError("botocore mapping operation set does not match service model")
+    if mapped_operations != canonical_service_operations:
+        raise ValueError("botocore mapping canonical operation set does not match the SDK service model and reviewed aliases")
     methods = botocore_mapping.get("python", {}).get("client", {}).get("methods", [])
-    expected_methods = {(python_name(name), name) for name in service_operations}
+    expected_methods = {(python_name(name), aliases.get(name, name)) for name in service_operations}
     if {(item["method"], item["operation"]) for item in methods} != expected_methods:
-        raise ValueError("botocore Python operation names do not match service model")
+        raise ValueError("botocore Python operation names do not match the SDK service model and canonical aliases")
 
     wrapper_count = validate_boto3_wrappers(args.boto3_source, boto3_annotations)
     entrypoint_count, transfer_operation_count = validate_s3transfer(
-        args.s3transfer_source, transfer_annotations, service_operations
+        args.s3transfer_source, transfer_annotations, canonical_service_operations
     )
 
-    resource_model = read_json(
+    resource_model = read_document(
         args.boto3_source / "boto3/data/s3/2006-03-01/resources-1.json"
     )
     mapped_resources = {item["name"] for item in boto3_mapping["python"]["resources"]}
@@ -289,7 +292,8 @@ def main() -> None:
         raise ValueError("boto3 mapping resource set does not match resource model")
 
     print("pinned SDK source validation passed")
-    print(f"  botocore operations: {len(service_operations)}")
+    print(f"  botocore SDK methods: {len(service_operations)}")
+    print(f"  canonical Smithy operations: {len(canonical_service_operations)}")
     print(f"  boto3 handwritten wrapper surfaces: {wrapper_count}")
     print(f"  boto3 modeled resources: {len(mapped_resources)}")
     print(f"  s3transfer public entrypoints: {entrypoint_count}")

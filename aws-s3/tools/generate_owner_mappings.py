@@ -8,32 +8,25 @@ not import or execute any of the SDK packages whose metadata it generates.
 from __future__ import annotations
 
 import argparse
-import json
+import hashlib
 import re
 from pathlib import Path
 from typing import Any
 
-
-API_VERSION = "runtimeconditions.io/v1alpha1"
-MAPPING_KIND = "RuntimeConditionsSDKMappingCandidate"
+from serialization import read_document, write_yaml
 
 
-def read_json(path: Path) -> dict[str, Any]:
-    with path.open(encoding="utf-8") as stream:
-        value = json.load(stream)
-    if not isinstance(value, dict):
-        raise ValueError(f"{path}: expected a JSON object")
-    return value
-
-
-def write_json(path: Path, value: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+API_VERSION = "runtimeconditions.io/sdk-mapping/v1alpha1"
+MAPPING_KIND = "RuntimeConditionsSDKMapping"
 
 
 def python_name(name: str) -> str:
     first = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
     return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", first).lower()
+
+
+def operation_fingerprint(names: list[str]) -> str:
+    return hashlib.sha256(("\n".join(names) + "\n").encode()).hexdigest()
 
 
 def sdk_dependency(distribution: str, mapping: str) -> dict[str, str]:
@@ -80,6 +73,24 @@ def referenced_operation(value: Any, operations: set[str], context: str) -> Any:
             raise ValueError(f"{context} references unknown operation: {operation}")
         generated["operationRef"] = operation_ref(operation)
     return generated
+
+
+def canonicalize_operation_refs(value: Any, aliases: dict[str, str]) -> Any:
+    if isinstance(value, list):
+        return [canonicalize_operation_refs(item, aliases) for item in value]
+    if not isinstance(value, dict):
+        return value
+    result = {
+        key: canonicalize_operation_refs(item, aliases)
+        for key, item in value.items()
+    }
+    operation_ref_value = result.get("operationRef")
+    if isinstance(operation_ref_value, dict):
+        operation = operation_ref_value.get("operation")
+        if operation in aliases:
+            operation_ref_value["sdkOperation"] = operation
+            operation_ref_value["operation"] = aliases[operation]
+    return result
 
 
 def request_binding(request: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -256,13 +267,49 @@ def resource_binding(
 
 def botocore_mapping(
     service_mapping: dict[str, Any],
+    sdk_service_model: dict[str, Any],
     paginators: dict[str, Any],
     waiters: dict[str, Any],
+    annotations: dict[str, Any],
     version: str,
 ) -> dict[str, Any]:
     service_metadata = service_mapping["metadata"]
-    operations = service_mapping["operations"]
-    operation_names = {item["name"] for item in operations}
+    authoritative_operations = {
+        item["name"]: item for item in service_mapping["operations"]
+    }
+    authoritative_operation_names = set(authoritative_operations)
+    aliases = annotations.get("canonicalOperationAliases", {})
+    sdk_operation_names = set(sdk_service_model.get("operations", {}))
+    applicable_aliases = {
+        alias: canonical
+        for alias, canonical in aliases.items()
+        if alias in sdk_operation_names
+    }
+    canonical_sdk_operations = {
+        aliases.get(operation, operation) for operation in sdk_operation_names
+    }
+    unknown_alias_targets = sorted(set(applicable_aliases.values()) - authoritative_operation_names)
+    if unknown_alias_targets:
+        raise ValueError(
+            "botocore aliases target unknown canonical operations: "
+            + ", ".join(unknown_alias_targets)
+        )
+    conflicting_aliases = sorted(set(applicable_aliases) & authoritative_operation_names)
+    if conflicting_aliases:
+        raise ValueError(
+            "botocore aliases conflict with canonical operations: "
+            + ", ".join(conflicting_aliases)
+        )
+    unsupported_operations = sorted(canonical_sdk_operations - authoritative_operation_names)
+    if unsupported_operations:
+        raise ValueError(
+            "SDK operations are absent from the version-aligned extension: "
+            + ", ".join(unsupported_operations)
+        )
+    operations = [
+        authoritative_operations[name] for name in sorted(canonical_sdk_operations)
+    ]
+    operation_names = set(canonical_sdk_operations)
 
     paginator_items = []
     for name in sorted(paginators.get("pagination", {})):
@@ -299,21 +346,34 @@ def botocore_mapping(
             "language": "python",
             "service": "s3",
             "serviceId": service_metadata["serviceId"],
-            "serviceApiVersion": service_metadata["apiVersion"],
+            "serviceShape": service_metadata["serviceShape"],
+            "serviceVersion": service_metadata["serviceVersion"],
             "operationNamesSha256": service_metadata["operationNamesSha256"],
+            "serviceMappingSemanticSha256": service_metadata["semanticSha256"],
+            "sdkOperationCount": len(sdk_operation_names),
+            "sdkCanonicalOperationNamesSha256": operation_fingerprint(
+                sorted(canonical_sdk_operations)
+            ),
         },
         "dependencies": [
-            {"kind": "extension", "id": service_mapping["extension"]["id"]}
+            {"kind": "extension", **service_mapping["extension"]}
         ],
         "extension": service_mapping["extension"],
         "operations": operations,
         "python": {
             "client": {
                 "surface": "botocore.client.s3",
-                "methods": [
+                "methods": sorted([
                     {"method": python_name(item["name"]), "operation": item["name"]}
                     for item in operations
-                ],
+                ] + [
+                    {
+                        "method": python_name(alias),
+                        "sdkOperation": alias,
+                        "operation": canonical,
+                    }
+                    for alias, canonical in applicable_aliases.items()
+                ], key=lambda item: item["method"]),
                 "paginatorFactory": {
                     "method": "get_paginator",
                     "selector": {"position": 0, "keyword": "operation_name"},
@@ -330,8 +390,6 @@ def botocore_mapping(
 
 
 def s3transfer_mapping(annotations: dict[str, Any], version: str, operations: set[str]) -> dict[str, Any]:
-    if annotations.get("expectedS3TransferVersion") != version:
-        raise ValueError("s3transfer annotation version does not match generated distribution version")
     calls = []
     for call in annotations.get("calls", []):
         declared_arguments = set(call.get("arguments", []))
@@ -374,8 +432,6 @@ def boto3_mapping(
     version: str,
     known_calls: dict[str, set[str]],
 ) -> dict[str, Any]:
-    if annotations.get("expectedBoto3Version") != version:
-        raise ValueError("boto3 wrapper annotation version does not match generated distribution version")
     referenced_calls = {
         item["call"] for item in annotations.get("clientWrappers", [])
     }
@@ -475,9 +531,11 @@ def boto3_mapping(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--service-mapping", type=Path, required=True)
+    parser.add_argument("--botocore-service-model", type=Path, required=True)
     parser.add_argument("--paginator-model", type=Path, required=True)
     parser.add_argument("--waiter-model", type=Path, required=True)
     parser.add_argument("--resource-model", type=Path, required=True)
+    parser.add_argument("--botocore-annotations", type=Path, required=True)
     parser.add_argument("--boto3-wrappers", type=Path, required=True)
     parser.add_argument("--s3transfer-annotations", type=Path, required=True)
     parser.add_argument("--botocore-output", type=Path, required=True)
@@ -488,25 +546,37 @@ def main() -> None:
     parser.add_argument("--s3transfer-version", required=True)
     args = parser.parse_args()
 
-    service = read_json(args.service_mapping)
-    paginator = read_json(args.paginator_model)
-    waiter = read_json(args.waiter_model)
-    resource = read_json(args.resource_model)
-    boto3_annotations = read_json(args.boto3_wrappers)
-    transfer_annotations = read_json(args.s3transfer_annotations)
+    service = read_document(args.service_mapping)
+    botocore_service_model = read_document(args.botocore_service_model)
+    paginator = read_document(args.paginator_model)
+    waiter = read_document(args.waiter_model)
+    resource = read_document(args.resource_model)
+    boto3_annotations = read_document(args.boto3_wrappers)
+    botocore_annotations = read_document(args.botocore_annotations)
+    transfer_annotations = read_document(args.s3transfer_annotations)
 
-    botocore = botocore_mapping(service, paginator, waiter, args.botocore_version)
+    botocore = botocore_mapping(
+        service,
+        botocore_service_model,
+        paginator,
+        waiter,
+        botocore_annotations,
+        args.botocore_version,
+    )
     operation_names = {item["name"] for item in botocore["operations"]}
+    aliases = botocore_annotations.get("canonicalOperationAliases", {})
     transfer = s3transfer_mapping(transfer_annotations, args.s3transfer_version, operation_names)
+    transfer = canonicalize_operation_refs(transfer, aliases)
     call_arguments = {
         item["name"]: set(item.get("arguments", []))
         for item in transfer["python"]["calls"]
     }
     boto3 = boto3_mapping(resource, boto3_annotations, args.boto3_version, call_arguments)
+    boto3 = canonicalize_operation_refs(boto3, aliases)
 
-    write_json(args.botocore_output, botocore)
-    write_json(args.s3transfer_output, transfer)
-    write_json(args.boto3_output, boto3)
+    write_yaml(args.botocore_output, botocore)
+    write_yaml(args.s3transfer_output, transfer)
+    write_yaml(args.boto3_output, boto3)
 
     resource_count = len(boto3["python"]["resources"])
     resource_actions = sum(len(item["actions"]) for item in boto3["python"]["resources"])
