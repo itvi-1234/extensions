@@ -1,52 +1,37 @@
 # Validation record
 
-## Extension definition
+## Authoritative extension generation
 
-The AWS S3 candidate passed targeted extension validation with the locally
-cloned Go tooling. Its embedded JSON Schemas were also checked independently,
-including expected rejection cases. No profiler was changed.
+The external compiler reads AWS's public Smithy JSON AST model for `com.amazonaws.s3#AmazonS3`, merges the reviewed Runtime Conditions `apply` overlay, validates every Condition identity path through authoritative shapes, verifies the reviewed operation fingerprint, and emits deterministic extension and service-mapping artifacts.
 
-The current Go validator still does not generically apply every extension's
-arbitrary Condition schema, and the current Python profiler does not consume
-SDK package mappings. Those are profiler capability decisions outside this
-authorship proof.
-
-## Language-neutral service mapping
-
-The service generator validates the pinned botocore S3 model before emitting
-metadata:
+The accepted source is the S3 model last changed by `aws/api-models-aws` commit `073f307ee1fd0acea67b706ddbd4ad5437c67eb8`. The model SHA-256 is `6975caa92319bf6c1fc2fdea7b3f64f9b9aca6d9b32edeccf086796338842e5a`.
 
 ```text
-service id: S3
-API version: 2006-03-01
-canonical operations: 116
-Condition templates: 123
+Smithy service shape: com.amazonaws.s3#AmazonS3
+service version: 2006-03-01
+canonical operations: 112
+operation-name SHA-256: 209771cb0915567090f615e18dacf594436fc6aadc2867f56535ae0db7935436
+Condition templates: 119
 ```
 
-The accepted operation count and SHA-256 fingerprint make operation-set drift
-a review event. Input identity paths are walked through the service shapes, so
-a stale nested bucket path fails generation.
+The extension semantic SHA-256 is `1a505b63d55893c26f3ffe6cf3cd9f90f0b5bd7975fabe47ff444a3ed1e13c72`. The generated release records the source repository, exact S3-changing commit, model path and digest, Smithy version, service shape, and service version. Operation schemas validate name-and-role pairs rather than independent global enums: for example, `PutObject` rejects a `source` role while `CopyObject` requires either `source` or `destination`.
 
-Every modeled S3 operation is represented: 112 primary bucket operations,
-three service-level operations, and one Object Lambda response operation. Seven
-additional templates describe secondary S3 buckets nested in request inputs.
+## Authoritative versus SDK operations
+
+Botocore 1.43.70 exposes 116 S3 client methods. Four are deprecated compatibility operations absent from the authoritative Smithy service closure. Reviewed SDK annotations map them to canonical extension operations:
+
+| Botocore operation | Canonical extension operation |
+| --- | --- |
+| `GetBucketLifecycle` | `GetBucketLifecycleConfiguration` |
+| `GetBucketNotification` | `GetBucketNotificationConfiguration` |
+| `PutBucketLifecycle` | `PutBucketLifecycleConfiguration` |
+| `PutBucketNotification` | `PutBucketNotificationConfiguration` |
+
+SDK-to-extension alignment validates all 116 methods, 112 canonical operations, four aliases, and every Condition identity path against the botocore source model.
 
 ## Owner-aligned mapping validation
 
-[`../tools/validate_owner_mappings.py`](../tools/validate_owner_mappings.py)
-loads all three generated mappings as static JSON and checks:
-
-- unique distribution/mapping identities;
-- every declared mapping dependency exists;
-- every `operationRef`, `waiterRef`, and `callRef` resolves to the declared
-  owner and member;
-- cross-mapping references are declared dependencies;
-- botocore client methods exactly cover canonical operations;
-- waiter and paginator operations exist;
-- extension Condition templates retain their canonical operation;
-- recursive dependencies contain no cycle.
-
-Result:
+Static recursive validation checks unique mapping identities, declared dependencies, operation/waiter/call references, extension release identity and semantic digest, canonical Condition operations, client method projection, and dependency cycles.
 
 ```text
 recursive SDK mapping validation passed
@@ -56,79 +41,31 @@ dependency order:
   boto3: boto3.aws.s3
 ```
 
-## Pinned SDK source validation
-
-[`../tools/validate_sdk_sources.py`](../tools/validate_sdk_sources.py) reads the
-official tagged source trees without importing or executing the SDK packages.
-It checks exact distribution versions, the complete operation and resource
-inventories, generated Python spellings, factory and wrapper signatures,
-positional/keyword bindings, handwritten load delegates, s3transfer public
-entrypoints, and the service operations actually used by the transfer
-implementation modules.
-
-Result:
+Pinned source validation checks exact distribution versions, the 116-to-112 operation projection, Python spellings, boto3 resource inventory, handwritten signatures and delegates, s3transfer public entrypoints, receiver bindings, and implementation operation sets.
 
 ```text
 pinned SDK source validation passed
-  botocore operations: 116
+  botocore SDK methods: 116
+  canonical Smithy operations: 112
   boto3 handwritten wrapper surfaces: 17
   boto3 modeled resources: 18
   s3transfer public entrypoints: 9
   s3transfer distinct canonical operations: 19
 ```
 
-The gate caught an off-by-one `extra_args` binding in the initial
-`S3Transfer.download_file` annotation. The corrected overlay now passes and a
-future signature change will fail in the same focused way.
+## Historical Smithy evidence
 
-## Installed artifact proof
+The public repository contains 24 commits that changed the S3 model between May 2025 and August 2026. They produced six distinct operation inventories and five operation-set transitions. The exact commits and additions are retained in [`../evidence/smithy-history/history.md`](../evidence/smithy-history/history.md).
 
-Official boto3 1.43.70, botocore 1.43.70, and s3transfer 0.19.2 source checkouts
-were rebuilt with their owner mapping and index. All three wheels were installed
-from local paths; no registry was used.
+Every operation-set transition is a required extension-semantic review point. A model-only change is not automatically declared safe; the compiler also checks all reviewed shape paths and classifications against the selected model.
 
-[`../../../sdk/authorship/aws-python/tools/discover_mappings.py`](../../../sdk/authorship/aws-python/tools/discover_mappings.py)
-used only Python distribution metadata and JSON reads. It verified index and
-mapping digests, required each mapping version to equal its installed owner,
-loaded recursive dependencies, and revalidated all references. It reported
-that boto3, botocore, and s3transfer were not imported.
+## Installed package proof
 
-`pip check` reported no broken dependencies. All six original S3 application
-tests passed unchanged against the rebuilt packages, and the added
-managed-transfer application passed through the real boto3-to-s3transfer
-small-file path. The complete evidence and package
-measurements are in
-[`../../../sdk/authorship/aws-python/results/2026-08-14-owner-aligned-packaging-rehearsal.md`](../../../sdk/authorship/aws-python/results/2026-08-14-owner-aligned-packaging-rehearsal.md).
-
-The post-install runtime surface test also checked 116 client methods, eight
-paginators, four waiters, 19 resource classes, and 148 resource members. Six
-s3transfer entrypoints were runtime-checked; the three CRT entrypoints remained
-source-validated because the optional `awscrt` extra was not installed.
-
-## Representative nested resolution
-
-The static resolver proves these chains:
-
-- direct `put_object` → botocore `PutObject` → `aws.s3` bucket Condition;
-- `Bucket.put_object` → botocore `PutObject` → the same Condition shape;
-- `Bucket.wait_until_exists` → botocore `bucket_exists` → `HeadBucket` →
-  Condition;
-- `Bucket.upload_file` → s3transfer managed upload → classic/CRT execution
-  path → botocore operations → Conditions.
-
-The multipart branches remain separate. The metadata does not claim that both
-single-part and multipart operations occur, and it does not turn branch
-ambiguity into a mapping-layer coverage or unresolved field.
+The existing Python packaging proof stages the owner mappings into local boto3, botocore, and s3transfer source trees, builds wheels without publishing to a registry, discovers the mappings through package metadata without SDK imports, validates the installed dependency closure, resolves representative recursive paths, and runs unchanged application fixtures.
 
 ## Remaining limitations
 
-- The candidate reference and execution-path vocabulary is not yet an accepted
-  cross-language specification.
-- Source validation currently contains S3-specific checks for s3transfer's
-  implementation modules. Generalizing that check belongs in the postponed
-  all-services generator workflow.
-- The application corpus contains the public boto3 managed-upload path but not
-  direct s3transfer calls, multipart/CRT execution, waiter, paginator, or every
-  resource-relation pattern. The mapping artifacts and static resolver cover
-  those surfaces, but profiler acceptance fixtures should be expanded before
-  profiler implementation.
+- The Smithy traits and normalized service-mapping contract are implemented externally but not yet packaged as a JVM `SmithyBuildPlugin` for AWS-owned integration.
+- Cross-service request dependencies remain blocked until their target extensions and reviewed traits exist.
+- The profiler repositories do not yet consume installed SDK mappings.
+- Historical model inventory measures review opportunities; maintainer interview evidence is still required to measure the human cost of each semantic interruption.

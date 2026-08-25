@@ -1,0 +1,117 @@
+name: AWS Smithy extension maintenance
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/smithy-maintenance.yml"
+      - "aws-s3/**"
+      - "smithy-runtime-conditions/**"
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+    inputs:
+      replay_history:
+        description: Replay every public S3 model-changing commit and retain the inventory report
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: aws-smithy-extension-maintenance
+  cancel-in-progress: false
+
+jobs:
+  observe-s3:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out extension semantics
+        uses: actions/checkout@v6
+        with:
+          path: extensions
+
+      - name: Check out authoritative AWS API models
+        uses: actions/checkout@v6
+        with:
+          repository: aws/api-models-aws
+          path: api-models-aws
+          fetch-depth: 0
+          filter: blob:none
+          sparse-checkout: models/s3
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install generator prerequisites
+        run: python -m pip install --disable-pip-version-check -r extensions/smithy-runtime-conditions/requirements.txt
+
+      - name: Observe authoritative S3 semantics
+        id: observation
+        continue-on-error: true
+        run: |
+          python extensions/smithy-runtime-conditions/tools/run_maintenance.py \
+            --manifest extensions/aws-s3/maintenance/smithy.yaml \
+            --models-root api-models-aws \
+            --extensions-root extensions \
+            --output maintenance-evidence/aws-s3
+
+      - name: Replay historical S3 model changes
+        if: github.event_name == 'workflow_dispatch' && inputs.replay_history
+        run: |
+          python extensions/smithy-runtime-conditions/tools/replay_history.py \
+            --manifest extensions/aws-s3/maintenance/smithy.yaml \
+            --models-root api-models-aws \
+            --output maintenance-evidence/aws-s3-history
+
+      - name: Upload maintenance evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: aws-s3-smithy-maintenance-${{ github.run_id }}
+          path: maintenance-evidence/aws-s3
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Upload historical inventory
+        if: github.event_name == 'workflow_dispatch' && inputs.replay_history
+        uses: actions/upload-artifact@v7
+        with:
+          name: aws-s3-smithy-history-${{ github.run_id }}
+          path: maintenance-evidence/aws-s3-history
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish maintenance summary
+        if: always() && hashFiles('maintenance-evidence/aws-s3/summary.md') != ''
+        run: cat maintenance-evidence/aws-s3/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create or update focused maintenance issue
+        if: steps.observation.outcome == 'failure' && github.event_name != 'pull_request' && hashFiles('maintenance-evidence/aws-s3/run.yaml') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          classification="$(python -c 'import yaml; print(yaml.safe_load(open("maintenance-evidence/aws-s3/run.yaml"))["classification"])')"
+          fingerprint="$(python -c 'import yaml; print(yaml.safe_load(open("maintenance-evidence/aws-s3/run.yaml"))["source"]["operationNamesSha256"][:12])')"
+          if [[ "$classification" == "extension-review-required" ]]; then
+            title="AWS S3 extension semantic review: $fingerprint"
+          else
+            title="AWS S3 extension automation failure"
+          fi
+          issue="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
+          if [[ -z "$issue" ]]; then
+            gh issue create --title "$title" --body-file maintenance-evidence/aws-s3/summary.md
+          else
+            gh issue comment "$issue" --body "The condition was observed again in [$GITHUB_WORKFLOW run $GITHUB_RUN_NUMBER]($RUN_URL)."
+          fi
+
+      - name: Enforce maintenance classification
+        if: steps.observation.outcome == 'failure'
+        run: exit 1

@@ -1,169 +1,76 @@
-# SDK author workflow for the S3 candidate
+# SDK author workflow for the AWS S3 extension
 
 ## Goal
 
-An SDK maintainer should maintain semantics at the layer the repository owns,
-reuse existing service/resource models, and review concise generated summaries.
-They should never hand-maintain the full generated mapping or duplicate a
-canonical operation table in every language.
+SDK maintainers should maintain only the behavior their repository owns, reuse existing service and code-generation models, and review concise generated summaries. They should never hand-maintain complete operation tables or generated mapping YAML.
 
-The AWS SDK for Python proof uses three owner-aligned artifacts because boto3,
-botocore, and s3transfer version and publish different public behavior. The
-same principle applies when one SDK repository owns all layers: references can
-remain internal to one generated artifact when the version owner is genuinely
-the same.
+The Python proof uses three owner-aligned artifacts because boto3, botocore, and s3transfer version and publish different public behavior. An SDK repository that owns all equivalent layers may keep those references within one artifact.
 
-## What is human-authored
+## Shared service semantics
 
-### Extension-aligned service semantics
+AWS's public Smithy model supplies the authoritative S3 operation and shape inventory. [`../model/runtimeconditions.smithy.yaml`](../model/runtimeconditions.smithy.yaml) supplies only Runtime Conditions decisions that cannot be inferred safely: extension identity, default bucket classification, service and Object Lambda exceptions, resource identity paths, source/destination roles, secondary buckets, and the reviewed operation fingerprint.
 
-[`../model/semantic-annotations.json`](../model/semantic-annotations.json)
-contains the decisions the botocore service model cannot safely infer:
+The shared compiler generates the immutable extension definition and language-neutral service mapping once. A new SDK language consumes that output and does not reproduce S3 semantics by hand.
 
-- ordinary bucket, service-level, and Object Lambda scopes;
-- primary source/destination roles;
-- secondary bucket references in nested request shapes;
-- the reviewed service identity and operation fingerprint.
+## Python-owned semantics
 
-It contains canonical S3 operation names, not Python method names. The complete
-116-operation language-neutral mapping is generated from this small overlay and
-the service model.
+[`../model/botocore-sdk-annotations.yaml`](../model/botocore-sdk-annotations.yaml) maps deprecated botocore compatibility methods absent from the authoritative Smithy closure to canonical extension operations. An SDK alias remains SDK metadata and does not expand extension vocabulary.
 
-### boto3 handwritten surfaces
+[`../model/boto3-wrapper-annotations.yaml`](../model/boto3-wrapper-annotations.yaml) contains only factories, aliases, injected client and resource transfer helpers, transfer-class methods, and handwritten resource loads absent from boto3's resource model.
 
-[`../model/boto3-wrapper-annotations.json`](../model/boto3-wrapper-annotations.json)
-contains only behavior absent from boto3's resource model:
+[`../model/s3transfer-semantic-annotations.yaml`](../model/s3transfer-semantic-annotations.yaml) contains public transfer entrypoints grouped into logical calls, their argument bindings, receiver-held configuration, classic and CRT implementations, mutually exclusive paths, and conditional canonical operation references.
 
-- top-level and Session factory spellings, positional/keyword selectors, and
-  the public `boto3.Session` alias;
-- five injected client transfer helpers;
-- ten injected Bucket/Object transfer helpers;
-- two `boto3.s3.transfer.S3Transfer` methods;
-- the two handwritten resource-load operations.
+Runtime branches remain behavioral mapping facts. They do not become profile coverage fields or unresolved observations; profilers and their callers decide how to handle source that cannot prove a branch.
 
-The generator obtains the 18 resources, 71 actions, 37 relations, four
-collections, and six resource waiters from boto3's existing resource model.
-
-### s3transfer behavior
-
-[`../model/s3transfer-semantic-annotations.json`](../model/s3transfer-semantic-annotations.json)
-contains nine public entrypoints grouped into four logical calls: managed
-upload, download, copy, and delete. It records their argument bindings and
-owner-qualified botocore operations.
-
-Runtime branches are represented honestly. A classic upload can use a
-single-part path, a successful multipart path, or a multipart cleanup path; a
-CRT upload uses `PutObject`. Multipart-copy tagging and annotation calls retain
-their argument and derived-data predicates. The mapping does not flatten those
-paths into a claim that every operation always occurs.
-
-Transfer configuration sometimes arrives when a manager object is constructed
-rather than when an upload/download/copy method is called. `receiverContext`
-preserves that constructor binding so implementation and multipart selection do
-not lose an input merely because it lives on receiver state.
-
-These predicates describe SDK execution behavior. They do not declare mapping
-coverage or an unresolved profiler observation. Consumers decide how to handle
-source that cannot prove a branch.
-
-## What is generated
-
-[`../tools/generate_owner_mappings.py`](../tools/generate_owner_mappings.py)
-reads SDK models and the reviewed overlays as static data. It emits:
-
-1. `botocore.aws.s3`, which owns canonical operations, client spellings,
-   paginators, waiters, and extension Condition templates;
-2. `s3transfer.aws.s3`, which owns public transfer entrypoints and references
-   botocore operations;
-3. `boto3.aws.s3`, which owns factories, resources, and wrapper bindings and
-   references botocore and s3transfer.
-
-The dependency chain is explicit:
+## Generated owner graph
 
 ```text
 boto3 factory/resource/wrapper
   -> botocore client operation or waiter
-  -> AWS S3 extension Condition
+  -> exact AWS S3 extension release
 
 boto3 managed-transfer wrapper
   -> s3transfer logical call and selected execution path
   -> botocore client operations
-  -> AWS S3 extension Conditions
+  -> exact AWS S3 extension release
 ```
 
-The runtime SDK does not import or execute Runtime Conditions code.
+Each mapping records its owning distribution, exact version, and SDK mapping-contract version. The terminal botocore service mapping records the target extension identifier and semantic digest plus the authoritative service-mapping digest; higher-level mappings reach that contract through required owner-qualified dependencies. The complete directed graph is validated recursively.
 
 ## First repository integration
 
-For each owning Python distribution, a maintainer would:
+For each owning distribution, a maintainer would:
 
-1. Add or adopt the relevant reviewed semantic overlay.
-2. Enable the mapping projection in the repository's existing model/code-
-   generation workflow.
-3. Add two static package-data patterns for
-   `runtimeconditions/index.json` and `runtimeconditions/mappings/*.json`.
-4. Run the source and recursive-reference validation gates.
-5. Review the semantic-overlay diff, generated count/digest summary, and
-   representative resolution fixtures.
-6. Publish the static files inside the normal SDK artifact. An additional
-   artifact may also be published, but is not required by this proof.
+1. Add or adopt the small reviewed overlay for behavior absent from generated models.
+2. Enable the Runtime Conditions projection in the repository's existing model or code-generation workflow.
+3. Include `runtimeconditions/index.yaml` and `runtimeconditions/mappings/*.yaml` as static package data or in an automatically installed version-aligned companion artifact.
+4. Run authoritative-extension alignment, SDK-source, recursive-reference, package, and representative application gates.
+5. Review only the authored overlay diff, focused generated summary, representative profile change, and adapter-facing impact.
+6. Publish static metadata through the SDK's normal release lifecycle without adding a Runtime Conditions runtime dependency.
 
-The exact Python packaging changes, staging commands, local-wheel installation,
-and measured results are in
-[`../../../sdk/authorship/aws-python`](../../../sdk/authorship/aws-python/).
+Application source and runtime behavior remain unchanged.
 
 ## Normal maintenance
 
-- Distribution versions are derived from immutable source and written into generated metadata. They are not maintained in semantic overlays, so a routine release does not manufacture an authored version-only diff.
-- An unchanged operation set regenerates without service-semantic work.
-- An added or removed service operation stops at the fingerprint gate for a
-  concise semantic review.
-- A routine generated Python spelling or resource-model change updates
-  mechanically and is checked against the pinned source.
-- A handwritten boto3 wrapper signature or delegate change stops source
-  validation until its small overlay entry is updated.
-- An s3transfer implementation change stops if its public signature or actual
-  service-operation set differs from the reviewed logical call.
-- A new language consumes the canonical service mapping and its own generator
-  model. It does not reproduce S3 semantics by hand.
+- A package-only release regenerates automatically; distribution versions are derived from immutable source rather than maintained in semantic overlays.
+- A Smithy operation or resource-semantic change is routed as `extension-review-required` before an SDK mapping update can be accepted.
+- A generated language spelling or model-surface change updates mechanically and is checked against exact source.
+- A handwritten wrapper signature, delegate, or implementation-path change is routed as `sdk-review-required` with the affected overlay and source diagnostic.
+- An automation or unsupported-input failure is `invalid` and is not counted as extension- or SDK-maintainer work.
+- Repeated observations of one semantic fingerprint are deduplicated into one maintenance item.
 
-The generated JSON is not a human review surface. Review is the authored
-semantic diff, source-model diff, count/fingerprint change, and fixture output.
+An older SDK may map a subset of operations defined by an additive extension release. The extension never lists every consuming language or SDK version, and maintainers never maintain a Cartesian compatibility matrix.
 
 ## Application developer experience
 
-For SDK-owned metadata, the application developer:
+The application developer uses and versions the SDK normally, runs the language profiler locally or in CI, and reviews the generated profile when desired. Recognized SDK calls require no Runtime Conditions dependency, mapping file, evidence file, compatibility lock, or source annotation.
 
-1. Uses and versions the SDK normally.
-2. Runs the language profiler locally or in CI.
-3. Reviews the generated profile when desired.
+When mapping metadata is absent or static detection is incomplete, extension-provided no-op declarations and project-local overrides remain the escape hatches. Application developers are not asked to become SDK mapping authors.
 
-There is no new application dependency, mapping file, evidence file,
-compatibility lock, or source annotation for recognized SDK calls. If no
-mapping exists or detection is incomplete, the extension's no-op binding and a
-project-local override remain the escape hatches; the application developer is
-not asked to author an SDK mapping.
+## Decisions outside SDK mapping authorship
 
-## What the SDK author does not decide
+SDK mappings do not decide how incomplete detection is handled, whether CI accepts a profile, what an adapter provisions, how IAM is rendered, which credential source is used, which Region or account is selected, which environment variables exist, or which compatible provider implementation fulfills a Condition.
 
-The mapping does not decide:
+## Current proof boundary
 
-- how incomplete detection is handled;
-- whether CI accepts or rejects a profile;
-- what an adapter provisions or how it renders IAM;
-- credentials, accounts, Regions, endpoints, or fixed environment variables;
-- which compatible implementation a downstream platform uses;
-- project-local override precedence.
-
-Those belong to profiler behavior, organizational policy, the extension, or a
-downstream adapter.
-
-## Current gate
-
-Packaging, recursive discovery, version ownership, source validation, and
-unchanged-application regression tests are proved. The remaining architecture
-review is whether real maintainers accept the three authored overlays and the
-execution-path representation as a sustainable burden.
-
-The current language profilers still do not consume this candidate. Expanding a
-profiler remains a separate decision, as requested for this investigation.
+Authoritative Smithy generation, immutable extension identity, Python owner alignment, local packaging, static discovery, recursive validation, and unchanged application fixtures are implemented. The current language profilers still do not consume the package mappings; expanding a profiler remains a separate design decision.

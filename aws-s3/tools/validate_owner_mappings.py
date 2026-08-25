@@ -4,17 +4,16 @@
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
+
+from serialization import read_document
 
 
-def read_json(path: Path) -> dict[str, Any]:
-    with path.open(encoding="utf-8") as stream:
-        value = json.load(stream)
-    if not isinstance(value, dict):
-        raise ValueError(f"{path}: expected a JSON object")
-    return value
+SDK_MAPPING_API_VERSION = "runtimeconditions.io/sdk-mapping/v1alpha1"
+SDK_MAPPING_KIND = "RuntimeConditionsSDKMapping"
+SERVICE_MAPPING_API_VERSION = "runtimeconditions.io/service-mapping/v1alpha1"
+SERVICE_MAPPING_KIND = "RuntimeConditionsServiceMapping"
 
 
 def walk(value: Any) -> Iterable[dict[str, Any]]:
@@ -72,9 +71,16 @@ def calls(mapping: dict[str, Any]) -> set[str]:
 
 
 def validate_mapping(
-    mapping: dict[str, Any], registry: dict[tuple[str, str], dict[str, Any]]
+    mapping: dict[str, Any],
+    registry: dict[tuple[str, str], dict[str, Any]],
+    service_mapping: Optional[dict[str, Any]],
 ) -> None:
     mapping_key = key(mapping)
+    if mapping.get("apiVersion") != SDK_MAPPING_API_VERSION or mapping.get("kind") != SDK_MAPPING_KIND:
+        raise ValueError(f"{mapping_key}: unsupported SDK mapping document contract")
+    metadata = mapping.get("metadata", {})
+    if metadata.get("language") != "python":
+        raise ValueError(f"{mapping_key}: expected Python mapping metadata")
     declared_dependencies = {
         (dependency["distribution"], dependency["mapping"])
         for dependency in mapping.get("dependencies", [])
@@ -126,6 +132,11 @@ def validate_mapping(
 
     operation_names = operations(mapping)
     if operation_names:
+        extension_dependencies = [
+            dependency for dependency in mapping.get("dependencies", []) if dependency.get("kind") == "extension"
+        ]
+        if len(extension_dependencies) != 1:
+            raise ValueError(f"{mapping_key}: terminal operation mapping must declare exactly one extension release")
         methods = mapping.get("python", {}).get("client", {}).get("methods", [])
         method_operations = {item.get("operation") for item in methods}
         if method_operations != operation_names:
@@ -140,6 +151,31 @@ def validate_mapping(
             for condition in operation.get("conditions", []):
                 if condition.get("operation", {}).get("name") != operation.get("name"):
                     raise ValueError(f"{mapping_key}: Condition template operation mismatch")
+        if service_mapping is not None:
+            expected_extension = service_mapping["extension"]
+            if extension_dependencies[0] != {"kind": "extension", **expected_extension}:
+                raise ValueError(f"{mapping_key}: extension release coordinates do not match the service mapping")
+            if mapping.get("extension") != expected_extension:
+                raise ValueError(f"{mapping_key}: embedded extension coordinates do not match the service mapping")
+            service_metadata = service_mapping["metadata"]
+            expected_metadata = {
+                "service": service_metadata["service"],
+                "serviceId": service_metadata["serviceId"],
+                "serviceShape": service_metadata["serviceShape"],
+                "serviceVersion": service_metadata["serviceVersion"],
+                "operationNamesSha256": service_metadata["operationNamesSha256"],
+                "serviceMappingSemanticSha256": service_metadata["semanticSha256"],
+            }
+            for field, expected in expected_metadata.items():
+                if metadata.get(field) != expected:
+                    raise ValueError(f"{mapping_key}: metadata.{field} does not match the service mapping")
+            canonical = {item["name"]: item for item in service_mapping.get("operations", [])}
+            unknown = sorted(operation_names - set(canonical))
+            if unknown:
+                raise ValueError(f"{mapping_key}: operations absent from selected extension semantics: {unknown}")
+            for operation in mapping.get("operations", []):
+                if operation != canonical[operation["name"]]:
+                    raise ValueError(f"{mapping_key}: canonical operation projection differs for {operation['name']}")
 
 
 def dependency_order(
@@ -174,18 +210,24 @@ def main() -> None:
     parser.add_argument("--mapping", type=Path, action="append", required=True)
     parser.add_argument("--root-distribution", required=True)
     parser.add_argument("--root-mapping", required=True)
+    parser.add_argument("--service-mapping", type=Path)
     args = parser.parse_args()
+
+    service_mapping = read_document(args.service_mapping) if args.service_mapping else None
+    if service_mapping is not None:
+        if service_mapping.get("apiVersion") != SERVICE_MAPPING_API_VERSION or service_mapping.get("kind") != SERVICE_MAPPING_KIND:
+            raise ValueError("unsupported language-neutral service mapping document contract")
 
     registry: dict[tuple[str, str], dict[str, Any]] = {}
     for path in args.mapping:
-        mapping = read_json(path)
+        mapping = read_document(path)
         mapping_key = key(mapping)
         if mapping_key in registry:
             raise ValueError(f"duplicate mapping identity: {mapping_key}")
         registry[mapping_key] = mapping
 
     for mapping in registry.values():
-        validate_mapping(mapping, registry)
+        validate_mapping(mapping, registry, service_mapping)
 
     root = (args.root_distribution, args.root_mapping)
     order = dependency_order(root, registry)
