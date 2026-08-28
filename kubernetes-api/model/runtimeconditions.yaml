@@ -1,0 +1,36 @@
+schemaVersion: 1
+extension:
+  id: https://runtimeconditions.io/extensions/kubernetes-api/0.1.0/runtimeconditions.extension.yaml
+  version: 0.1.0
+  conditionKind: kubernetes
+  interfaceType: api
+reviewedInventory:
+  operationCount: 1123
+  operationIdsSha256: f32fcf3c6d90729c067ef7df8b7ece4e9c9cc52a7a29958d1df6519e0471e15d
+  semanticSha256: 0ea1345e622231970d47bd80a0babc84a7425edf17596673e9112882b0b2a701
+resourceOperations:
+  verbs:
+  - connect
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+  scopes:
+  - all_namespaces
+  - cluster
+  - namespaced
+  connectRequiresHttpMethod: true
+nonResourceOperations:
+  httpMethods:
+  - delete
+  - get
+  - head
+  - options
+  - patch
+  - post
+  - put
+  - trace
