@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,15 @@ from serialization import read_document, write_yaml
 
 API_VERSION = "runtimeconditions.io/sdk-mapping/v1alpha1"
 MAPPING_KIND = "RuntimeConditionsSDKMapping"
+
+
+def semantic_sha256(value: Any) -> str:
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def add_mapping_semantic_digest(mapping: dict[str, Any]) -> None:
+    mapping["metadata"]["semanticSha256"] = semantic_sha256({"operations": mapping.get("operations", []), "python": mapping.get("python", {})})
 
 
 def python_name(name: str) -> str:
@@ -573,6 +583,9 @@ def main() -> None:
     }
     boto3 = boto3_mapping(resource, boto3_annotations, args.boto3_version, call_arguments)
     boto3 = canonicalize_operation_refs(boto3, aliases)
+
+    for mapping in (botocore, transfer, boto3):
+        add_mapping_semantic_digest(mapping)
 
     write_yaml(args.botocore_output, botocore)
     write_yaml(args.s3transfer_output, transfer)

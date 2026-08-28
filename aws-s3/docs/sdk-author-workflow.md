@@ -73,4 +73,4 @@ SDK mappings do not decide how incomplete detection is handled, whether CI accep
 
 ## Current proof boundary
 
-Authoritative Smithy generation, immutable extension identity, Python owner alignment, local packaging, static discovery, recursive validation, and unchanged application fixtures are implemented. The current language profilers still do not consume the package mappings; expanding a profiler remains a separate design decision.
+Authoritative Smithy generation, immutable extension identity, Python owner alignment, local packaging, static discovery, recursive validation, and unchanged application fixtures are implemented. The Python profiler now consumes the three owner mappings across all seven applications without adding SDK annotations or application declarations; the exact supported constructs and incomplete-source decisions remain an experimental consumer contract rather than a cross-language standard.

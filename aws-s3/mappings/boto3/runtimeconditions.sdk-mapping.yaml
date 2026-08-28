@@ -6,6 +6,7 @@ metadata:
   distributionVersion: 1.43.70
   language: python
   service: s3
+  semanticSha256: 0e7942c78cf4d835f8189e62597d907a311422852b929d7fa2c85fcb2a3a8804
 dependencies:
 - kind: sdkMapping
   distribution: botocore

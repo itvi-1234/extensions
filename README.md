@@ -15,6 +15,7 @@ Extension release identity, immutability, provenance, and SDK compatibility are 
 - `common-integrations/` contains common API, datastore, and cache vocabulary plus Go, Java, and Python declaration packages.
 - `env-configuration/` contains workload configuration input vocabulary plus Go, Java, and Python declaration packages.
 - `aws-s3/` contains the Amazon S3 extension candidate, authoritative Smithy overlay, generated semantic release, Python SDK mappings, and historical maintenance evidence.
+- `kubernetes-api/` contains the authoritative OpenAPI projection, accepted local Kubernetes API extension release, language-neutral service mapping, and maintenance inputs used by official client mappings.
 - `smithy-runtime-conditions/` contains reusable Runtime Conditions Smithy traits and the external compiler used to prove the workflow against AWS's public models before proposing an internal AWS generator integration.
 
 ## Local validation

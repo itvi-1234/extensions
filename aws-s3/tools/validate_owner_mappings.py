@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
@@ -14,6 +16,11 @@ SDK_MAPPING_API_VERSION = "runtimeconditions.io/sdk-mapping/v1alpha1"
 SDK_MAPPING_KIND = "RuntimeConditionsSDKMapping"
 SERVICE_MAPPING_API_VERSION = "runtimeconditions.io/service-mapping/v1alpha1"
 SERVICE_MAPPING_KIND = "RuntimeConditionsServiceMapping"
+
+
+def semantic_sha256(value: Any) -> str:
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def walk(value: Any) -> Iterable[dict[str, Any]]:
@@ -81,6 +88,8 @@ def validate_mapping(
     metadata = mapping.get("metadata", {})
     if metadata.get("language") != "python":
         raise ValueError(f"{mapping_key}: expected Python mapping metadata")
+    if metadata.get("semanticSha256") != semantic_sha256({"operations": mapping.get("operations", []), "python": mapping.get("python", {})}):
+        raise ValueError(f"{mapping_key}: mapping semantic digest does not match mapping body")
     declared_dependencies = {
         (dependency["distribution"], dependency["mapping"])
         for dependency in mapping.get("dependencies", [])

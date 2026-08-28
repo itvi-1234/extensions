@@ -67,5 +67,5 @@ The existing Python packaging proof stages the owner mappings into local boto3, 
 
 - The Smithy traits and normalized service-mapping contract are implemented externally but not yet packaged as a JVM `SmithyBuildPlugin` for AWS-owned integration.
 - Cross-service request dependencies remain blocked until their target extensions and reviewed traits exist.
-- The profiler repositories do not yet consume installed SDK mappings.
+- Python profiler consumption is proved for the seven accepted AWS fixtures, while paginator, collection, transfer-class, and precise runtime-path selection remain outside that proof.
 - Historical model inventory measures review opportunities; maintainer interview evidence is still required to measure the human cost of each semantic interruption.

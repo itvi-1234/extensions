@@ -13,6 +13,7 @@ metadata:
   serviceMappingSemanticSha256: 54a92a0dc07c238ac56b125ca74f5bdcafa2741a45afd2440d91723dc865763d
   sdkOperationCount: 116
   sdkCanonicalOperationNamesSha256: 209771cb0915567090f615e18dacf594436fc6aadc2867f56535ae0db7935436
+  semanticSha256: ca6b8b7d7594dd4ead3ea79c95206db553d8929671ff3b64c4be15a29dee6e36
 dependencies:
 - kind: extension
   id: https://runtimeconditions.io/extensions/aws-s3/0.1.0/runtimeconditions.extension.yaml

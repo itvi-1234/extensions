@@ -8,4 +8,4 @@ It deliberately does not copy botocore's canonical operation templates or s3tran
 
 Maintainers review the boto3 resource-model diff, [`../../model/boto3-wrapper-annotations.yaml`](../../model/boto3-wrapper-annotations.yaml), source-validation output, and representative resolutions. The generated file is not a line-by-line review surface.
 
-The local wheel proof, recursive discovery, and release-maintenance tools live under [`../../../../sdk/authorship/aws-python`](../../../../sdk/authorship/aws-python/). No profiler consumes this mapping yet.
+The local wheel proof, recursive discovery, release-maintenance tools, and seven-application profiler integration live under [`../../../../sdk/authorship/aws-python`](../../../../sdk/authorship/aws-python/).
