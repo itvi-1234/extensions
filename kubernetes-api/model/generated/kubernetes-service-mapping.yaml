@@ -7,7 +7,8 @@ metadata:
   operationCount: 1123
   operationIdsSha256: f32fcf3c6d90729c067ef7df8b7ece4e9c9cc52a7a29958d1df6519e0471e15d
   sourceInventorySemanticSha256: 0ea1345e622231970d47bd80a0babc84a7425edf17596673e9112882b0b2a701
-  semanticSha256: 4596f8c4d67c398130424617f76d1bad10418d3ddb24bf2ff23942f5a7a097cd
+  resourceCount: 95
+  semanticSha256: 55e5307e0d614988f68742801ee384d6b0da8c9ee292af9e26da538d8060f59f
   source:
     repository: https://github.com/kubernetes/kubernetes.git
     revision: 24e2b02af5543d7910c2bb074c7264df5a8f0467
@@ -14658,3 +14659,2768 @@ operations:
       apiVersion: v1beta1
       resource: storageversionmigrations
       scope: cluster
+resources:
+- apiGroup: ''
+  apiVersion: v1
+  kind: Binding
+  resource: bindings
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: ComponentStatus
+  resource: componentstatuses
+  namespaced: false
+  operations:
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+- apiGroup: ''
+  apiVersion: v1
+  kind: ConfigMap
+  resource: configmaps
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: Endpoints
+  resource: endpoints
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: Event
+  resource: events
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: LimitRange
+  resource: limitranges
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: Namespace
+  resource: namespaces
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: ''
+  apiVersion: v1
+  kind: Node
+  resource: nodes
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: ''
+  apiVersion: v1
+  kind: PersistentVolume
+  resource: persistentvolumes
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: ''
+  apiVersion: v1
+  kind: PersistentVolumeClaim
+  resource: persistentvolumeclaims
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: Pod
+  resource: pods
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: PodTemplate
+  resource: podtemplates
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: ReplicationController
+  resource: replicationcontrollers
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: ResourceQuota
+  resource: resourcequotas
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: Secret
+  resource: secrets
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: Service
+  resource: services
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: ''
+  apiVersion: v1
+  kind: ServiceAccount
+  resource: serviceaccounts
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: admissionregistration.k8s.io
+  apiVersion: v1
+  kind: MutatingAdmissionPolicy
+  resource: mutatingadmissionpolicies
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: admissionregistration.k8s.io
+  apiVersion: v1
+  kind: MutatingAdmissionPolicyBinding
+  resource: mutatingadmissionpolicybindings
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: admissionregistration.k8s.io
+  apiVersion: v1
+  kind: MutatingWebhookConfiguration
+  resource: mutatingwebhookconfigurations
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: admissionregistration.k8s.io
+  apiVersion: v1
+  kind: ValidatingAdmissionPolicy
+  resource: validatingadmissionpolicies
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: admissionregistration.k8s.io
+  apiVersion: v1
+  kind: ValidatingAdmissionPolicyBinding
+  resource: validatingadmissionpolicybindings
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: admissionregistration.k8s.io
+  apiVersion: v1
+  kind: ValidatingWebhookConfiguration
+  resource: validatingwebhookconfigurations
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: admissionregistration.k8s.io
+  apiVersion: v1alpha1
+  kind: MutatingAdmissionPolicy
+  resource: mutatingadmissionpolicies
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: admissionregistration.k8s.io
+  apiVersion: v1alpha1
+  kind: MutatingAdmissionPolicyBinding
+  resource: mutatingadmissionpolicybindings
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: admissionregistration.k8s.io
+  apiVersion: v1beta1
+  kind: MutatingAdmissionPolicy
+  resource: mutatingadmissionpolicies
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: admissionregistration.k8s.io
+  apiVersion: v1beta1
+  kind: MutatingAdmissionPolicyBinding
+  resource: mutatingadmissionpolicybindings
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: apiextensions.k8s.io
+  apiVersion: v1
+  kind: CustomResourceDefinition
+  resource: customresourcedefinitions
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: apiregistration.k8s.io
+  apiVersion: v1
+  kind: APIService
+  resource: apiservices
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: apps
+  apiVersion: v1
+  kind: ControllerRevision
+  resource: controllerrevisions
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: apps
+  apiVersion: v1
+  kind: DaemonSet
+  resource: daemonsets
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: apps
+  apiVersion: v1
+  kind: Deployment
+  resource: deployments
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: apps
+  apiVersion: v1
+  kind: ReplicaSet
+  resource: replicasets
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: apps
+  apiVersion: v1
+  kind: StatefulSet
+  resource: statefulsets
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: authentication.k8s.io
+  apiVersion: v1
+  kind: SelfSubjectReview
+  resource: selfsubjectreviews
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+- apiGroup: authentication.k8s.io
+  apiVersion: v1
+  kind: TokenReview
+  resource: tokenreviews
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+- apiGroup: authorization.k8s.io
+  apiVersion: v1
+  kind: LocalSubjectAccessReview
+  resource: localsubjectaccessreviews
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+- apiGroup: authorization.k8s.io
+  apiVersion: v1
+  kind: SelfSubjectAccessReview
+  resource: selfsubjectaccessreviews
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+- apiGroup: authorization.k8s.io
+  apiVersion: v1
+  kind: SelfSubjectRulesReview
+  resource: selfsubjectrulesreviews
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+- apiGroup: authorization.k8s.io
+  apiVersion: v1
+  kind: SubjectAccessReview
+  resource: subjectaccessreviews
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+- apiGroup: autoscaling
+  apiVersion: v1
+  kind: HorizontalPodAutoscaler
+  resource: horizontalpodautoscalers
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: autoscaling
+  apiVersion: v2
+  kind: HorizontalPodAutoscaler
+  resource: horizontalpodautoscalers
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: batch
+  apiVersion: v1
+  kind: CronJob
+  resource: cronjobs
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: batch
+  apiVersion: v1
+  kind: Job
+  resource: jobs
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: certificates.k8s.io
+  apiVersion: v1
+  kind: CertificateSigningRequest
+  resource: certificatesigningrequests
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: certificates.k8s.io
+  apiVersion: v1alpha1
+  kind: ClusterTrustBundle
+  resource: clustertrustbundles
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: certificates.k8s.io
+  apiVersion: v1beta1
+  kind: ClusterTrustBundle
+  resource: clustertrustbundles
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: certificates.k8s.io
+  apiVersion: v1beta1
+  kind: PodCertificateRequest
+  resource: podcertificaterequests
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: coordination.k8s.io
+  apiVersion: v1
+  kind: Lease
+  resource: leases
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: coordination.k8s.io
+  apiVersion: v1alpha2
+  kind: LeaseCandidate
+  resource: leasecandidates
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: coordination.k8s.io
+  apiVersion: v1beta1
+  kind: LeaseCandidate
+  resource: leasecandidates
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: discovery.k8s.io
+  apiVersion: v1
+  kind: EndpointSlice
+  resource: endpointslices
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: events.k8s.io
+  apiVersion: v1
+  kind: Event
+  resource: events
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: flowcontrol.apiserver.k8s.io
+  apiVersion: v1
+  kind: FlowSchema
+  resource: flowschemas
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: flowcontrol.apiserver.k8s.io
+  apiVersion: v1
+  kind: PriorityLevelConfiguration
+  resource: prioritylevelconfigurations
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: internal.apiserver.k8s.io
+  apiVersion: v1alpha1
+  kind: StorageVersion
+  resource: storageversions
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: networking.k8s.io
+  apiVersion: v1
+  kind: IPAddress
+  resource: ipaddresses
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: networking.k8s.io
+  apiVersion: v1
+  kind: Ingress
+  resource: ingresses
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: networking.k8s.io
+  apiVersion: v1
+  kind: IngressClass
+  resource: ingressclasses
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: networking.k8s.io
+  apiVersion: v1
+  kind: NetworkPolicy
+  resource: networkpolicies
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: networking.k8s.io
+  apiVersion: v1
+  kind: ServiceCIDR
+  resource: servicecidrs
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: networking.k8s.io
+  apiVersion: v1beta1
+  kind: IPAddress
+  resource: ipaddresses
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: networking.k8s.io
+  apiVersion: v1beta1
+  kind: ServiceCIDR
+  resource: servicecidrs
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: node.k8s.io
+  apiVersion: v1
+  kind: RuntimeClass
+  resource: runtimeclasses
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: policy
+  apiVersion: v1
+  kind: PodDisruptionBudget
+  resource: poddisruptionbudgets
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: rbac.authorization.k8s.io
+  apiVersion: v1
+  kind: ClusterRole
+  resource: clusterroles
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: rbac.authorization.k8s.io
+  apiVersion: v1
+  kind: ClusterRoleBinding
+  resource: clusterrolebindings
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: rbac.authorization.k8s.io
+  apiVersion: v1
+  kind: Role
+  resource: roles
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: rbac.authorization.k8s.io
+  apiVersion: v1
+  kind: RoleBinding
+  resource: rolebindings
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: resource.k8s.io
+  apiVersion: v1
+  kind: DeviceClass
+  resource: deviceclasses
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: resource.k8s.io
+  apiVersion: v1
+  kind: ResourceClaim
+  resource: resourceclaims
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: resource.k8s.io
+  apiVersion: v1
+  kind: ResourceClaimTemplate
+  resource: resourceclaimtemplates
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: resource.k8s.io
+  apiVersion: v1
+  kind: ResourceSlice
+  resource: resourceslices
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: resource.k8s.io
+  apiVersion: v1alpha3
+  kind: DeviceTaintRule
+  resource: devicetaintrules
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: resource.k8s.io
+  apiVersion: v1alpha3
+  kind: ResourcePoolStatusRequest
+  resource: resourcepoolstatusrequests
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: resource.k8s.io
+  apiVersion: v1beta1
+  kind: DeviceClass
+  resource: deviceclasses
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: resource.k8s.io
+  apiVersion: v1beta1
+  kind: ResourceClaim
+  resource: resourceclaims
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: resource.k8s.io
+  apiVersion: v1beta1
+  kind: ResourceClaimTemplate
+  resource: resourceclaimtemplates
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: resource.k8s.io
+  apiVersion: v1beta1
+  kind: ResourceSlice
+  resource: resourceslices
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: resource.k8s.io
+  apiVersion: v1beta2
+  kind: DeviceClass
+  resource: deviceclasses
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: resource.k8s.io
+  apiVersion: v1beta2
+  kind: DeviceTaintRule
+  resource: devicetaintrules
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: resource.k8s.io
+  apiVersion: v1beta2
+  kind: ResourceClaim
+  resource: resourceclaims
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: resource.k8s.io
+  apiVersion: v1beta2
+  kind: ResourceClaimTemplate
+  resource: resourceclaimtemplates
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: resource.k8s.io
+  apiVersion: v1beta2
+  kind: ResourceSlice
+  resource: resourceslices
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: scheduling.k8s.io
+  apiVersion: v1
+  kind: PriorityClass
+  resource: priorityclasses
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: scheduling.k8s.io
+  apiVersion: v1alpha2
+  kind: PodGroup
+  resource: podgroups
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: scheduling.k8s.io
+  apiVersion: v1alpha2
+  kind: Workload
+  resource: workloads
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: storage.k8s.io
+  apiVersion: v1
+  kind: CSIDriver
+  resource: csidrivers
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: storage.k8s.io
+  apiVersion: v1
+  kind: CSINode
+  resource: csinodes
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: storage.k8s.io
+  apiVersion: v1
+  kind: CSIStorageCapacity
+  resource: csistoragecapacities
+  namespaced: true
+  operations:
+  - verb: create
+    scopes:
+    - namespaced
+  - verb: delete
+    scopes:
+    - namespaced
+  - verb: deletecollection
+    scopes:
+    - namespaced
+  - verb: get
+    scopes:
+    - namespaced
+  - verb: list
+    scopes:
+    - all_namespaces
+    - namespaced
+  - verb: patch
+    scopes:
+    - namespaced
+  - verb: update
+    scopes:
+    - namespaced
+  - verb: watch
+    scopes:
+    - all_namespaces
+    - namespaced
+- apiGroup: storage.k8s.io
+  apiVersion: v1
+  kind: StorageClass
+  resource: storageclasses
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: storage.k8s.io
+  apiVersion: v1
+  kind: VolumeAttachment
+  resource: volumeattachments
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: storage.k8s.io
+  apiVersion: v1
+  kind: VolumeAttributesClass
+  resource: volumeattributesclasses
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: storage.k8s.io
+  apiVersion: v1beta1
+  kind: VolumeAttributesClass
+  resource: volumeattributesclasses
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster
+- apiGroup: storagemigration.k8s.io
+  apiVersion: v1beta1
+  kind: StorageVersionMigration
+  resource: storageversionmigrations
+  namespaced: false
+  operations:
+  - verb: create
+    scopes:
+    - cluster
+  - verb: delete
+    scopes:
+    - cluster
+  - verb: deletecollection
+    scopes:
+    - cluster
+  - verb: get
+    scopes:
+    - cluster
+  - verb: list
+    scopes:
+    - cluster
+  - verb: patch
+    scopes:
+    - cluster
+  - verb: update
+    scopes:
+    - cluster
+  - verb: watch
+    scopes:
+    - cluster

@@ -9,11 +9,12 @@ The approved Kubernetes operation forms compile into an immutable extension rele
 - Extension: `https://runtimeconditions.io/extensions/kubernetes-api/0.1.0/runtimeconditions.extension.yaml`
 - Version: `0.1.0`
 - Extension semantic SHA-256: `b051163962d807642703a6626f1f9297de6681fb5773182c50e3dbde1774d62e`
-- Service-mapping semantic SHA-256: `4596f8c4d67c398130424617f76d1bad10418d3ddb24bf2ff23942f5a7a097cd`
+- Service-mapping semantic SHA-256: `55e5307e0d614988f68742801ee384d6b0da8c9ee292af9e26da538d8060f59f`
 - Authoritative operations: 1123
 - Resource operations: 1058
 - Non-resource operations: 65
 - Distinct condition operations: 1015
+- Discoverable built-in resource selectors: 95
 
 ## Preserved semantics
 
@@ -23,6 +24,7 @@ The approved Kubernetes operation forms compile into an immutable extension rele
 - Connect operations additionally retain HTTP method rather than collapsing distinct connect endpoints.
 - Non-resource operations retain canonical path and HTTP method.
 - The resource-coordinate schema remains open to valid CRD group, version, resource, and subresource values; the built-in inventory is not a closed vocabulary enum.
+- The service mapping includes a generated, language-neutral GVK-to-resource discovery catalog for built-in resources. It does not claim that unmodeled CRDs can be resolved without live discovery evidence.
 
 ## Maintainer review surface
 

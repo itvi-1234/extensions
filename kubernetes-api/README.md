@@ -6,7 +6,7 @@
 
 This directory defines the semantic ground truth that an official Kubernetes client mapping targets. It begins with Kubernetes v1.36.2 and the official Python client 36.0.3, while representing Kubernetes API requirements independently of a particular client language or generated release.
 
-[`releases/0.1.0/runtimeconditions.extension.yaml`](releases/0.1.0/runtimeconditions.extension.yaml) is the immutable local release produced from the approved [`model/runtimeconditions.yaml`](model/runtimeconditions.yaml) semantic contract. [`model/generated/extension-review.md`](model/generated/extension-review.md) is its human review surface; the 1,123-operation service mapping is deterministic machine output.
+[`releases/0.1.0/runtimeconditions.extension.yaml`](releases/0.1.0/runtimeconditions.extension.yaml) is the immutable local release produced from the approved [`model/runtimeconditions.yaml`](model/runtimeconditions.yaml) semantic contract. [`model/generated/extension-review.md`](model/generated/extension-review.md) is its human review surface; the 1,123-operation service mapping and 95-entry built-in resource selector catalog are deterministic machine outputs.
 
 ## Why this case matters
 
@@ -26,7 +26,7 @@ The initial unchanged application is [`../../sdk/kubernetes/python/configmap-rea
 
 [`tools/project_openapi.py`](tools/project_openapi.py) validates and projects the complete authoritative model into [`model/generated/kubernetes-v1.36-operation-inventory.yaml`](model/generated/kubernetes-v1.36-operation-inventory.yaml). Humans review [`model/generated/openapi-review.md`](model/generated/openapi-review.md), not the 1,123-entry generated inventory.
 
-[`tools/compile_extension.py`](tools/compile_extension.py) then validates every projected operation against the approved open CRD-compatible schema and emits the immutable extension plus [`model/generated/kubernetes-service-mapping.yaml`](model/generated/kubernetes-service-mapping.yaml). Resource, connect, and non-resource operations remain distinct validated forms; connect operations preserve HTTP method.
+[`tools/compile_extension.py`](tools/compile_extension.py) then validates every projected operation against the approved open CRD-compatible schema and emits the immutable extension plus [`model/generated/kubernetes-service-mapping.yaml`](model/generated/kubernetes-service-mapping.yaml). Resource, connect, and non-resource operations remain distinct validated forms; connect operations preserve HTTP method. The compiler also groups authoritative resource operations into unambiguous built-in group/version/kind selectors with plural resource name, namespaced state, and supported verb/scope pairs for dynamic SDKs.
 
 Install the authoring-only dependency with `python3 -m pip install -r kubernetes-api/requirements.txt`, then run the projection from the extension repository root with an immutable local copy of the source model:
 

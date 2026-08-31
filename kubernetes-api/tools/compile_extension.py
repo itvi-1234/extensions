@@ -7,7 +7,7 @@ import argparse
 import hashlib
 import json
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -179,6 +179,50 @@ def validate_inventory(inventory: dict[str, Any], semantics: dict[str, Any], spe
     return mapping_operations
 
 
+def discovery_resources(inventory: dict[str, Any]) -> list[dict[str, Any]]:
+    indexed: dict[tuple[str, str, str], dict[str, Any]] = {}
+    operations: dict[tuple[str, str, str], dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
+    for item in inventory.get("operations", []):
+        projection = item.get("projection", {})
+        group_version_kind = item.get("source", {}).get("groupVersionKind")
+        if projection.get("form") != "resource" or projection.get("subresource") or not isinstance(group_version_kind, dict):
+            continue
+        selector = tuple(group_version_kind.get(field) for field in ("group", "version", "kind"))
+        if not all(isinstance(value, str) for value in selector):
+            raise ValueError(f"{item.get('operationId')}: base resource has an invalid group/version/kind selector")
+        identity = {
+            "apiGroup": projection["apiGroup"],
+            "apiVersion": projection["apiVersion"],
+            "kind": group_version_kind["kind"],
+            "resource": projection["resource"],
+        }
+        previous = indexed.get(selector)
+        if previous is not None and previous != identity:
+            raise ValueError(f"ambiguous discovery resource selector {selector!r}: {previous!r} and {identity!r}")
+        indexed[selector] = identity
+        operations[selector][projection["verb"]].add(projection["scope"])
+
+    resources: list[dict[str, Any]] = []
+    for selector in sorted(indexed):
+        scopes = {scope for values in operations[selector].values() for scope in values}
+        namespaced = bool(scopes.intersection({"namespaced", "all_namespaces"}))
+        if namespaced and "cluster" in scopes:
+            raise ValueError(f"discovery resource selector {selector!r} mixes cluster and namespaced access")
+        resources.append(
+            {
+                **indexed[selector],
+                "namespaced": namespaced,
+                "operations": [
+                    {"verb": verb, "scopes": sorted(operations[selector][verb])}
+                    for verb in sorted(operations[selector])
+                ],
+            }
+        )
+    if not resources:
+        raise ValueError("authoritative inventory contains no discoverable base resources")
+    return resources
+
+
 def build_outputs(inventory: dict[str, Any], semantics: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     extension_config = semantics.get("extension", {})
     extension_id = require_string(extension_config.get("id"), "extension.id")
@@ -187,6 +231,7 @@ def build_outputs(inventory: dict[str, Any], semantics: dict[str, Any]) -> tuple
         raise ValueError("extension id and semantic version do not identify the same release")
     spec = build_spec(semantics)
     mapping_operations = validate_inventory(inventory, semantics, spec)
+    resources = discovery_resources(inventory)
     source = inventory["metadata"]["source"]
     spec_digest = semantic_sha256(spec)
     extension = {
@@ -218,17 +263,20 @@ def build_outputs(inventory: dict[str, Any], semantics: dict[str, Any]) -> tuple
             "operationCount": len(mapping_operations),
             "operationIdsSha256": inventory["metadata"]["operationIdsSha256"],
             "sourceInventorySemanticSha256": inventory["metadata"]["semanticSha256"],
-            "semanticSha256": semantic_sha256(mapping_operations),
+            "resourceCount": len(resources),
+            "semanticSha256": semantic_sha256({"operations": mapping_operations, "resources": resources}),
             "source": source,
         },
         "extension": {"id": extension_id, "version": version, "semanticSha256": spec_digest},
         "operations": mapping_operations,
+        "resources": resources,
     }
     return extension, service_mapping
 
 
 def review_markdown(extension: dict[str, Any], mapping: dict[str, Any]) -> str:
     operations = mapping["operations"]
+    resources = mapping["resources"]
     forms = Counter("non_resource" if "path" in item["conditions"][0]["operation"] else "resource" for item in operations)
     verbs = Counter(item["conditions"][0]["operation"].get("verb") for item in operations if "verb" in item["conditions"][0]["operation"])
     connect_methods = Counter(item["conditions"][0]["operation"].get("method") for item in operations if item["conditions"][0]["operation"].get("verb") == "connect")
@@ -250,6 +298,7 @@ def review_markdown(extension: dict[str, Any], mapping: dict[str, Any]) -> str:
         f"- Resource operations: {forms['resource']}",
         f"- Non-resource operations: {forms['non_resource']}",
         f"- Distinct condition operations: {len(unique_conditions)}",
+        f"- Discoverable built-in resource selectors: {len(resources)}",
         "",
         "## Preserved semantics",
         "",
@@ -259,6 +308,7 @@ def review_markdown(extension: dict[str, Any], mapping: dict[str, Any]) -> str:
         "- Connect operations additionally retain HTTP method rather than collapsing distinct connect endpoints.",
         "- Non-resource operations retain canonical path and HTTP method.",
         "- The resource-coordinate schema remains open to valid CRD group, version, resource, and subresource values; the built-in inventory is not a closed vocabulary enum.",
+        "- The service mapping includes a generated, language-neutral GVK-to-resource discovery catalog for built-in resources. It does not claim that unmodeled CRDs can be resolved without live discovery evidence.",
         "",
         "## Maintainer review surface",
         "",

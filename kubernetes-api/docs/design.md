@@ -59,11 +59,11 @@ The official Python client transforms the authoritative OpenAPI model before Ope
 
 Constructing `CoreV1Api`, loading in-cluster configuration, or loading kubeconfig does not prove a resource operation by itself. The mapping must not emit a broad Kubernetes condition from those expressions.
 
-Several Python surfaces will require later focused work:
+The Python proof handles these materially different surfaces:
 
 - A generated list method can perform a normal list or a watch depending on arguments and wrapper usage, so the mapping may require a source-proven conditional operation rather than one unconditional conclusion.
 - `watch.Watch.stream` wraps a generated list method and must preserve the underlying resource while changing the required operation to watch where the call proves it.
-- `DynamicClient` and custom-resource helpers receive group, version, resource, namespace, and action dynamically. Statically resolvable values may produce a condition; unresolved values must not be guessed.
+- `DynamicClient.resources.get` produces a Resource whose later methods derive operations from discovered state. The service mapping therefore generates an unambiguous built-in GVK selector catalog from authoritative operations, while the SDK mapping source-verifies the producer and Resource proxy. Statically resolved built-in selectors can produce state; unmodeled CRDs and unresolved selectors emit nothing because source does not prove their plural name or scope.
 - Dynamic custom-resource SDK methods remain distinct mapping records. The method and route fix the base verb, scope, and optional subresource; the three list methods have the same explicit `watch=true` override as typed list methods. A shared generation rule may bind group, version, and resource arguments across those records but must never turn them into one operation with combinatorial behavior.
 - Utility, configuration, discovery, serialization, and model-only calls do not necessarily prove resource access.
 
@@ -89,6 +89,6 @@ The first slice demonstrates all of the following:
 - At least one historical or subsequent Python client release is regenerated to measure actual maintenance work.
 - Generated YAML is validated mechanically and summarized for review rather than presented to maintainers for line-by-line approval.
 
-## Expansion sequence
+## Expansion result
 
-The generated typed-client expansion, list-versus-watch behavior, separate custom-resource helpers, package integration, and four-release historical replay are implemented. The next Kubernetes boundary is handwritten `Watch.stream`, `DynamicClient`, discovery-created `Resource` state, and their callable or object delegation. Profiler changes remain a separate decision after the mapping and authorship workflow are understood.
+The generated typed-client expansion, list-versus-watch behavior, separate custom-resource helpers, package integration, `Watch.stream` delegation, DynamicClient base-resource state flow, real-profiler proof, and four-release historical replay are implemented. Dynamic subresources, ResourceList fan-out, constructor-only discovery traffic, and resource coordinates available only from live CRD discovery remain explicit boundaries. Those limitations do not close the extension vocabulary: extension-provided declarations and future statically proved mappings may still express valid custom-resource coordinates.

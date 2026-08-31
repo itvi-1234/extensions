@@ -24,7 +24,17 @@ class KubernetesExtensionCompilationTest(unittest.TestCase):
     def test_compiles_every_authoritative_operation(self):
         self.assertEqual(self.mapping["metadata"]["operationCount"], 1123)
         self.assertEqual(len(self.mapping["operations"]), 1123)
+        self.assertEqual(self.mapping["metadata"]["resourceCount"], 95)
+        self.assertEqual(len(self.mapping["resources"]), 95)
         self.assertEqual(self.mapping["extension"]["semanticSha256"], self.extension["metadata"]["semanticSha256"])
+
+    def test_discovery_catalog_maps_one_gvk_to_one_built_in_resource(self):
+        config_map = next(item for item in self.mapping["resources"] if item["apiGroup"] == "" and item["apiVersion"] == "v1" and item["kind"] == "ConfigMap")
+        self.assertEqual(config_map["resource"], "configmaps")
+        self.assertTrue(config_map["namespaced"])
+        self.assertEqual(next(item for item in config_map["operations"] if item["verb"] == "list")["scopes"], ["all_namespaces", "namespaced"])
+        selectors = [(item["apiGroup"], item["apiVersion"], item["kind"]) for item in self.mapping["resources"]]
+        self.assertEqual(len(selectors), len(set(selectors)))
 
     def test_config_map_operation_matches_approved_shape(self):
         operation = next(item for item in self.mapping["operations"] if item["name"] == "readCoreV1NamespacedConfigMap")
