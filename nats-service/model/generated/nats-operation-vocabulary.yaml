@@ -1,0 +1,49 @@
+apiVersion: runtimeconditions.io/service-mapping/v1alpha1
+kind: RuntimeConditionsServiceVocabulary
+metadata:
+  name: nats.service
+  service: nats
+  semanticSha256: 8956b74fe10c5a3cf0e73667329751a9aefd6ef86901d19ef9bc95a553d3f074
+extension:
+  id: https://runtimeconditions.io/extensions/nats-service/0.1.0/runtimeconditions.extension.yaml
+  version: 0.1.0
+  semanticSha256: b67877d056715d94583ecaf19a90429b31b52507399ffb3d06b0ab092f39995e
+operationForms:
+  connection:
+    actions:
+    - connect
+  subject:
+    actions:
+    - publish
+    - subscribe
+    - request
+  stream:
+    actions:
+    - create
+    - update
+    - delete
+    - inspect
+    - publish
+  consumer:
+    actions:
+    - create
+    - update
+    - delete
+    - inspect
+    - consume
+  key_value:
+    actions:
+    - create
+    - delete
+    - inspect
+    - read
+    - write
+    - watch
+  object_store:
+    actions:
+    - create
+    - delete
+    - inspect
+    - read
+    - write
+    - watch
