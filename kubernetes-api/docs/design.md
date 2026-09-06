@@ -28,14 +28,14 @@ Concrete cluster endpoints, contexts, namespaces, object names, service accounts
 
 The Kubernetes v1.36.2 Swagger document exposes each built-in endpoint's path, HTTP method, `operationId`, `x-kubernetes-action`, and `x-kubernetes-group-version-kind`. The initial operation is `/api/v1/namespaces/{namespace}/configmaps/{name}` plus `GET`, with `operationId: readCoreV1NamespacedConfigMap`, action `get`, and the core/v1 `ConfigMap` GVK.
 
-A deterministic projection can derive the language-neutral built-in inventory as follows:
+A deterministic neutral projection can preserve the built-in OpenAPI operation surface as follows, while the semantic bridge performs the Runtime Conditions translations in steps 4 through 6:
 
 1. Retain the exact OpenAPI `operationId` as authoritative model identity while using path and method as the endpoint join through generator transformations that may rename it.
 2. Derive API group and version from the endpoint path. Retain `x-kubernetes-group-version-kind` as request or response representation evidence because eviction, scale, and token subresources demonstrate that GVK may differ from the accessed endpoint.
 3. Derive the plural resource and optional subresource from the path rather than pluralizing the kind.
-4. Derive `namespaced`, `all_namespaces`, or `cluster` access scope by comparing an operation path with its resource family. A cluster-level list or watch of ConfigMaps is not equivalent to access within one namespace or to a cluster-scoped resource.
-5. Normalize the API operation to Kubernetes access verbs such as `get`, `list`, `watch`, `create`, `update`, `patch`, `delete`, and `deletecollection` using reviewed Kubernetes rules rather than treating HTTP methods as sufficient semantics.
-6. Retain unusual connect, proxy, logs, status, scale, eviction, token, and other subresource operations as focused review categories instead of silently forcing them into ordinary CRUD.
+4. The semantic bridge derives `namespaced`, `all_namespaces`, or `cluster` Condition access scope by comparing a preserved endpoint route with its resource family. A cluster-level list or watch of ConfigMaps is not equivalent to access within one namespace or to a cluster-scoped resource.
+5. The semantic bridge maps authoritative Kubernetes actions to Condition verbs such as `get`, `list`, `watch`, `create`, `update`, `patch`, `delete`, and `deletecollection` rather than treating HTTP methods as sufficient semantics.
+6. The bridge retains unusual connect, proxy, logs, status, scale, eviction, token, and other subresource operations as focused semantic decisions instead of silently forcing them into ordinary CRUD.
 
 The projection must fail with a focused extension-review event when required model evidence is absent or a new operation category has no reviewed transformation rule.
 

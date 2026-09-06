@@ -4,14 +4,6 @@ metadata:
   id: https://runtimeconditions.io/extensions/aws-s3/0.1.0/runtimeconditions.extension.yaml
   version: 0.1.0
   semanticSha256: 1a505b63d55893c26f3ffe6cf3cd9f90f0b5bd7975fabe47ff444a3ed1e13c72
-  provenance:
-    repository: https://github.com/aws/api-models-aws.git
-    revision: 073f307ee1fd0acea67b706ddbd4ad5437c67eb8
-    path: models/s3/service/2006-03-01/s3-2006-03-01.json
-    sha256: 6975caa92319bf6c1fc2fdea7b3f64f9b9aca6d9b32edeccf086796338842e5a
-    smithyVersion: '2.0'
-    serviceShape: com.amazonaws.s3#AmazonS3
-    serviceVersion: '2006-03-01'
 spec:
   kinds:
   - name: aws.s3

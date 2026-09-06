@@ -13,7 +13,7 @@
 | Layer | Owns | Does not own |
 | --- | --- | --- |
 | AWS S3 extension | S3 kind, interface types, canonical operation vocabulary, schemas, validation, immutable semantic releases | SDK symbols, detection policy, credentials, provisioning |
-| Smithy overlay | Reviewed classification, resource identity paths, roles, and secondary dependencies | SDK-specific aliases and public names |
+| Service Operations Semantic Bridge | Reviewed translation from Smithy operations to Condition classification, resource identity paths, roles, and secondary dependencies | SDK-specific aliases and public names |
 | Service mapping | Deterministic projection from authoritative Smithy operations to extension Condition templates | New Condition vocabulary, coverage reporting, adapter policy |
 | Language SDK mapping | Versioned SDK construction patterns, public symbols, wrappers, and SDK compatibility aliases | Independent S3 semantics |
 | Language profiler | Static discovery and profile generation | AWS semantics absent from resolved mappings |
@@ -115,9 +115,11 @@ The accepted extension is published at an immutable versioned identifier and car
 
 An SDK mapping declares the exact extension identifier, version, and semantic digest it targets. Many SDK mappings and SDK versions can target one extension release. A new SDK release alone does not require a new extension release. A semantic extension change does require a new immutable extension release and regeneration or validation of every mapping that claims compatibility with it.
 
+Across extensions, a new service operation can map to existing Condition vocabulary without changing the extension. Every SDK release that exposes that operation must still regenerate its language mapping so the new public method references the canonical service operation. For this S3 extension, canonical operation names are deliberately adapter-actionable authorization vocabulary, so adding an S3 operation name normally changes the extension; that S3-specific consequence is not a universal semantic-bridge rule.
+
 The maintenance lanes are intentionally separate:
 
-1. The extension lane watches authoritative Smithy model changes and stops for focused semantic review when the accepted overlay no longer covers the model.
+1. The extension lane watches authoritative Smithy model changes and stops for focused semantic review when the accepted semantic bridge no longer covers the model.
 2. Each SDK lane watches its own releases, binds public symbols and SDK-only aliases to the accepted canonical service mapping, and stops for SDK-specific review when that binding changes.
 3. The join gate rejects an SDK mapping when its canonical operations, input paths, extension identity, or semantic digest do not match the selected extension release.
 

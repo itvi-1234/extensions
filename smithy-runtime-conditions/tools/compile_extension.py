@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile a Runtime Conditions extension from an authoritative Smithy model and reviewed YAML overlays."""
+"""Compile a Runtime Conditions extension from an authoritative Smithy model and semantic bridge."""
 
 from __future__ import annotations
 
@@ -15,11 +15,11 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 from serialization import read_document, write_yaml
 
 
-SERVICE_TRAIT = "runtimeconditions.smithy#serviceSemantics"
-OPERATION_TRAIT = "runtimeconditions.smithy#operationSemantics"
 SERVICE_MAPPING_API_VERSION = "runtimeconditions.io/service-mapping/v1alpha1"
 SERVICE_MAPPING_KIND = "RuntimeConditionsServiceMapping"
 EXTENSION_API_VERSION = "runtimeconditions.io/v1alpha1"
+BRIDGE_API_VERSION = "runtimeconditions.io/service-operations-semantic-bridge/v1alpha1"
+BRIDGE_KIND = "RuntimeConditionsServiceOperationsSemanticBridge"
 SEMVER = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$")
 
 
@@ -50,33 +50,58 @@ def shape_name(shape_id: str) -> str:
     return shape_id.rsplit("#", 1)[-1]
 
 
-def merge_overlays(model: Dict[str, Any], overlays: List[Dict[str, Any]]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    source_shapes = model.get("shapes", {})
-    if not isinstance(source_shapes, dict):
-        raise ValueError("Smithy model shapes must be an object")
-    merged = json.loads(json.dumps(source_shapes))
-    trait_definitions: Dict[str, Any] = {}
-    for overlay in overlays:
-        if str(overlay.get("smithy", "")).split(".", 1)[0] != str(model.get("smithy", "")).split(".", 1)[0]:
-            raise ValueError("Smithy model and overlay major versions do not match")
-        for target, value in overlay.get("shapes", {}).items():
-            if value.get("type") == "apply":
-                if target not in merged:
-                    raise ValueError(f"overlay applies traits to unknown shape {target}")
-                traits = merged[target].setdefault("traits", {})
-                for trait, trait_value in value.get("traits", {}).items():
-                    if trait in traits and traits[trait] != trait_value:
-                        raise ValueError(f"conflicting trait {trait} on {target}")
-                    traits[trait] = trait_value
-            else:
-                if target in merged and merged[target] != value:
-                    raise ValueError(f"overlay redefines source shape {target}")
-                trait_definitions[target] = value
-    for trait in (SERVICE_TRAIT, OPERATION_TRAIT):
-        definition = trait_definitions.get(trait)
-        if not definition or "smithy.api#trait" not in definition.get("traits", {}):
-            raise ValueError(f"missing Smithy trait definition {trait}")
-    return merged, trait_definitions
+def require_string(value: Any, description: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{description} must be a non-empty string")
+    return value
+
+
+def validate_bridge(
+    bridge: Dict[str, Any],
+    source_repository: str,
+    source_path: str,
+    service_shape: str,
+) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
+    if bridge.get("apiVersion") != BRIDGE_API_VERSION or bridge.get("kind") != BRIDGE_KIND:
+        raise ValueError("semantic bridge does not use the standard Service Operations Semantic Bridge contract")
+    source = bridge.get("operationSource")
+    if not isinstance(source, dict) or source.get("kind") != "SmithyModel":
+        raise ValueError("semantic bridge operationSource must identify a Smithy model")
+    expected_source = {"repository": source_repository, "path": source_path, "serviceShape": service_shape}
+    for field, value in expected_source.items():
+        if source.get(field) != value:
+            raise ValueError(f"semantic bridge operationSource {field} does not identify the selected Smithy model")
+    extension = bridge.get("extension")
+    if not isinstance(extension, dict):
+        raise ValueError("semantic bridge extension must be an object")
+    semantics = {
+        "extensionName": require_string(extension.get("extensionName"), "extension.extensionName"),
+        "serviceKey": require_string(extension.get("serviceKey"), "extension.serviceKey"),
+        "extensionVersion": require_string(extension.get("version"), "extension.version"),
+        "extensionId": require_string(extension.get("id"), "extension.id"),
+        "displayName": require_string(extension.get("displayName"), "extension.displayName"),
+        "conditionKind": require_string(extension.get("conditionKind"), "extension.conditionKind"),
+        "defaultCondition": bridge.get("defaultCondition"),
+        "reviewedOperationCount": source.get("operationCount"),
+        "reviewedOperationNamesSha256": source.get("operationNamesSha256"),
+    }
+    if not isinstance(semantics["defaultCondition"], dict):
+        raise ValueError("semantic bridge defaultCondition must be an object")
+    mappings = bridge.get("operationMappings")
+    if not isinstance(mappings, list):
+        raise ValueError("semantic bridge operationMappings must be a list")
+    operation_semantics: Dict[str, Dict[str, Any]] = {}
+    for index, mapping in enumerate(mappings):
+        if not isinstance(mapping, dict):
+            raise ValueError(f"semantic bridge operationMappings[{index}] must be an object")
+        name = require_string(mapping.get("operation"), f"semantic bridge operationMappings[{index}].operation")
+        if name in operation_semantics:
+            raise ValueError(f"semantic bridge operation {name!r} is duplicated")
+        value = {key: mapping[key] for key in ("primaryCondition", "additionalConditions") if key in mapping}
+        if not value:
+            raise ValueError(f"semantic bridge operation {name!r} does not define a semantic exception")
+        operation_semantics[name] = value
+    return semantics, operation_semantics
 
 
 def service_operation_ids(service: Dict[str, Any]) -> List[str]:
@@ -145,7 +170,10 @@ def condition_template(
 
 
 def build_operations(
-    shapes: Dict[str, Any], service: Dict[str, Any], semantics: Dict[str, Any]
+    shapes: Dict[str, Any],
+    service: Dict[str, Any],
+    semantics: Dict[str, Any],
+    operation_semantics: Dict[str, Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
     operation_ids = service_operation_ids(service)
     names = [shape_name(item) for item in operation_ids]
@@ -154,18 +182,13 @@ def build_operations(
     actual_digest = operation_fingerprint(names)
     if len(names) != expected_count or actual_digest != expected_digest:
         raise ModelDrift(
-            f"authoritative operation set changed: got {len(names)} operations and {actual_digest}; reviewed overlay expects {expected_count} and {expected_digest}",
+            f"authoritative operation set changed: got {len(names)} operations and {actual_digest}; reviewed semantic bridge expects {expected_count} and {expected_digest}",
             names,
         )
-    known = set(operation_ids)
-    annotated = {
-        shape_id
-        for shape_id, shape in shapes.items()
-        if OPERATION_TRAIT in shape.get("traits", {})
-    }
-    unknown = sorted(annotated - known)
+    known_names = set(names)
+    unknown = sorted(set(operation_semantics) - known_names)
     if unknown:
-        raise ValueError(f"operation semantics target shapes outside the service closure: {', '.join(unknown)}")
+        raise ValueError(f"semantic bridge targets operations outside the service closure: {', '.join(unknown)}")
     default_condition = semantics.get("defaultCondition")
     if not isinstance(default_condition, dict):
         raise ValueError("service semantics require defaultCondition")
@@ -175,10 +198,10 @@ def build_operations(
     result = []
     for operation_id in operation_ids:
         operation_name = shape_name(operation_id)
-        operation_semantics = shapes[operation_id].get("traits", {}).get(OPERATION_TRAIT, {})
-        primary = operation_semantics.get("primaryCondition", default_condition)
+        operation_mapping = operation_semantics.get(operation_name, {})
+        primary = operation_mapping.get("primaryCondition", default_condition)
         conditions = [condition_template(shapes, operation_id, operation_name, kind, primary, False)]
-        for additional in operation_semantics.get("additionalConditions", []):
+        for additional in operation_mapping.get("additionalConditions", []):
             conditions.append(condition_template(shapes, operation_id, operation_name, kind, additional, True))
         result.append({"name": operation_name, "shapeId": operation_id, "conditions": conditions})
     return result
@@ -314,13 +337,12 @@ def build_outputs(
     source_path: str,
     service_shape: str,
     shapes: Dict[str, Any],
+    bridge: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     service = shapes.get(service_shape)
     if not service or service.get("type") != "service":
         raise ValueError(f"selected shape is not a Smithy service: {service_shape}")
-    semantics = service.get("traits", {}).get(SERVICE_TRAIT)
-    if not isinstance(semantics, dict):
-        raise ValueError(f"selected service does not carry {SERVICE_TRAIT}")
+    semantics, operation_semantics = validate_bridge(bridge, source_repository, source_path, service_shape)
     version = semantics.get("extensionVersion")
     extension_id = semantics.get("extensionId")
     if not isinstance(version, str) or not SEMVER.fullmatch(version):
@@ -328,7 +350,7 @@ def build_outputs(
     if not isinstance(extension_id, str) or f"/{version}/" not in extension_id:
         raise ValueError("extensionId must contain the exact extensionVersion as a path segment")
     try:
-        operations = build_operations(shapes, service, semantics)
+        operations = build_operations(shapes, service, semantics, operation_semantics)
     except ModelDrift:
         raise
     except ValueError as error:
@@ -357,7 +379,6 @@ def build_outputs(
             "id": extension_id,
             "version": version,
             "semanticSha256": spec_digest,
-            "provenance": provenance,
         },
         "spec": spec,
     }
@@ -379,6 +400,7 @@ def build_outputs(
             "operationCount": len(names),
             "operationNamesSha256": operation_fingerprint(names),
             "semanticSha256": semantic_sha256(mapping_operations),
+            "semanticBridgeSha256": semantic_sha256(bridge),
             "source": provenance,
         },
         "extension": {
@@ -469,8 +491,7 @@ def review_markdown(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", type=Path, required=True)
-    parser.add_argument("--traits", type=Path, required=True)
-    parser.add_argument("--overlay", type=Path, action="append", required=True)
+    parser.add_argument("--bridge", type=Path, required=True)
     parser.add_argument("--service-shape", required=True)
     parser.add_argument("--source-repository", required=True)
     parser.add_argument("--source-revision", required=True)
@@ -482,8 +503,10 @@ def main() -> int:
     args = parser.parse_args()
 
     model = read_document(args.model)
-    overlay_documents = [read_document(args.traits)] + [read_document(path) for path in args.overlay]
-    shapes, _ = merge_overlays(model, overlay_documents)
+    shapes = model.get("shapes")
+    if not isinstance(shapes, dict):
+        raise ValueError("Smithy model shapes must be an object")
+    bridge = read_document(args.bridge)
     baseline = baseline_operations(args.baseline_service_mapping)
     model_digest = sha256_file(args.model)
     try:
@@ -494,6 +517,7 @@ def main() -> int:
             args.source_path,
             args.service_shape,
             shapes,
+            bridge,
         )
     except ModelDrift as error:
         args.review_output.parent.mkdir(parents=True, exist_ok=True)
@@ -520,7 +544,7 @@ def main() -> int:
     args.review_output.write_text(
         review_markdown(
             "automatic",
-            "The authoritative Smithy operation inventory matches the reviewed Runtime Conditions overlay, and deterministic extension and service-mapping artifacts were generated successfully.",
+            "The authoritative Smithy operation inventory matches the reviewed Service Operations Semantic Bridge, and deterministic extension and service-mapping artifacts were generated successfully.",
             args.source_repository,
             args.source_revision,
             args.source_path,

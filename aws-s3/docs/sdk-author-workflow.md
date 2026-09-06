@@ -8,7 +8,7 @@ The Python proof uses three owner-aligned artifacts because boto3, botocore, and
 
 ## Shared service semantics
 
-AWS's public Smithy model supplies the authoritative S3 operation and shape inventory. [`../model/runtimeconditions.smithy.yaml`](../model/runtimeconditions.smithy.yaml) supplies only Runtime Conditions decisions that cannot be inferred safely: extension identity, default bucket classification, service and Object Lambda exceptions, resource identity paths, source/destination roles, secondary buckets, and the reviewed operation fingerprint.
+AWS's public Smithy model supplies the authoritative S3 operation and shape inventory. [`../model/service-operations-semantic-bridge.yaml`](../model/service-operations-semantic-bridge.yaml) references that model and supplies only Runtime Conditions decisions that cannot be inferred safely: extension identity, default bucket classification, service and Object Lambda exceptions, resource identity paths, source/destination roles, secondary buckets, and the reviewed operation fingerprint.
 
 The shared compiler generates the immutable extension definition and language-neutral service mapping once. A new SDK language consumes that output and does not reproduce S3 semantics by hand.
 
@@ -41,21 +41,21 @@ Each mapping records its owning distribution, exact version, and SDK mapping-con
 
 For each owning distribution, a maintainer would:
 
-1. Add or adopt the small reviewed overlay for behavior absent from generated models.
+1. Add or adopt the small reviewed semantic bridge for behavior absent from generated service models and SDK annotations for behavior absent from generated SDK models.
 2. Enable the Runtime Conditions projection in the repository's existing model or code-generation workflow.
 3. Include `runtimeconditions/index.yaml` and `runtimeconditions/mappings/*.yaml` as static package data or in an automatically installed version-aligned companion artifact.
 4. Run authoritative-extension alignment, SDK-source, recursive-reference, package, and representative application gates.
-5. Review only the authored overlay diff, focused generated summary, representative profile change, and adapter-facing impact.
+5. Review only the authored semantic bridge or SDK annotation diff, focused generated summary, representative profile change, and adapter-facing impact.
 6. Publish static metadata through the SDK's normal release lifecycle without adding a Runtime Conditions runtime dependency.
 
 Application source and runtime behavior remain unchanged.
 
 ## Normal maintenance
 
-- A package-only release regenerates automatically; distribution versions are derived from immutable source rather than maintained in semantic overlays.
+- A package-only release regenerates automatically; distribution versions are derived from immutable source rather than maintained in the semantic bridge or SDK annotations.
 - A Smithy operation or resource-semantic change is routed as `extension-review-required` before an SDK mapping update can be accepted.
 - A generated language spelling or model-surface change updates mechanically and is checked against exact source.
-- A handwritten wrapper signature, delegate, or implementation-path change is routed as `sdk-review-required` with the affected overlay and source diagnostic.
+- A handwritten wrapper signature, delegate, or implementation-path change is routed as `sdk-review-required` with the affected SDK annotation and source diagnostic.
 - An automation or unsupported-input failure is `invalid` and is not counted as extension- or SDK-maintainer work.
 - Repeated observations of one semantic fingerprint are deduplicated into one maintenance item.
 

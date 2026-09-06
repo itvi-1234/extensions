@@ -28,4 +28,4 @@ The approved Kubernetes operation forms compile into an immutable extension rele
 
 ## Maintainer review surface
 
-Maintainers review the compact `model/runtimeconditions.yaml` semantic contract and this summary. The extension release and complete service mapping are deterministic machine outputs and are not line-by-line review surfaces.
+Maintainers review the compact `model/service-operations-semantic-bridge.yaml` contract and this summary. The extension release and complete service mapping are deterministic machine outputs and are not line-by-line review surfaces.

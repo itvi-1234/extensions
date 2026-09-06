@@ -1,0 +1,336 @@
+apiVersion: runtimeconditions.io/service-mapping/v1alpha1
+kind: RuntimeConditionsServiceMapping
+metadata:
+  name: nats.service
+  service: nats
+  operationCount: 26
+  sourceInventorySemanticSha256: 0f6fb3a7c5f1f3c8c780724057ef96ca22a7b2d0c2766f493e22d5f444c88ee8
+  semanticBridgeSha256: f0744ec1b401acbb161243afd83dbb26e0b179ebe92b0f392920f61aec42737e
+  semanticSha256: 791de4f22212d2c6e61952a154ca6c1bd1904c6c430c766cb27680a8aeb01cb7
+extension:
+  id: https://runtimeconditions.io/extensions/nats-service/0.1.0/runtimeconditions.extension.yaml
+  version: 0.1.0
+  semanticSha256: 84a3797300ed1912858b393ca46512f2363ae838cb38bce26e687017026bb7e2
+fields:
+  subject:
+    schema:
+      type: string
+      minLength: 1
+      pattern: ^[^\s]+$
+  subjects:
+    schema:
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: string
+        minLength: 1
+        pattern: ^[^\s]+$
+  name:
+    schema:
+      type: string
+      minLength: 1
+      pattern: ^[^\s.*>]+$
+  stream:
+    schema:
+      type: string
+      minLength: 1
+      pattern: ^[^\s.*>]+$
+  bucket:
+    schema:
+      type: string
+      minLength: 1
+      pattern: ^[^\s.*>]+$
+operations:
+- name: connection.connect
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: connection
+      action: connect
+    bindings:
+      required: []
+      optional: []
+- name: subject.publish
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: subject
+      action: publish
+    bindings:
+      required:
+      - subject
+      optional: []
+- name: subject.subscribe
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: subject
+      action: subscribe
+    bindings:
+      required:
+      - subject
+      optional: []
+- name: subject.request
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: subject
+      action: request
+    bindings:
+      required:
+      - subject
+      optional: []
+- name: stream.create
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: stream
+      action: create
+    bindings:
+      required:
+      - name
+      optional:
+      - subjects
+- name: stream.update
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: stream
+      action: update
+    bindings:
+      required:
+      - name
+      optional:
+      - subjects
+- name: stream.delete
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: stream
+      action: delete
+    bindings:
+      required:
+      - name
+      optional: []
+- name: stream.inspect
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: stream
+      action: inspect
+    bindings:
+      required:
+      - name
+      optional: []
+- name: stream.publish
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: stream
+      action: publish
+    bindings:
+      required:
+      - subject
+      optional: []
+- name: consumer.create
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: consumer
+      action: create
+    bindings:
+      required:
+      - stream
+      optional:
+      - name
+- name: consumer.update
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: consumer
+      action: update
+    bindings:
+      required:
+      - stream
+      optional:
+      - name
+- name: consumer.delete
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: consumer
+      action: delete
+    bindings:
+      required:
+      - stream
+      optional:
+      - name
+- name: consumer.inspect
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: consumer
+      action: inspect
+    bindings:
+      required:
+      - stream
+      optional:
+      - name
+- name: consumer.consume
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: consumer
+      action: consume
+    bindings:
+      required:
+      - stream
+      optional:
+      - name
+- name: key_value.create
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: key_value
+      action: create
+    bindings:
+      required:
+      - bucket
+      optional: []
+- name: key_value.delete
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: key_value
+      action: delete
+    bindings:
+      required:
+      - bucket
+      optional: []
+- name: key_value.inspect
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: key_value
+      action: inspect
+    bindings:
+      required:
+      - bucket
+      optional: []
+- name: key_value.read
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: key_value
+      action: read
+    bindings:
+      required:
+      - bucket
+      optional: []
+- name: key_value.write
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: key_value
+      action: write
+    bindings:
+      required:
+      - bucket
+      optional: []
+- name: key_value.watch
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: key_value
+      action: watch
+    bindings:
+      required:
+      - bucket
+      optional: []
+- name: object_store.create
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: object_store
+      action: create
+    bindings:
+      required:
+      - bucket
+      optional: []
+- name: object_store.delete
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: object_store
+      action: delete
+    bindings:
+      required:
+      - bucket
+      optional: []
+- name: object_store.inspect
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: object_store
+      action: inspect
+    bindings:
+      required:
+      - bucket
+      optional: []
+- name: object_store.read
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: object_store
+      action: read
+    bindings:
+      required:
+      - bucket
+      optional: []
+- name: object_store.write
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: object_store
+      action: write
+    bindings:
+      required:
+      - bucket
+      optional: []
+- name: object_store.watch
+  conditions:
+  - kind: nats
+    interfaceType: service
+    operation:
+      resource: object_store
+      action: watch
+    bindings:
+      required:
+      - bucket
+      optional: []

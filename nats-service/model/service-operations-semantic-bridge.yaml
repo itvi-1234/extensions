@@ -1,0 +1,252 @@
+apiVersion: runtimeconditions.io/service-operations-semantic-bridge/v1alpha1
+kind: RuntimeConditionsServiceOperationsSemanticBridge
+metadata:
+  name: nats.service
+  service: nats
+operationSource:
+  kind: ServiceOperationsInventory
+  name: nats.service
+  service: nats
+  semanticSha256: 0f6fb3a7c5f1f3c8c780724057ef96ca22a7b2d0c2766f493e22d5f444c88ee8
+extension:
+  id: https://runtimeconditions.io/extensions/nats-service/0.1.0/runtimeconditions.extension.yaml
+  version: 0.1.0
+  conditionKind: nats
+  interfaceType: service
+conditionFields:
+  subject:
+    inventoryShape: nats.subject
+  subjects:
+    inventoryShape: nats.subjects
+  name:
+    inventoryShape: nats.resourceName
+  stream:
+    inventoryShape: nats.resourceName
+  bucket:
+    inventoryShape: nats.resourceName
+operationMappings:
+- operation: connection.connect
+  condition:
+    resource: connection
+    action: connect
+- operation: subject.publish
+  condition:
+    resource: subject
+    action: publish
+  bindings:
+    subject:
+      input: subject
+      required: true
+- operation: subject.subscribe
+  condition:
+    resource: subject
+    action: subscribe
+  bindings:
+    subject:
+      input: subject
+      required: true
+- operation: subject.request
+  condition:
+    resource: subject
+    action: request
+  bindings:
+    subject:
+      input: subject
+      required: true
+- operation: stream.create
+  condition:
+    resource: stream
+    action: create
+  bindings:
+    name:
+      input: streamName
+      required: true
+    subjects:
+      input: subjects
+      required: false
+- operation: stream.update
+  condition:
+    resource: stream
+    action: update
+  bindings:
+    name:
+      input: streamName
+      required: true
+    subjects:
+      input: subjects
+      required: false
+- operation: stream.delete
+  condition:
+    resource: stream
+    action: delete
+  bindings:
+    name:
+      input: streamName
+      required: true
+- operation: stream.inspect
+  condition:
+    resource: stream
+    action: inspect
+  bindings:
+    name:
+      input: streamName
+      required: true
+- operation: stream.publish
+  condition:
+    resource: stream
+    action: publish
+  bindings:
+    subject:
+      input: subject
+      required: true
+- operation: consumer.create
+  condition:
+    resource: consumer
+    action: create
+  bindings:
+    stream:
+      input: streamName
+      required: true
+    name:
+      input: consumerName
+      required: false
+- operation: consumer.update
+  condition:
+    resource: consumer
+    action: update
+  bindings:
+    stream:
+      input: streamName
+      required: true
+    name:
+      input: consumerName
+      required: false
+- operation: consumer.delete
+  condition:
+    resource: consumer
+    action: delete
+  bindings:
+    stream:
+      input: streamName
+      required: true
+    name:
+      input: consumerName
+      required: false
+- operation: consumer.inspect
+  condition:
+    resource: consumer
+    action: inspect
+  bindings:
+    stream:
+      input: streamName
+      required: true
+    name:
+      input: consumerName
+      required: false
+- operation: consumer.consume
+  condition:
+    resource: consumer
+    action: consume
+  bindings:
+    stream:
+      input: streamName
+      required: true
+    name:
+      input: consumerName
+      required: false
+- operation: key_value.create
+  condition:
+    resource: key_value
+    action: create
+  bindings:
+    bucket:
+      input: bucketName
+      required: true
+- operation: key_value.delete
+  condition:
+    resource: key_value
+    action: delete
+  bindings:
+    bucket:
+      input: bucketName
+      required: true
+- operation: key_value.inspect
+  condition:
+    resource: key_value
+    action: inspect
+  bindings:
+    bucket:
+      input: bucketName
+      required: true
+- operation: key_value.read
+  condition:
+    resource: key_value
+    action: read
+  bindings:
+    bucket:
+      input: bucketName
+      required: true
+- operation: key_value.write
+  condition:
+    resource: key_value
+    action: write
+  bindings:
+    bucket:
+      input: bucketName
+      required: true
+- operation: key_value.watch
+  condition:
+    resource: key_value
+    action: watch
+  bindings:
+    bucket:
+      input: bucketName
+      required: true
+- operation: object_store.create
+  condition:
+    resource: object_store
+    action: create
+  bindings:
+    bucket:
+      input: bucketName
+      required: true
+- operation: object_store.delete
+  condition:
+    resource: object_store
+    action: delete
+  bindings:
+    bucket:
+      input: bucketName
+      required: true
+- operation: object_store.inspect
+  condition:
+    resource: object_store
+    action: inspect
+  bindings:
+    bucket:
+      input: bucketName
+      required: true
+- operation: object_store.read
+  condition:
+    resource: object_store
+    action: read
+  bindings:
+    bucket:
+      input: bucketName
+      required: true
+- operation: object_store.write
+  condition:
+    resource: object_store
+    action: write
+  bindings:
+    bucket:
+      input: bucketName
+      required: true
+- operation: object_store.watch
+  condition:
+    resource: object_store
+    action: watch
+  bindings:
+    bucket:
+      input: bucketName
+      required: true

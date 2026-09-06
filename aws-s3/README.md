@@ -4,7 +4,7 @@
 
 **Authoritative-model maintenance experiment — not yet an AWS-published extension.**
 
-This directory contains an AWS-specific Runtime Conditions extension, its externally maintained Smithy semantics, generated language-neutral service mapping, and owner-aligned Python SDK mappings. A downstream adapter may fulfill the requirement with a compatible implementation, but the extension vocabulary describes Amazon S3 rather than a generic object store.
+This directory contains an AWS-specific Runtime Conditions extension, its externally maintained Service Operations Semantic Bridge, generated language-neutral service mapping, and owner-aligned Python SDK mappings. A downstream adapter may fulfill the requirement with a compatible implementation, but the extension vocabulary describes Amazon S3 rather than a generic object store.
 
 ## Condition shape
 
@@ -24,7 +24,7 @@ Operation entries identify canonical S3 API operations, not IAM actions. An adap
 
 ## Authoritative semantic source
 
-AWS's public [`api-models-aws`](https://github.com/aws/api-models-aws) Smithy repository is the authoritative API inventory. [`model/runtimeconditions.smithy.yaml`](model/runtimeconditions.smithy.yaml) applies the small Runtime Conditions semantic overlay without modifying AWS's generated model.
+AWS's public [`api-models-aws`](https://github.com/aws/api-models-aws) Smithy repository is the authoritative operation source. [`model/service-operations-semantic-bridge.yaml`](model/service-operations-semantic-bridge.yaml) references that source directly and defines only the Runtime Conditions decisions that the Smithy model does not own.
 
 The compiler under [`../smithy-runtime-conditions`](../smithy-runtime-conditions/) produces both:
 
@@ -49,18 +49,18 @@ An older SDK may use a subset of operations in this extension release. A newer S
 
 ## Maintenance automation
 
-[`maintenance/smithy.yaml`](maintenance/smithy.yaml) declares the authoritative model, overlay, generated release, and accepted service mapping. [`.github/workflows/smithy-maintenance.yml`](../.github/workflows/smithy-maintenance.yml) checks the public model daily, validates pull requests, retains evidence, and creates one deduplicated issue when extension review is required.
+[`maintenance/smithy.yaml`](maintenance/smithy.yaml) declares the authoritative model, semantic bridge, generated release, and accepted service mapping. [`.github/workflows/smithy-maintenance.yml`](../.github/workflows/smithy-maintenance.yml) checks the public model daily, validates pull requests, retains evidence, and creates one deduplicated issue when extension review is required.
 
 [`evidence/smithy-history/history.md`](evidence/smithy-history/history.md) inventories the public S3 model history. The first 24 model-changing commits produced six distinct operation inventories and five operation-set transitions, establishing concrete historical extension-review points without claiming that every model-only change is semantically irrelevant.
 
 ## Human-authored inputs
 
-- [`model/runtimeconditions.smithy.yaml`](model/runtimeconditions.smithy.yaml) owns S3 interface classification, resource identity paths, source/destination roles, secondary buckets, extension identity, and the reviewed operation fingerprint.
+- [`model/service-operations-semantic-bridge.yaml`](model/service-operations-semantic-bridge.yaml) owns S3 interface classification, resource identity paths, source/destination roles, secondary buckets, extension identity, and the reviewed operation fingerprint while referencing AWS's Smithy model as the operation authority.
 - [`model/botocore-sdk-annotations.yaml`](model/botocore-sdk-annotations.yaml) owns deprecated Python SDK compatibility aliases absent from authoritative Smithy vocabulary.
 - [`model/boto3-wrapper-annotations.yaml`](model/boto3-wrapper-annotations.yaml) owns handwritten boto3 surfaces absent from its resource model.
 - [`model/s3transfer-semantic-annotations.yaml`](model/s3transfer-semantic-annotations.yaml) owns public transfer entrypoints and implementation paths absent from the service model.
 
-Generated YAML is not a line-by-line human review surface. Maintainers review the overlay diff, focused model summary, representative profile changes, and adapter-facing impact.
+Generated YAML is not a line-by-line human review surface. Maintainers review the semantic bridge diff, focused model summary, representative profile changes, and adapter-facing impact.
 
 ## Authentication and configuration
 
@@ -68,4 +68,4 @@ Creating or calling an AWS SDK client does not prove a workload-facing environme
 
 ## Remaining boundary
 
-Some S3 request shapes refer to KMS keys, IAM roles, SNS topics, SQS queues, Lambda functions, or S3 Tables. Those are potential cross-service Runtime Conditions, but the S3 extension cannot own their vocabulary. They become expressible only after the corresponding extensions and reviewed cross-service traits exist.
+Some S3 request shapes refer to KMS keys, IAM roles, SNS topics, SQS queues, Lambda functions, or S3 Tables. Those are potential cross-service Runtime Conditions, but the S3 extension cannot own their vocabulary. They become expressible only after the corresponding extensions and reviewed cross-service bridge mappings exist.

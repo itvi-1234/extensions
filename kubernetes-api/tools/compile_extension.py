@@ -21,6 +21,10 @@ SERVICE_MAPPING_API_VERSION = "runtimeconditions.io/service-mapping/v1alpha1"
 SEMVER = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$")
 DNS_SUBDOMAIN_OR_EMPTY = r"^(?:|[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?)$"
 DNS_LABEL = r"^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$"
+BRIDGE_API_VERSION = "runtimeconditions.io/service-operations-semantic-bridge/v1alpha1"
+BRIDGE_KIND = "RuntimeConditionsServiceOperationsSemanticBridge"
+SOURCE_PROJECTION_API_VERSION = "runtimeconditions.io/kubernetes-openapi-projection/v1alpha1"
+SOURCE_PROJECTION_KIND = "RuntimeConditionsKubernetesOpenAPIProjection"
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -79,14 +83,22 @@ def operation_schema(verbs: list[str], scopes: list[str], methods: list[str]) ->
     return {"oneOf": [ordinary_resource, connect_resource, non_resource]}
 
 
-def build_spec(semantics: dict[str, Any]) -> dict[str, Any]:
-    extension = semantics.get("extension", {})
+def build_spec(bridge: dict[str, Any]) -> dict[str, Any]:
+    if bridge.get("apiVersion") != BRIDGE_API_VERSION or bridge.get("kind") != BRIDGE_KIND:
+        raise ValueError("semantic bridge does not use the standard Service Operations Semantic Bridge contract")
+    extension = bridge.get("extension", {})
     kind = require_string(extension.get("conditionKind"), "extension.conditionKind")
     interface_type = require_string(extension.get("interfaceType"), "extension.interfaceType")
-    verbs = require_string_list(semantics.get("resourceOperations", {}).get("verbs"), "resourceOperations.verbs")
-    scopes = require_string_list(semantics.get("resourceOperations", {}).get("scopes"), "resourceOperations.scopes")
-    methods = require_string_list(semantics.get("nonResourceOperations", {}).get("httpMethods"), "nonResourceOperations.httpMethods")
-    if "connect" not in verbs or semantics.get("resourceOperations", {}).get("connectRequiresHttpMethod") is not True:
+    action_mappings = bridge.get("resourceOperations", {}).get("actionMappings")
+    scope_mappings = bridge.get("resourceOperations", {}).get("scopes")
+    if not isinstance(action_mappings, dict) or not action_mappings or any(not isinstance(key, str) or not isinstance(value, str) for key, value in action_mappings.items()):
+        raise ValueError("resourceOperations.actionMappings must map source actions to Condition verbs")
+    if not isinstance(scope_mappings, dict) or set(scope_mappings) != {"namespacedRoute", "clusterRouteForNamespacedResource", "clusterRoute"} or any(not isinstance(value, str) or not value for value in scope_mappings.values()):
+        raise ValueError("resourceOperations.scopes must define every endpoint-to-Condition scope mapping")
+    verbs = list(dict.fromkeys(action_mappings.values()))
+    scopes = list(dict.fromkeys(scope_mappings.values()))
+    methods = require_string_list(bridge.get("nonResourceOperations", {}).get("httpMethods"), "nonResourceOperations.httpMethods")
+    if "connect" not in verbs or bridge.get("resourceOperations", {}).get("connectRequiresHttpMethod") is not True:
         raise ValueError("resourceOperations must preserve connect with a required HTTP method")
     condition_schema = {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -132,37 +144,71 @@ def build_spec(semantics: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def profile_operation(inventory_operation: dict[str, Any]) -> dict[str, Any]:
-    projection = inventory_operation.get("projection", {})
-    form = projection.get("form")
-    if form == "non_resource":
-        return {"path": require_string(projection.get("path"), "non-resource path"), "method": require_string(projection.get("method"), "non-resource method")}
-    if form != "resource":
-        raise ValueError(f"{inventory_operation.get('operationId')}: unknown projection form {form!r}")
-    result = {key: projection[key] for key in ("verb", "apiGroup", "apiVersion", "resource", "scope")}
-    if projection.get("subresource"):
-        result["subresource"] = projection["subresource"]
-    if projection.get("verb") == "connect":
-        result["method"] = require_string(inventory_operation.get("method"), "connect HTTP method")
+def resource_families(source_projection: dict[str, Any]) -> dict[tuple[str, str, str], bool]:
+    families: dict[tuple[str, str, str], bool] = defaultdict(bool)
+    for operation in source_projection.get("operations", []):
+        endpoint = operation.get("source", {}).get("endpoint") if isinstance(operation, dict) else None
+        if operation.get("classification") != "resource" or not isinstance(endpoint, dict):
+            continue
+        family = tuple(endpoint.get(field) for field in ("apiGroup", "apiVersion", "resource"))
+        if not all(isinstance(value, str) for value in family):
+            raise ValueError(f"{operation.get('operationId')}: invalid neutral endpoint coordinates")
+        families[family] = families[family] or endpoint.get("routeScope") == "namespaced"
+    return families
+
+
+def profile_operation(source_operation: dict[str, Any], bridge: dict[str, Any], families: dict[tuple[str, str, str], bool]) -> dict[str, Any]:
+    if source_operation.get("classification") == "non_resource":
+        return {"path": require_string(source_operation.get("path"), "non-resource path"), "method": require_string(source_operation.get("method"), "non-resource method")}
+    source = source_operation.get("source", {})
+    endpoint = source.get("endpoint") if isinstance(source, dict) else None
+    if source_operation.get("classification") != "resource" or not isinstance(endpoint, dict):
+        raise ValueError(f"{source_operation.get('operationId')}: invalid neutral resource operation")
+    action = source.get("action")
+    action_mappings = bridge["resourceOperations"]["actionMappings"]
+    if action not in action_mappings:
+        raise ValueError(f"{source_operation.get('operationId')}: source action {action!r} has no semantic bridge mapping")
+    family = tuple(endpoint.get(field) for field in ("apiGroup", "apiVersion", "resource"))
+    scopes = bridge["resourceOperations"]["scopes"]
+    if endpoint.get("routeScope") == "namespaced":
+        scope = scopes["namespacedRoute"]
+    elif families.get(family, False):
+        scope = scopes["clusterRouteForNamespacedResource"]
+    else:
+        scope = scopes["clusterRoute"]
+    result = {"verb": action_mappings[action], "apiGroup": endpoint["apiGroup"], "apiVersion": endpoint["apiVersion"], "resource": endpoint["resource"], "scope": scope}
+    if endpoint.get("subresource"):
+        result["subresource"] = endpoint["subresource"]
+    if result["verb"] == "connect":
+        result["method"] = require_string(source_operation.get("method"), "connect HTTP method")
     return result
 
 
-def validate_inventory(inventory: dict[str, Any], semantics: dict[str, Any], spec: dict[str, Any]) -> list[dict[str, Any]]:
-    reviewed = semantics.get("reviewedInventory", {})
-    metadata = inventory.get("metadata", {})
-    for field in ("operationCount", "operationIdsSha256", "semanticSha256"):
+def validate_source_projection(source_projection: dict[str, Any], bridge: dict[str, Any], spec: dict[str, Any]) -> list[dict[str, Any]]:
+    if source_projection.get("apiVersion") != SOURCE_PROJECTION_API_VERSION or source_projection.get("kind") != SOURCE_PROJECTION_KIND:
+        raise ValueError("source projection does not use the Kubernetes OpenAPI projection contract")
+    reviewed = bridge.get("operationSource", {})
+    if reviewed.get("kind") != "OpenAPIDocument":
+        raise ValueError("semantic bridge operationSource must identify an OpenAPI document")
+    metadata = source_projection.get("metadata", {})
+    for field in ("operationCount", "operationIdsSha256"):
         if metadata.get(field) != reviewed.get(field):
-            raise ValueError(f"authoritative inventory {field} changed: got {metadata.get(field)!r}, reviewed {reviewed.get(field)!r}")
-    extension = semantics["extension"]
+            raise ValueError(f"authoritative OpenAPI projection {field} changed: got {metadata.get(field)!r}, reviewed {reviewed.get(field)!r}")
+    source = metadata.get("source", {})
+    for field in ("repository", "revision", "ref", "path", "sha256", "semanticSha256"):
+        if source.get(field) != reviewed.get(field):
+            raise ValueError(f"authoritative OpenAPI source {field} changed: got {source.get(field)!r}, reviewed {reviewed.get(field)!r}")
+    extension = bridge["extension"]
     validator = Draft202012Validator(spec["schemas"][0]["schema"])
     mapping_operations: list[dict[str, Any]] = []
     seen: set[str] = set()
-    for item in inventory.get("operations", []):
-        name = require_string(item.get("operationId"), "inventory operationId")
+    families = resource_families(source_projection)
+    for item in source_projection.get("operations", []):
+        name = require_string(item.get("operationId"), "source projection operationId")
         if name in seen:
             raise ValueError(f"duplicate authoritative operation {name}")
         seen.add(name)
-        operation = profile_operation(item)
+        operation = profile_operation(item, bridge, families)
         condition = {"kind": extension["conditionKind"], "interface": {"type": extension["interfaceType"], "operations": [operation]}}
         errors = sorted(validator.iter_errors(condition), key=lambda error: list(error.path))
         if errors:
@@ -175,17 +221,18 @@ def validate_inventory(inventory: dict[str, Any], semantics: dict[str, Any], spe
             }
         )
     if len(mapping_operations) != reviewed["operationCount"]:
-        raise ValueError("authoritative inventory operation list does not match reviewed count")
+        raise ValueError("authoritative OpenAPI projection operation list does not match reviewed count")
     return mapping_operations
 
 
-def discovery_resources(inventory: dict[str, Any]) -> list[dict[str, Any]]:
+def discovery_resources(source_projection: dict[str, Any], mapping_operations: list[dict[str, Any]]) -> list[dict[str, Any]]:
     indexed: dict[tuple[str, str, str], dict[str, Any]] = {}
     operations: dict[tuple[str, str, str], dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
-    for item in inventory.get("operations", []):
-        projection = item.get("projection", {})
+    projected = {item["name"]: item["conditions"][0]["operation"] for item in mapping_operations}
+    for item in source_projection.get("operations", []):
+        projection = projected.get(item.get("operationId"), {})
         group_version_kind = item.get("source", {}).get("groupVersionKind")
-        if projection.get("form") != "resource" or projection.get("subresource") or not isinstance(group_version_kind, dict):
+        if item.get("classification") != "resource" or projection.get("subresource") or not isinstance(group_version_kind, dict):
             continue
         selector = tuple(group_version_kind.get(field) for field in ("group", "version", "kind"))
         if not all(isinstance(value, str) for value in selector):
@@ -219,50 +266,38 @@ def discovery_resources(inventory: dict[str, Any]) -> list[dict[str, Any]]:
             }
         )
     if not resources:
-        raise ValueError("authoritative inventory contains no discoverable base resources")
+        raise ValueError("authoritative OpenAPI projection contains no discoverable base resources")
     return resources
 
 
-def build_outputs(inventory: dict[str, Any], semantics: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    extension_config = semantics.get("extension", {})
+def build_outputs(source_projection: dict[str, Any], bridge: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    extension_config = bridge.get("extension", {})
     extension_id = require_string(extension_config.get("id"), "extension.id")
     version = require_string(extension_config.get("version"), "extension.version")
     if not SEMVER.fullmatch(version) or f"/{version}/" not in extension_id:
         raise ValueError("extension id and semantic version do not identify the same release")
-    spec = build_spec(semantics)
-    mapping_operations = validate_inventory(inventory, semantics, spec)
-    resources = discovery_resources(inventory)
-    source = inventory["metadata"]["source"]
+    spec = build_spec(bridge)
+    mapping_operations = validate_source_projection(source_projection, bridge, spec)
+    resources = discovery_resources(source_projection, mapping_operations)
+    source = source_projection["metadata"]["source"]
     spec_digest = semantic_sha256(spec)
     extension = {
         "apiVersion": EXTENSION_API_VERSION,
         "kind": "RuntimeConditionsExtensionDefinition",
-        "metadata": {
-            "id": extension_id,
-            "version": version,
-            "semanticSha256": spec_digest,
-            "provenance": {
-                "repository": source["repository"],
-                "revision": source["revision"],
-                "ref": source["ref"],
-                "path": source["path"],
-                "sha256": source["sha256"],
-                "semanticSha256": source["semanticSha256"],
-                "inventorySemanticSha256": inventory["metadata"]["semanticSha256"],
-            },
-        },
+        "metadata": {"id": extension_id, "version": version, "semanticSha256": spec_digest},
         "spec": spec,
     }
     service_mapping = {
         "apiVersion": SERVICE_MAPPING_API_VERSION,
         "kind": "RuntimeConditionsServiceMapping",
         "metadata": {
-            "name": "kubernetes.api",
-            "service": "kubernetes-api",
+            "name": bridge["metadata"]["name"],
+            "service": bridge["metadata"]["service"],
             "apiVersion": source["ref"],
             "operationCount": len(mapping_operations),
-            "operationIdsSha256": inventory["metadata"]["operationIdsSha256"],
-            "sourceInventorySemanticSha256": inventory["metadata"]["semanticSha256"],
+            "operationIdsSha256": source_projection["metadata"]["operationIdsSha256"],
+            "sourceProjectionSemanticSha256": source_projection["metadata"]["semanticSha256"],
+            "semanticBridgeSha256": semantic_sha256(bridge),
             "resourceCount": len(resources),
             "semanticSha256": semantic_sha256({"operations": mapping_operations, "resources": resources}),
             "source": source,
@@ -312,7 +347,7 @@ def review_markdown(extension: dict[str, Any], mapping: dict[str, Any]) -> str:
         "",
         "## Maintainer review surface",
         "",
-        "Maintainers review the compact `model/runtimeconditions.yaml` semantic contract and this summary. The extension release and complete service mapping are deterministic machine outputs and are not line-by-line review surfaces.",
+        "Maintainers review the compact `model/service-operations-semantic-bridge.yaml` contract and this summary. The extension release and complete service mapping are deterministic machine outputs and are not line-by-line review surfaces.",
         "",
     ]
     return "\n".join(lines)
@@ -320,15 +355,15 @@ def review_markdown(extension: dict[str, Any], mapping: dict[str, Any]) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--inventory", type=Path, required=True)
-    parser.add_argument("--semantics", type=Path, required=True)
+    parser.add_argument("--source-projection", type=Path, required=True)
+    parser.add_argument("--bridge", type=Path, required=True)
     parser.add_argument("--extension-output", type=Path, required=True)
     parser.add_argument("--service-mapping-output", type=Path, required=True)
     parser.add_argument("--review-output", type=Path, required=True)
     args = parser.parse_args()
-    inventory = read_document(args.inventory)
-    semantics = read_document(args.semantics)
-    extension, mapping = build_outputs(inventory, semantics)
+    source_projection = read_document(args.source_projection)
+    bridge = read_document(args.bridge)
+    extension, mapping = build_outputs(source_projection, bridge)
     write_yaml(args.extension_output, extension)
     write_yaml(args.service_mapping_output, mapping)
     args.review_output.parent.mkdir(parents=True, exist_ok=True)

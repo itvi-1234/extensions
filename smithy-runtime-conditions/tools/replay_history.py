@@ -46,7 +46,7 @@ def render_report(manifest: dict[str, Any], observations: list[dict[str, Any]]) 
         "",
         f"The authoritative repository contains {len(observations)} commits that changed the selected service model, producing {distinct} distinct operation inventories and {inventory_changes} operation-set transitions after the first observed model.",
         "",
-        "An operation-set transition is a required extension-semantic review point, not proof that every model-only change is automatically safe. Shape-level semantic classification is performed by the extension compiler against the reviewed overlay.",
+        "An operation-set transition is a required extension-semantic review point, not proof that every model-only change is automatically safe. Shape-level semantic classification is performed by the extension compiler against the reviewed Service Operations Semantic Bridge.",
         "",
         "| Date | Commit | Operations | Inventory change | Added | Removed | Fingerprint |",
         "| --- | --- | ---: | --- | --- | --- | --- |",

@@ -9,16 +9,16 @@ ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
 sys.path.insert(0, str(TOOLS))
 
-from compile_extension import build_outputs, profile_operation  # noqa: E402
+from compile_extension import build_outputs, profile_operation, resource_families  # noqa: E402
 from serialization import read_document  # noqa: E402
 
 
 class KubernetesExtensionCompilationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.inventory = read_document(ROOT / "model/generated/kubernetes-v1.36-operation-inventory.yaml")
-        cls.semantics = read_document(ROOT / "model/runtimeconditions.yaml")
-        cls.extension, cls.mapping = build_outputs(cls.inventory, cls.semantics)
+        cls.source_projection = read_document(ROOT / "model/generated/kubernetes-v1.36-openapi-projection.yaml")
+        cls.bridge = read_document(ROOT / "model/service-operations-semantic-bridge.yaml")
+        cls.extension, cls.mapping = build_outputs(cls.source_projection, cls.bridge)
         cls.validator = Draft202012Validator(cls.extension["spec"]["schemas"][0]["schema"])
 
     def test_compiles_every_authoritative_operation(self):
@@ -44,8 +44,8 @@ class KubernetesExtensionCompilationTest(unittest.TestCase):
         )
 
     def test_connect_preserves_http_method(self):
-        source = next(item for item in self.inventory["operations"] if item["operationId"] == "connectCoreV1PostNamespacedPodExec")
-        operation = profile_operation(source)
+        source = next(item for item in self.source_projection["operations"] if item["operationId"] == "connectCoreV1PostNamespacedPodExec")
+        operation = profile_operation(source, self.bridge, resource_families(self.source_projection))
         self.assertEqual(operation["verb"], "connect")
         self.assertEqual(operation["method"], "post")
 

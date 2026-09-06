@@ -87,7 +87,7 @@ def render_summary(result: dict[str, Any]) -> str:
         f"- Candidate bytes match accepted artifacts: {result['artifacts']['extensionMatchesAccepted'] and result['artifacts']['serviceMappingMatchesAccepted']}",
         f"- Compiler exit code: {result['compiler']['exitCode']}",
         "",
-        "The review surface is the Smithy overlay and focused semantic report. Generated YAML is machine output.",
+        "The review surface is the Service Operations Semantic Bridge and focused semantic report. Generated YAML is machine output.",
         "",
     ]
     return "\n".join(lines)
@@ -122,11 +122,9 @@ def main() -> int:
         str(compiler),
         "--model",
         str(model_path),
-        "--traits",
-        str(extensions_root / manifest["traits"]),
+        "--bridge",
+        str(extensions_root / manifest["semanticBridge"]),
     ]
-    for overlay in manifest["overlays"]:
-        command.extend(["--overlay", str(extensions_root / overlay)])
     command.extend(
         [
             "--service-shape",
@@ -158,7 +156,7 @@ def main() -> int:
     extension_semantics_match = candidate_extension_digest == accepted_extension_digest and candidate_extension_digest is not None
     if completed.returncode == 2:
         classification = "extension-review-required"
-        message = "The authoritative operation inventory no longer matches the reviewed Smithy overlay. Extension stakeholders must review the focused model difference before publishing a new extension release."
+        message = "The authoritative operation inventory no longer matches the reviewed Service Operations Semantic Bridge. Extension stakeholders must review the focused model difference before publishing a new extension release."
     elif completed.returncode != 0:
         classification = "invalid"
         message = "The maintenance automation failed before it could classify authoritative API semantics safely."
@@ -167,7 +165,7 @@ def main() -> int:
         message = "The authoritative model remains semantically compatible with the accepted immutable extension release. Provenance-only model changes do not require a new extension release."
     else:
         classification = "extension-review-required"
-        message = "The authoritative model is covered by the overlay, but its generated extension semantics differ from the accepted immutable release. Extension stakeholders must review and publish a new release before SDK mappings target the change."
+        message = "The authoritative model is covered by the semantic bridge, but its generated extension semantics differ from the accepted immutable release. Extension stakeholders must review and publish a new release before SDK mappings target the change."
     result = {
         "schemaVersion": 1,
         "experiment": manifest["id"],

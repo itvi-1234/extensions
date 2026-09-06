@@ -30,7 +30,7 @@ Ordinary package dependency resolution selects compatible SDK packages. Each ins
 
 ## Maintenance classifications
 
-- `automatic`: the authoritative model, reviewed overlay, generated extension, service mapping, SDK surfaces, and package proof remain aligned.
+- `automatic`: the authoritative model or fallback inventory, reviewed Service Operations Semantic Bridge, generated extension, service mapping, SDK surfaces, and package proof remain aligned.
 - `extension-review-required`: authoritative API semantics cannot be represented safely by the selected extension release.
 - `sdk-review-required`: the extension remains sufficient, but a language-specific SDK surface, wrapper, dependency, or package integration changed.
 - `invalid`: the automation failed or received unsupported input before semantic ownership could be classified safely.
@@ -39,4 +39,4 @@ Extension and SDK review events are measured separately so extension-author burd
 
 ## Human review surface
 
-Humans review Smithy overlays, added or removed operations, resource classifications, identity paths, roles, cross-service dependencies, representative profile changes, and adapter-facing impact. Generated extension YAML, language-neutral mappings, and language-specific SDK mappings are machine output and are not line-by-line review surfaces.
+Humans review semantic bridge changes, added or removed operations, resource classifications, identity paths, roles, cross-service dependencies, representative profile changes, and adapter-facing impact. Generated extension YAML, language-neutral mappings, and language-specific SDK mappings are machine output and are not line-by-line review surfaces.

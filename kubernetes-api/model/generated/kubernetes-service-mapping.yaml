@@ -6,7 +6,8 @@ metadata:
   apiVersion: v1.36.2
   operationCount: 1123
   operationIdsSha256: f32fcf3c6d90729c067ef7df8b7ece4e9c9cc52a7a29958d1df6519e0471e15d
-  sourceInventorySemanticSha256: 0ea1345e622231970d47bd80a0babc84a7425edf17596673e9112882b0b2a701
+  sourceProjectionSemanticSha256: bf8209aaddb164672b0630658212a67030c2096adee3ecdde27ac986c4a91b46
+  semanticBridgeSha256: 72de8e2fabcfd1929fce8bae379ae839a9d2671eecab2908345818550ab21e9f
   resourceCount: 95
   semanticSha256: 55e5307e0d614988f68742801ee384d6b0da8c9ee292af9e26da538d8060f59f
   source:

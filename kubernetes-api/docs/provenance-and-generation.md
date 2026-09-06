@@ -2,7 +2,7 @@
 
 ## Why two source models are necessary
 
-The Runtime Conditions extension and the Python SDK mapping have different semantic owners. The extension follows the authoritative Kubernetes API release. The SDK mapping follows the exact transformed model and source emitted by the Kubernetes Python client repository.
+The Runtime Conditions extension and the Python SDK mapping have different semantic owners. The extension follows the authoritative Kubernetes API release through its Service Operations Semantic Bridge. The SDK mapping follows the exact transformed model and source emitted by the Kubernetes Python client repository and references the resulting service mapping.
 
 For the first proof, Python client 36.0.3 identifies Kubernetes API v1.36.2 in its changelog. Kubernetes v1.36.2 resolves to commit `24e2b02af5543d7910c2bb074c7264df5a8f0467`. Python client v36.0.3 resolves to commit `67e7d9abfc6fe6629fa650d9b0abf4c99ef8c39c`.
 
@@ -22,6 +22,6 @@ The 28 generator-injected dynamic endpoints consist of 27 distinct custom-resour
 
 ## Maintenance ownership
 
-Extension automation watches Kubernetes API releases and classifies changes in authoritative resource, subresource, access-scope, non-resource, watch, and connect semantics. Python SDK automation watches Python client releases, verifies that the retained unprocessed model still joins semantically to an accepted extension model, and projects generator transformations plus handwritten wrappers into version-owned mappings.
+Extension automation watches Kubernetes API releases and uses the semantic bridge to classify changes in authoritative resource, subresource, access-scope, non-resource, watch, and connect semantics. Python SDK automation watches Python client releases, verifies that the retained unprocessed model still joins semantically to the accepted service mapping, and projects generator transformations plus handwritten wrappers into version-owned mappings. A new API operation can leave the extension unchanged when it uses existing Condition vocabulary, but every Python release that exposes it still regenerates its SDK mapping.
 
 Kubernetes Python maintainers should not maintain 936 method mappings. A generator integration can emit the generated surface mechanically from the retained processed model. Human-authored SDK metadata should be limited to custom-object argument bindings, handwritten watch behavior, aliases, and other public semantics absent from the generator input.

@@ -41,7 +41,7 @@ For the basic case, `PutObject` proves two stable facts: the workload needs an S
 
 An API operation name is useful to an adapter, but it is not an IAM policy declaration. AWS authorization requirements can vary with request features, encryption choices, endpoint forms, and service behavior. The adapter translates extension semantics into platform-specific permissions; the SDK mapping must not manufacture request facts the application source does not prove.
 
-Several operations demonstrate why the Smithy inventory still needs a reviewed semantic overlay:
+Several operations demonstrate why the Smithy model still needs a reviewed Service Operations Semantic Bridge:
 
 - `CopyObject` and `UploadPartCopy` target a destination bucket and reference a source object through another input path. The mapping emits source and destination bucket templates with explicit roles.
 - Bucket configuration calls can contain references to other buckets, KMS keys, IAM roles, SNS topics, SQS queues, or Lambda functions. Those secondary resources are nested request semantics, not consequences of an operation name.

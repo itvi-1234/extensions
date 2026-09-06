@@ -2,7 +2,7 @@
 
 The authoritative repository contains 24 commits that changed the selected service model, producing 6 distinct operation inventories and 5 operation-set transitions after the first observed model.
 
-An operation-set transition is a required extension-semantic review point, not proof that every model-only change is automatically safe. Shape-level semantic classification is performed by the extension compiler against the reviewed overlay.
+An operation-set transition is a required extension-semantic review point, not proof that every model-only change is automatically safe. Shape-level semantic classification is performed by the extension compiler against the reviewed Service Operations Semantic Bridge.
 
 | Date | Commit | Operations | Inventory change | Added | Removed | Fingerprint |
 | --- | --- | ---: | --- | --- | --- | --- |

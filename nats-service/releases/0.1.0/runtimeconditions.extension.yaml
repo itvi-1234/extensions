@@ -3,7 +3,7 @@ kind: RuntimeConditionsExtensionDefinition
 metadata:
   id: https://runtimeconditions.io/extensions/nats-service/0.1.0/runtimeconditions.extension.yaml
   version: 0.1.0
-  semanticSha256: b67877d056715d94583ecaf19a90429b31b52507399ffb3d06b0ab092f39995e
+  semanticSha256: 84a3797300ed1912858b393ca46512f2363ae838cb38bce26e687017026bb7e2
 spec:
   kinds:
   - name: nats
@@ -77,8 +77,7 @@ spec:
                     resource:
                       const: connection
                     action:
-                      enum:
-                      - connect
+                      const: connect
                   additionalProperties: false
                 - type: object
                   required:
@@ -89,11 +88,38 @@ spec:
                     resource:
                       const: subject
                     action:
-                      enum:
-                      - publish
-                      - subscribe
-                      - request
-                    subject: &id001
+                      const: publish
+                    subject:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - subject
+                  properties:
+                    resource:
+                      const: subject
+                    action:
+                      const: subscribe
+                    subject:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - subject
+                  properties:
+                    resource:
+                      const: subject
+                    action:
+                      const: request
+                    subject:
                       type: string
                       minLength: 1
                       pattern: ^[^\s]+$
@@ -107,12 +133,8 @@ spec:
                     resource:
                       const: stream
                     action:
-                      enum:
-                      - create
-                      - update
-                      - delete
-                      - inspect
-                    name: &id002
+                      const: create
+                    name:
                       type: string
                       minLength: 1
                       pattern: ^[^\s.*>]+$
@@ -120,7 +142,63 @@ spec:
                       type: array
                       minItems: 1
                       uniqueItems: true
-                      items: *id001
+                      items:
+                        type: string
+                        minLength: 1
+                        pattern: ^[^\s]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - name
+                  properties:
+                    resource:
+                      const: stream
+                    action:
+                      const: update
+                    name:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                    subjects:
+                      type: array
+                      minItems: 1
+                      uniqueItems: true
+                      items:
+                        type: string
+                        minLength: 1
+                        pattern: ^[^\s]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - name
+                  properties:
+                    resource:
+                      const: stream
+                    action:
+                      const: delete
+                    name:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - name
+                  properties:
+                    resource:
+                      const: stream
+                    action:
+                      const: inspect
+                    name:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
                   additionalProperties: false
                 - type: object
                   required:
@@ -132,7 +210,10 @@ spec:
                       const: stream
                     action:
                       const: publish
-                    subject: *id001
+                    subject:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s]+$
                   additionalProperties: false
                 - type: object
                   required:
@@ -143,14 +224,91 @@ spec:
                     resource:
                       const: consumer
                     action:
-                      enum:
-                      - create
-                      - update
-                      - delete
-                      - inspect
-                      - consume
-                    stream: *id002
-                    name: *id002
+                      const: create
+                    stream:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                    name:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - stream
+                  properties:
+                    resource:
+                      const: consumer
+                    action:
+                      const: update
+                    stream:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                    name:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - stream
+                  properties:
+                    resource:
+                      const: consumer
+                    action:
+                      const: delete
+                    stream:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                    name:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - stream
+                  properties:
+                    resource:
+                      const: consumer
+                    action:
+                      const: inspect
+                    stream:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                    name:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - stream
+                  properties:
+                    resource:
+                      const: consumer
+                    action:
+                      const: consume
+                    stream:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                    name:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
                   additionalProperties: false
                 - type: object
                   required:
@@ -161,14 +319,86 @@ spec:
                     resource:
                       const: key_value
                     action:
-                      enum:
-                      - create
-                      - delete
-                      - inspect
-                      - read
-                      - write
-                      - watch
-                    bucket: *id002
+                      const: create
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - bucket
+                  properties:
+                    resource:
+                      const: key_value
+                    action:
+                      const: delete
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - bucket
+                  properties:
+                    resource:
+                      const: key_value
+                    action:
+                      const: inspect
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - bucket
+                  properties:
+                    resource:
+                      const: key_value
+                    action:
+                      const: read
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - bucket
+                  properties:
+                    resource:
+                      const: key_value
+                    action:
+                      const: write
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - bucket
+                  properties:
+                    resource:
+                      const: key_value
+                    action:
+                      const: watch
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
                   additionalProperties: false
                 - type: object
                   required:
@@ -179,14 +409,86 @@ spec:
                     resource:
                       const: object_store
                     action:
-                      enum:
-                      - create
-                      - delete
-                      - inspect
-                      - read
-                      - write
-                      - watch
-                    bucket: *id002
+                      const: create
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - bucket
+                  properties:
+                    resource:
+                      const: object_store
+                    action:
+                      const: delete
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - bucket
+                  properties:
+                    resource:
+                      const: object_store
+                    action:
+                      const: inspect
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - bucket
+                  properties:
+                    resource:
+                      const: object_store
+                    action:
+                      const: read
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - bucket
+                  properties:
+                    resource:
+                      const: object_store
+                    action:
+                      const: write
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
+                  additionalProperties: false
+                - type: object
+                  required:
+                  - resource
+                  - action
+                  - bucket
+                  properties:
+                    resource:
+                      const: object_store
+                    action:
+                      const: watch
+                    bucket:
+                      type: string
+                      minLength: 1
+                      pattern: ^[^\s.*>]+$
                   additionalProperties: false
           additionalProperties: false
       additionalProperties: true

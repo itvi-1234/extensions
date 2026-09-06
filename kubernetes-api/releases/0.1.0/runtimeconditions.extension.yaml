@@ -4,14 +4,6 @@ metadata:
   id: https://runtimeconditions.io/extensions/kubernetes-api/0.1.0/runtimeconditions.extension.yaml
   version: 0.1.0
   semanticSha256: b051163962d807642703a6626f1f9297de6681fb5773182c50e3dbde1774d62e
-  provenance:
-    repository: https://github.com/kubernetes/kubernetes.git
-    revision: 24e2b02af5543d7910c2bb074c7264df5a8f0467
-    ref: v1.36.2
-    path: api/openapi-spec/swagger.json
-    sha256: dcede2063da1d7ad62ecb5af8adb6d7fabd0b52385a7fa0048afb491dac90450
-    semanticSha256: ca58855c8fe1774f8859e957ec94ebb41b016ea726e986f166460eefce488cfd
-    inventorySemanticSha256: 0ea1345e622231970d47bd80a0babc84a7425edf17596673e9112882b0b2a701
 spec:
   kinds:
   - name: kubernetes

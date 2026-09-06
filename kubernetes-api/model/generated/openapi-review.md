@@ -1,8 +1,8 @@
-# Kubernetes OpenAPI semantic review
+# Kubernetes OpenAPI source review
 
 **Classification: `investigation`**
 
-The authoritative Kubernetes operation inventory projected deterministically. The extension vocabulary remains unreleased while the structured resource, non-resource, connect, watch, and dynamic-resource semantics are reviewed.
+The authoritative Kubernetes OpenAPI operation surface normalized deterministically without adding Runtime Conditions semantics.
 
 ## Authoritative input
 
@@ -14,41 +14,41 @@ The authoritative Kubernetes operation inventory projected deterministically. Th
 - Source semantic SHA-256: `ca58855c8fe1774f8859e957ec94ebb41b016ea726e986f166460eefce488cfd`
 - Operation IDs: 1123
 - Operation-ID SHA-256: `f32fcf3c6d90729c067ef7df8b7ece4e9c9cc52a7a29958d1df6519e0471e15d`
-- Inventory semantic SHA-256: `0ea1345e622231970d47bd80a0babc84a7425edf17596673e9112882b0b2a701`
+- Projection semantic SHA-256: `bf8209aaddb164672b0630658212a67030c2096adee3ecdde27ac986c4a91b46`
 
-## Inventory
+## Source projection
 
 - Resource operations: 1058
 - Non-resource operations: 65
 - Resource families: 95 (43 namespaced, 52 cluster-scoped)
-- Access scopes: `all_namespaces` 82, `cluster` 489, `namespaced` 487
-- Connect operations requiring a vocabulary decision: 48
+- Route scopes: `cluster` 571, `namespaced` 487
 - Endpoint/GVK group-version differences requiring the endpoint coordinates to remain authoritative: 14
 
-| Normalized verb | Operations |
+| Authoritative Kubernetes action | Operations |
 | --- | ---: |
 | `connect` | 48 |
-| `create` | 97 |
 | `delete` | 87 |
 | `deletecollection` | 86 |
 | `get` | 133 |
 | `list` | 129 |
 | `patch` | 131 |
-| `update` | 132 |
-| `watch` | 215 |
+| `post` | 97 |
+| `put` | 132 |
+| `watch` | 87 |
+| `watchlist` | 128 |
 
 ## Representative operation
 
-`readCoreV1NamespacedConfigMap` projects to `get` on `core/v1` resource `configmaps` with `namespaced` access.
+`readCoreV1NamespacedConfigMap` is `get` on the `core/v1` endpoint resource `configmaps` with a `namespaced` route.
 
 ## Findings that affect extension design
 
-- A namespaced resource can be accessed within one namespace or across all namespaces. The operation needs `namespaced`, `all_namespaces`, and `cluster` access scopes rather than a single resource-scope flag.
+- The neutral projection preserves whether each authoritative endpoint route is namespaced or cluster-level. Runtime Conditions access-scope semantics are assigned later by the Service Operations Semantic Bridge.
 - The endpoint group and version identify the accessed API resource. GVK identifies the request or response representation and differs for eviction, scale, and token subresources, so it cannot replace endpoint coordinates.
-- Dedicated watch and watch-list endpoints normalize to the same logical `watch` verb in the language-neutral inventory, but an SDK generator may transform or remove those endpoints and must own the resulting language behavior.
-- Non-resource endpoints need a separately validated operation form instead of being forced into resource coordinates.
-- Connect operations preserve the authoritative Kubernetes action and HTTP method until maintainers approve adopter-facing semantics for attach, exec, port-forward, and proxy access.
+- Dedicated watch and watch-list actions remain distinct authoritative source values in the neutral projection. Their translation to the same Runtime Conditions `watch` semantic belongs to the bridge.
+- Non-resource endpoints remain classified without being forced into Runtime Conditions resource coordinates.
+- Connect operations preserve the authoritative Kubernetes action and HTTP method; the bridge decides their adapter-facing representation.
 
 ## Human review surface
 
-Review the structured operation forms, access-scope distinctions, connect semantics, non-resource representation, CRD compatibility, and representative adapter impact. The complete generated YAML inventory is machine output and is not a line-by-line review surface.
+Review authoritative operation counts, endpoint structure, Kubernetes actions, group/version/kind evidence, and source drift. Runtime Conditions verbs, access scopes, and adapter impact belong to the separately reviewed Service Operations Semantic Bridge.

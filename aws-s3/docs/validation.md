@@ -2,7 +2,7 @@
 
 ## Authoritative extension generation
 
-The external compiler reads AWS's public Smithy JSON AST model for `com.amazonaws.s3#AmazonS3`, merges the reviewed Runtime Conditions `apply` overlay, validates every Condition identity path through authoritative shapes, verifies the reviewed operation fingerprint, and emits deterministic extension and service-mapping artifacts.
+The external compiler reads AWS's public Smithy JSON AST model for `com.amazonaws.s3#AmazonS3`, applies the reviewed Service Operations Semantic Bridge, validates every Condition identity path through authoritative shapes, verifies the reviewed operation fingerprint, and emits deterministic extension and service-mapping artifacts.
 
 The accepted source is the S3 model last changed by `aws/api-models-aws` commit `073f307ee1fd0acea67b706ddbd4ad5437c67eb8`. The model SHA-256 is `6975caa92319bf6c1fc2fdea7b3f64f9b9aca6d9b32edeccf086796338842e5a`.
 
@@ -65,7 +65,7 @@ The existing Python packaging proof stages the owner mappings into local boto3, 
 
 ## Remaining limitations
 
-- The Smithy traits and normalized service-mapping contract are implemented externally but not yet packaged as a JVM `SmithyBuildPlugin` for AWS-owned integration.
-- Cross-service request dependencies remain blocked until their target extensions and reviewed traits exist.
+- The semantic-bridge compiler and normalized service-mapping contract are implemented externally but not yet packaged as a JVM `SmithyBuildPlugin` for AWS-owned integration.
+- Cross-service request dependencies remain blocked until their target extensions and reviewed bridge mappings exist.
 - Python profiler consumption is proved for the seven accepted AWS fixtures, while paginator, collection, transfer-class, and precise runtime-path selection remain outside that proof.
 - Historical model inventory measures review opportunities; maintainer interview evidence is still required to measure the human cost of each semantic interruption.

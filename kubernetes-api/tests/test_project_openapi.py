@@ -8,7 +8,7 @@ from pathlib import Path
 TOOLS = Path(__file__).resolve().parents[1] / "tools"
 sys.path.insert(0, str(TOOLS))
 
-from project_openapi import build_inventory, extract_operations  # noqa: E402
+from project_openapi import build_projection, extract_operations  # noqa: E402
 
 
 def resource_operation(operation_id, action, group, version, kind):
@@ -41,23 +41,24 @@ class OpenAPIProjectionTest(unittest.TestCase):
             },
         }
 
-    def test_projects_scopes_and_endpoint_coordinates(self):
+    def test_preserves_neutral_route_and_endpoint_coordinates(self):
         with tempfile.TemporaryDirectory() as directory:
             model_path = Path(directory, "swagger.json")
             model = self.model()
             model_path.write_text(json.dumps(model), encoding="utf-8")
-            inventory = build_inventory(model_path, model, "https://example.test/repo.git", "revision", "v1.0.0", "swagger.json")
-        by_id = {operation["operationId"]: operation for operation in inventory["operations"]}
-        self.assertEqual(by_id["readCoreV1NamespacedConfigMap"]["projection"]["scope"], "namespaced")
-        self.assertEqual(by_id["listCoreV1ConfigMapForAllNamespaces"]["projection"]["scope"], "all_namespaces")
-        self.assertEqual(by_id["listCoreV1Node"]["projection"]["scope"], "cluster")
+            projection = build_projection(model_path, model, "https://example.test/repo.git", "revision", "v1.0.0", "swagger.json")
+        by_id = {operation["operationId"]: operation for operation in projection["operations"]}
+        self.assertEqual(by_id["readCoreV1NamespacedConfigMap"]["source"]["endpoint"]["routeScope"], "namespaced")
+        self.assertEqual(by_id["listCoreV1ConfigMapForAllNamespaces"]["source"]["endpoint"]["routeScope"], "cluster")
+        self.assertEqual(by_id["listCoreV1Node"]["source"]["endpoint"]["routeScope"], "cluster")
         eviction = by_id["createCoreV1NamespacedPodEviction"]
-        self.assertEqual(eviction["projection"]["verb"], "create")
-        self.assertEqual(eviction["projection"]["apiGroup"], "")
-        self.assertEqual(eviction["projection"]["resource"], "pods")
-        self.assertEqual(eviction["projection"]["subresource"], "eviction")
+        self.assertEqual(eviction["source"]["action"], "post")
+        self.assertEqual(eviction["source"]["endpoint"]["apiGroup"], "")
+        self.assertEqual(eviction["source"]["endpoint"]["resource"], "pods")
+        self.assertEqual(eviction["source"]["endpoint"]["subresource"], "eviction")
         self.assertTrue(eviction["source"]["groupVersionKindDiffersFromEndpoint"])
         self.assertEqual(by_id["getCodeVersion"]["classification"], "non_resource")
+        self.assertNotIn("projection", by_id["readCoreV1NamespacedConfigMap"])
 
     def test_rejects_partial_kubernetes_extensions(self):
         model = self.model()

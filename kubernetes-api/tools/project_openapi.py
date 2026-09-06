@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Project a Kubernetes OpenAPI v2 document into a deterministic language-neutral operation inventory."""
+"""Normalize a Kubernetes OpenAPI v2 document into a deterministic authoring projection."""
 
 from __future__ import annotations
 
@@ -13,23 +13,9 @@ from typing import Any, Iterable
 from serialization import read_document, write_yaml
 
 
-INVENTORY_API_VERSION = "runtimeconditions.io/kubernetes-openapi-inventory/v1alpha1"
-INVENTORY_KIND = "RuntimeConditionsKubernetesOpenAPIOperationInventory"
+PROJECTION_API_VERSION = "runtimeconditions.io/kubernetes-openapi-projection/v1alpha1"
+PROJECTION_KIND = "RuntimeConditionsKubernetesOpenAPIProjection"
 HTTP_METHODS = ("delete", "get", "head", "options", "patch", "post", "put", "trace")
-NORMALIZED_VERBS = {
-    "delete": "delete",
-    "deletecollection": "deletecollection",
-    "get": "get",
-    "list": "list",
-    "patch": "patch",
-    "post": "create",
-    "put": "update",
-    "watch": "watch",
-    "watchlist": "watch",
-    "connect": "connect",
-}
-
-
 def sha256_bytes(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
@@ -84,8 +70,6 @@ def extract_operations(model: dict[str, Any]) -> list[dict[str, Any]]:
                 raise ValueError(f"{operation_id}: x-kubernetes-action and x-kubernetes-group-version-kind must be present together")
             if action is not None:
                 require_string(action, f"{operation_id} x-kubernetes-action")
-                if action not in NORMALIZED_VERBS:
-                    raise ValueError(f"{operation_id}: unsupported Kubernetes action {action!r}")
                 if not isinstance(gvk, dict):
                     raise ValueError(f"{operation_id}: x-kubernetes-group-version-kind must be an object")
                 for field in ("group", "kind", "version"):
@@ -151,7 +135,7 @@ def parse_resource_path(path: str) -> dict[str, Any]:
     return result
 
 
-def build_inventory(
+def build_projection(
     model_path: Path,
     model: dict[str, Any],
     source_repository: str,
@@ -181,33 +165,11 @@ def build_inventory(
             projected["tags"] = operation["tags"]
         if operation["action"] is None:
             projected["classification"] = "non_resource"
-            projected["projection"] = {
-                "form": "non_resource",
-                "path": operation["path"],
-                "method": operation["method"],
-            }
             operations.append(projected)
             continue
         parsed = parsed_resources[operation["operationId"]]
-        family = (parsed["apiGroup"], parsed["apiVersion"], parsed["resource"])
-        if parsed["routeScope"] == "namespaced":
-            access_scope = "namespaced"
-        elif family_namespaced[family]:
-            access_scope = "all_namespaces"
-        else:
-            access_scope = "cluster"
         endpoint_gv = (parsed["apiGroup"], parsed["apiVersion"])
         gvk = operation["gvk"]
-        projection: dict[str, Any] = {
-            "form": "resource",
-            "verb": NORMALIZED_VERBS[operation["action"]],
-            "apiGroup": parsed["apiGroup"],
-            "apiVersion": parsed["apiVersion"],
-            "resource": parsed["resource"],
-            "scope": access_scope,
-        }
-        if parsed.get("subresource"):
-            projection["subresource"] = parsed["subresource"]
         projected["classification"] = "resource"
         projected["source"] = {
             "action": operation["action"],
@@ -216,25 +178,24 @@ def build_inventory(
                 "version": gvk["version"],
                 "kind": gvk["kind"],
             },
+            "endpoint": parsed,
         }
         if endpoint_gv != (gvk["group"], gvk["version"]):
             projected["source"]["groupVersionKindDiffersFromEndpoint"] = True
         if parsed.get("watchPath"):
             projected["source"]["watchPath"] = True
-        projected["projection"] = projection
         operations.append(projected)
 
     operation_ids = [operation["operationId"] for operation in operations]
     classification_counts = Counter(operation["classification"] for operation in operations)
     action_counts = Counter(operation.get("source", {}).get("action") for operation in operations if operation["classification"] == "resource")
-    verb_counts = Counter(operation["projection"]["verb"] for operation in operations if operation["classification"] == "resource")
-    scope_counts = Counter(operation["projection"]["scope"] for operation in operations if operation["classification"] == "resource")
-    subresource_counts = Counter(operation["projection"].get("subresource") for operation in operations if operation["classification"] == "resource" and operation["projection"].get("subresource"))
+    route_scope_counts = Counter(operation["source"]["endpoint"]["routeScope"] for operation in operations if operation["classification"] == "resource")
+    subresource_counts = Counter(operation["source"]["endpoint"].get("subresource") for operation in operations if operation["classification"] == "resource" and operation["source"]["endpoint"].get("subresource"))
     mismatches = sum(bool(operation.get("source", {}).get("groupVersionKindDiffersFromEndpoint")) for operation in operations)
     model_semantic_digest = semantic_sha256(model)
     return {
-        "apiVersion": INVENTORY_API_VERSION,
-        "kind": INVENTORY_KIND,
+        "apiVersion": PROJECTION_API_VERSION,
+        "kind": PROJECTION_KIND,
         "metadata": {
             "name": "kubernetes-api",
             "operationCount": len(operations),
@@ -252,14 +213,12 @@ def build_inventory(
             "summary": {
                 "classifications": dict(sorted(classification_counts.items())),
                 "actions": dict(sorted(action_counts.items())),
-                "verbs": dict(sorted(verb_counts.items())),
-                "accessScopes": dict(sorted(scope_counts.items())),
+                "routeScopes": dict(sorted(route_scope_counts.items())),
                 "subresources": dict(sorted(subresource_counts.items())),
                 "resourceFamilies": len(family_namespaced),
                 "namespacedResourceFamilies": sum(family_namespaced.values()),
                 "clusterResourceFamilies": len(family_namespaced) - sum(family_namespaced.values()),
                 "groupVersionKindEndpointMismatches": mismatches,
-                "connectOperations": verb_counts.get("connect", 0),
             },
         },
         "operations": operations,
@@ -272,20 +231,20 @@ def baseline_operation_ids(path: Path | None) -> set[str]:
     return {operation["operationId"] for operation in read_document(path).get("operations", [])}
 
 
-def review_markdown(inventory: dict[str, Any], baseline: set[str]) -> str:
-    metadata = inventory["metadata"]
+def review_markdown(projection: dict[str, Any], baseline: set[str]) -> str:
+    metadata = projection["metadata"]
     summary = metadata["summary"]
     source = metadata["source"]
-    current = {operation["operationId"] for operation in inventory["operations"]}
+    current = {operation["operationId"] for operation in projection["operations"]}
     added = sorted(current - baseline) if baseline else []
     removed = sorted(baseline - current) if baseline else []
-    representative = next(operation for operation in inventory["operations"] if operation["operationId"] == "readCoreV1NamespacedConfigMap")
+    representative = next(operation for operation in projection["operations"] if operation["operationId"] == "readCoreV1NamespacedConfigMap")
     lines = [
-        "# Kubernetes OpenAPI semantic review",
+        "# Kubernetes OpenAPI source review",
         "",
         "**Classification: `investigation`**",
         "",
-        "The authoritative Kubernetes operation inventory projected deterministically. The extension vocabulary remains unreleased while the structured resource, non-resource, connect, watch, and dynamic-resource semantics are reviewed.",
+        "The authoritative Kubernetes OpenAPI operation surface normalized deterministically without adding Runtime Conditions semantics.",
         "",
         "## Authoritative input",
         "",
@@ -297,36 +256,35 @@ def review_markdown(inventory: dict[str, Any], baseline: set[str]) -> str:
         f"- Source semantic SHA-256: `{source['semanticSha256']}`",
         f"- Operation IDs: {metadata['operationCount']}",
         f"- Operation-ID SHA-256: `{metadata['operationIdsSha256']}`",
-        f"- Inventory semantic SHA-256: `{metadata['semanticSha256']}`",
+        f"- Projection semantic SHA-256: `{metadata['semanticSha256']}`",
         "",
-        "## Inventory",
+        "## Source projection",
         "",
         f"- Resource operations: {summary['classifications'].get('resource', 0)}",
         f"- Non-resource operations: {summary['classifications'].get('non_resource', 0)}",
         f"- Resource families: {summary['resourceFamilies']} ({summary['namespacedResourceFamilies']} namespaced, {summary['clusterResourceFamilies']} cluster-scoped)",
-        f"- Access scopes: {', '.join(f'`{name}` {count}' for name, count in summary['accessScopes'].items())}",
-        f"- Connect operations requiring a vocabulary decision: {summary['connectOperations']}",
+        f"- Route scopes: {', '.join(f'`{name}` {count}' for name, count in summary['routeScopes'].items())}",
         f"- Endpoint/GVK group-version differences requiring the endpoint coordinates to remain authoritative: {summary['groupVersionKindEndpointMismatches']}",
         "",
-        "| Normalized verb | Operations |",
+        "| Authoritative Kubernetes action | Operations |",
         "| --- | ---: |",
     ]
-    for verb, count in summary["verbs"].items():
-        lines.append(f"| `{verb}` | {count} |")
+    for action, count in summary["actions"].items():
+        lines.append(f"| `{action}` | {count} |")
     lines.extend(
         [
             "",
             "## Representative operation",
             "",
-            f"`{representative['operationId']}` projects to `{representative['projection']['verb']}` on `{representative['projection']['apiGroup'] or 'core'}/{representative['projection']['apiVersion']}` resource `{representative['projection']['resource']}` with `{representative['projection']['scope']}` access.",
+            f"`{representative['operationId']}` is `{representative['source']['action']}` on the `{representative['source']['endpoint']['apiGroup'] or 'core'}/{representative['source']['endpoint']['apiVersion']}` endpoint resource `{representative['source']['endpoint']['resource']}` with a `{representative['source']['endpoint']['routeScope']}` route.",
             "",
             "## Findings that affect extension design",
             "",
-            "- A namespaced resource can be accessed within one namespace or across all namespaces. The operation needs `namespaced`, `all_namespaces`, and `cluster` access scopes rather than a single resource-scope flag.",
+            "- The neutral projection preserves whether each authoritative endpoint route is namespaced or cluster-level. Runtime Conditions access-scope semantics are assigned later by the Service Operations Semantic Bridge.",
             "- The endpoint group and version identify the accessed API resource. GVK identifies the request or response representation and differs for eviction, scale, and token subresources, so it cannot replace endpoint coordinates.",
-            "- Dedicated watch and watch-list endpoints normalize to the same logical `watch` verb in the language-neutral inventory, but an SDK generator may transform or remove those endpoints and must own the resulting language behavior.",
-            "- Non-resource endpoints need a separately validated operation form instead of being forced into resource coordinates.",
-            "- Connect operations preserve the authoritative Kubernetes action and HTTP method until maintainers approve adopter-facing semantics for attach, exec, port-forward, and proxy access.",
+            "- Dedicated watch and watch-list actions remain distinct authoritative source values in the neutral projection. Their translation to the same Runtime Conditions `watch` semantic belongs to the bridge.",
+            "- Non-resource endpoints remain classified without being forced into Runtime Conditions resource coordinates.",
+            "- Connect operations preserve the authoritative Kubernetes action and HTTP method; the bridge decides their adapter-facing representation.",
         ]
     )
     if baseline:
@@ -344,7 +302,7 @@ def review_markdown(inventory: dict[str, Any], baseline: set[str]) -> str:
             "",
             "## Human review surface",
             "",
-            "Review the structured operation forms, access-scope distinctions, connect semantics, non-resource representation, CRD compatibility, and representative adapter impact. The complete generated YAML inventory is machine output and is not a line-by-line review surface.",
+            "Review authoritative operation counts, endpoint structure, Kubernetes actions, group/version/kind evidence, and source drift. Runtime Conditions verbs, access scopes, and adapter impact belong to the separately reviewed Service Operations Semantic Bridge.",
             "",
         ]
     )
@@ -358,13 +316,13 @@ def main() -> int:
     parser.add_argument("--source-revision", required=True)
     parser.add_argument("--source-ref", required=True)
     parser.add_argument("--source-path", required=True)
-    parser.add_argument("--inventory-output", type=Path, required=True)
+    parser.add_argument("--projection-output", type=Path, required=True)
     parser.add_argument("--review-output", type=Path, required=True)
     parser.add_argument("--baseline", type=Path)
     args = parser.parse_args()
 
     model = read_document(args.model)
-    inventory = build_inventory(
+    projection = build_projection(
         args.model,
         model,
         args.source_repository,
@@ -373,14 +331,14 @@ def main() -> int:
         args.source_path,
     )
     baseline = baseline_operation_ids(args.baseline)
-    write_yaml(args.inventory_output, inventory)
+    write_yaml(args.projection_output, projection)
     args.review_output.parent.mkdir(parents=True, exist_ok=True)
-    args.review_output.write_text(review_markdown(inventory, baseline), encoding="utf-8")
+    args.review_output.write_text(review_markdown(projection, baseline), encoding="utf-8")
     print("classification: investigation")
-    print(f"operations: {inventory['metadata']['operationCount']}")
-    print(f"resource operations: {inventory['metadata']['summary']['classifications'].get('resource', 0)}")
-    print(f"non-resource operations: {inventory['metadata']['summary']['classifications'].get('non_resource', 0)}")
-    print(f"inventory semantic sha256: {inventory['metadata']['semanticSha256']}")
+    print(f"operations: {projection['metadata']['operationCount']}")
+    print(f"resource operations: {projection['metadata']['summary']['classifications'].get('resource', 0)}")
+    print(f"non-resource operations: {projection['metadata']['summary']['classifications'].get('non_resource', 0)}")
+    print(f"projection semantic sha256: {projection['metadata']['semanticSha256']}")
     return 0
 
 

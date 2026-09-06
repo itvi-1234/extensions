@@ -1,27 +1,24 @@
 # Runtime Conditions Smithy pipeline
 
-This project proves an externally maintainable workflow that AWS can later integrate into its internal Smithy and SDK generators. It consumes AWS's public Smithy JSON AST models, merges small Runtime Conditions trait overlays, validates reviewed semantics against authoritative shapes, and emits deterministic extension and language-neutral service-mapping artifacts.
+This project proves an externally maintainable workflow that AWS can later integrate into its internal Smithy and SDK generators. It consumes AWS's public Smithy JSON AST models, applies small Service Operations Semantic Bridges, validates reviewed semantics against authoritative shapes, and emits deterministic extension and language-neutral service-mapping artifacts.
 
-The implementation is service-independent. Amazon S3 is the first acceptance case; adding a service supplies a manifest and overlay rather than another service-specific operation-table generator.
+The implementation is service-independent. Amazon S3 is the first acceptance case; adding a service supplies a manifest and semantic bridge rather than another service-specific operation-table generator.
 
 ## Inputs and outputs
 
 ```text
 authoritative Smithy model
-  + Runtime Conditions trait definitions
-  + reviewed service overlay
+  + reviewed Service Operations Semantic Bridge
   -> immutable extension definition
   -> language-neutral service mapping
   -> focused semantic review report
 ```
 
-[`model/runtimeconditions-traits.smithy.yaml`](model/runtimeconditions-traits.smithy.yaml) is a YAML-serialized Smithy AST defining the external traits. A service overlay uses Smithy `apply` shapes, so semantic ownership remains separate from AWS's generated public models and can later move into AWS without changing the conceptual input.
-
-[`tools/compile_extension.py`](tools/compile_extension.py) is the external compiler. It requires PyYAML but no Runtime Conditions runtime or SDK import. A future AWS-owned integration can consume the same traits through a native `SmithyBuildPlugin` and join the normalized output to each language generator's authoritative symbol provider.
+[`tools/compile_extension.py`](tools/compile_extension.py) is the external compiler. It requires PyYAML but no Runtime Conditions runtime or SDK import. The bridge references the authoritative Smithy repository, model path, and service shape directly, and records only the Runtime Conditions translation decisions that Smithy does not own. A future AWS-owned integration can consume equivalent annotations through a native `SmithyBuildPlugin` and join the normalized output to each language generator's authoritative symbol provider.
 
 Install the authoring-only dependency with `python3 -m pip install -r extensions/smithy-runtime-conditions/requirements.txt`; generated extensions and consuming applications gain no Python dependency.
 
-Runtime Conditions-owned manifests, overlays, mappings, indexes, state, and evidence use YAML. The compiler accepts JSON only at the boundary where AWS publishes an authoritative Smithy JSON AST; consuming that upstream representation does not create a second first-party serialization contract.
+Runtime Conditions-owned manifests, semantic bridges, mappings, indexes, state, and evidence use YAML. The compiler accepts JSON only at the boundary where AWS publishes an authoritative Smithy JSON AST; consuming that upstream representation does not create a second first-party serialization contract.
 
 [`tools/run_maintenance.py`](tools/run_maintenance.py) resolves the commit that last changed a selected service model, runs the compiler, compares deterministic output with the accepted release, and classifies the observation as `automatic`, `extension-review-required`, or `invalid`.
 

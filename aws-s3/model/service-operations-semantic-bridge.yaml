@@ -1,0 +1,89 @@
+apiVersion: runtimeconditions.io/service-operations-semantic-bridge/v1alpha1
+kind: RuntimeConditionsServiceOperationsSemanticBridge
+metadata:
+  name: aws.s3
+  service: s3
+operationSource:
+  kind: SmithyModel
+  repository: https://github.com/aws/api-models-aws.git
+  path: models/s3/service/2006-03-01/s3-2006-03-01.json
+  serviceShape: com.amazonaws.s3#AmazonS3
+  operationCount: 112
+  operationNamesSha256: 209771cb0915567090f615e18dacf594436fc6aadc2867f56535ae0db7935436
+extension:
+  id: https://runtimeconditions.io/extensions/aws-s3/0.1.0/runtimeconditions.extension.yaml
+  version: 0.1.0
+  extensionName: aws-s3
+  serviceKey: s3
+  displayName: Amazon S3
+  conditionKind: aws.s3
+defaultCondition:
+  interfaceType: bucket
+  identityPath: Bucket
+operationMappings:
+- operation: CopyObject
+  primaryCondition:
+    interfaceType: bucket
+    identityPath: Bucket
+    operationRole: destination
+  additionalConditions:
+  - interfaceType: bucket
+    identityPath: CopySource
+    identityEncoding: s3-copy-source
+    operationRole: source
+    conditional: true
+- operation: CreateBucket
+  primaryCondition:
+    interfaceType: service
+- operation: ListBuckets
+  primaryCondition:
+    interfaceType: service
+- operation: ListDirectoryBuckets
+  primaryCondition:
+    interfaceType: service
+- operation: PutBucketAnalyticsConfiguration
+  additionalConditions:
+  - interfaceType: bucket
+    identityPath: AnalyticsConfiguration.StorageClassAnalysis.DataExport.Destination.S3BucketDestination.Bucket
+    operationRole: destination
+    conditional: true
+- operation: PutBucketInventoryConfiguration
+  additionalConditions:
+  - interfaceType: bucket
+    identityPath: InventoryConfiguration.Destination.S3BucketDestination.Bucket
+    operationRole: destination
+    conditional: true
+- operation: PutBucketLogging
+  additionalConditions:
+  - interfaceType: bucket
+    identityPath: BucketLoggingStatus.LoggingEnabled.TargetBucket
+    operationRole: destination
+    conditional: true
+- operation: PutBucketReplication
+  additionalConditions:
+  - interfaceType: bucket
+    identityPath: ReplicationConfiguration.Rules[].Destination.Bucket
+    identityEncoding: s3-bucket-arn
+    operationRole: destination
+    conditional: true
+- operation: RestoreObject
+  additionalConditions:
+  - interfaceType: bucket
+    identityPath: RestoreRequest.OutputLocation.S3.BucketName
+    operationRole: destination
+    conditional: true
+- operation: UploadPartCopy
+  primaryCondition:
+    interfaceType: bucket
+    identityPath: Bucket
+    operationRole: destination
+  additionalConditions:
+  - interfaceType: bucket
+    identityPath: CopySource
+    identityEncoding: s3-copy-source
+    operationRole: source
+    conditional: true
+- operation: WriteGetObjectResponse
+  primaryCondition:
+    interfaceType: object_lambda
+    identityPath: RequestRoute

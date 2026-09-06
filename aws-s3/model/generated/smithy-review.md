@@ -2,7 +2,7 @@
 
 **Classification: `automatic`**
 
-The authoritative Smithy operation inventory matches the reviewed Runtime Conditions overlay, and deterministic extension and service-mapping artifacts were generated successfully.
+The authoritative Smithy operation inventory matches the reviewed Service Operations Semantic Bridge, and deterministic extension and service-mapping artifacts were generated successfully.
 
 ## Authoritative input
 

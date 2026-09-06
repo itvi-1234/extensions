@@ -10,13 +10,15 @@ This repository contains Runtime Conditions extension definitions, declaration p
 
 Extension release identity, immutability, provenance, and SDK compatibility are defined in [`EXTENSION_RELEASES.md`](EXTENSION_RELEASES.md).
 
+Operation-oriented extensions use the authoring contract in [`SERVICE_OPERATIONS_SEMANTIC_BRIDGES.md`](SERVICE_OPERATIONS_SEMANTIC_BRIDGES.md). A semantic bridge references an authoritative Smithy, OpenAPI, protobuf, or comparable source when available and uses a separate Service Operations Inventory only as a fallback.
+
 ## Contents
 
 - `common-integrations/` contains common API, datastore, and cache vocabulary plus Go, Java, and Python declaration packages.
 - `env-configuration/` contains workload configuration input vocabulary plus Go, Java, and Python declaration packages.
-- `aws-s3/` contains the Amazon S3 extension candidate, authoritative Smithy overlay, generated semantic release, Python SDK mappings, and historical maintenance evidence.
+- `aws-s3/` contains the Amazon S3 extension candidate, Smithy-referenced semantic bridge, generated semantic release, Python SDK mappings, and historical maintenance evidence.
 - `kubernetes-api/` contains the authoritative OpenAPI projection, accepted local Kubernetes API extension release, language-neutral service mapping, and maintenance inputs used by official client mappings.
-- `smithy-runtime-conditions/` contains reusable Runtime Conditions Smithy traits and the external compiler used to prove the workflow against AWS's public models before proposing an internal AWS generator integration.
+- `smithy-runtime-conditions/` contains the external compiler used to prove semantic-bridge generation against AWS's public Smithy models before proposing an internal AWS generator integration.
 
 ## Local validation
 
