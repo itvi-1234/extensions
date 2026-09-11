@@ -14,13 +14,18 @@ Operation-oriented extensions use the authoring contract in [`SERVICE_OPERATIONS
 
 ## Contents
 
-- `common-integrations/` contains common API, datastore, and cache vocabulary plus Go, Java, and Python declaration packages.
-- `env-configuration/` contains workload configuration input vocabulary plus Go, Java, and Python declaration packages.
-- `google-analytics/` contains an experimental browser-side Google Analytics requirement and validation schema.
-- `source-control/` contains experimental Git provider and repository-operation vocabulary for development and CI workloads.
-- `aws-s3/` contains the Amazon S3 extension candidate, Smithy-referenced semantic bridge, generated semantic release, Python SDK mappings, and historical maintenance evidence.
-- `kubernetes-api/` contains the authoritative OpenAPI projection, accepted local Kubernetes API extension release, language-neutral service mapping, and maintenance inputs used by official client mappings.
-- `smithy-runtime-conditions/` contains the external compiler used to prove semantic-bridge generation against AWS's public Smithy models before proposing an internal AWS generator integration.
+- `vocabularies/` contains core, non-provider-specific vocabulary.
+  - `common-integrations/` common API, datastore, and cache vocabulary plus Go, Java, and Python declaration packages.
+  - `env-configuration/` workload configuration input vocabulary plus Go, Java, and Python declaration packages.
+  - `source-control/` experimental Git provider and repository-operation vocabulary for development and CI workloads.
+- `providers/` contains provider/service extension candidates, namespaced by vendor.
+  - `aws/s3/` the Amazon S3 extension candidate, Smithy-referenced semantic bridge, generated semantic release, Python SDK mappings, and historical maintenance evidence.
+  - `kubernetes/api/` the authoritative OpenAPI projection, accepted local Kubernetes API extension release, language-neutral service mapping, and maintenance inputs used by official client mappings.
+  - `nats/service/` the NATS service extension candidate.
+  - `google/analytics/` an experimental browser-side Google Analytics requirement and validation schema.
+- `tooling/` contains automation shared across extensions, not extensions themselves.
+  - `common/` the shared Python helpers (e.g. `serialization.py`) every extension's `tools/` imports from, so a fix only has to happen in one place.
+  - `smithy-runtime-conditions/` the external compiler used to prove semantic-bridge generation against AWS's public Smithy models before proposing an internal AWS generator integration.
 
 ## Local validation
 
