@@ -16,6 +16,8 @@ Operation-oriented extensions use the authoring contract in [`SERVICE_OPERATIONS
 
 - `common-integrations/` contains common API, datastore, and cache vocabulary plus Go, Java, and Python declaration packages.
 - `env-configuration/` contains workload configuration input vocabulary plus Go, Java, and Python declaration packages.
+- `google-analytics/` contains an experimental browser-side Google Analytics requirement and validation schema.
+- `source-control/` contains experimental Git provider and repository-operation vocabulary for development and CI workloads.
 - `aws-s3/` contains the Amazon S3 extension candidate, Smithy-referenced semantic bridge, generated semantic release, Python SDK mappings, and historical maintenance evidence.
 - `kubernetes-api/` contains the authoritative OpenAPI projection, accepted local Kubernetes API extension release, language-neutral service mapping, and maintenance inputs used by official client mappings.
 - `smithy-runtime-conditions/` contains the external compiler used to prove semantic-bridge generation against AWS's public Smithy models before proposing an internal AWS generator integration.

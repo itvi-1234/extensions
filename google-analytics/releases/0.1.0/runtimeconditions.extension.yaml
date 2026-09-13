@@ -1,0 +1,105 @@
+apiVersion: runtimeconditions.io/v1alpha1
+kind: RuntimeConditionsExtensionDefinition
+
+metadata:
+  id: https://runtimeconditions.io/extensions/google-analytics/0.1.0/runtimeconditions.extension.yaml
+  version: 0.1.0
+
+spec:
+  kinds:
+    - name: google.analytics
+
+  interfaceTypes:
+    - name: web
+      targetKind: google.analytics
+
+  conditionFields:
+    - name: configuration
+      appliesToKinds:
+        - google.analytics
+      appliesToInterfaceTypes:
+        - web
+
+  interfaceFields:
+    - name: events
+      targetKind: google.analytics
+      targetType: web
+
+  fieldValues:
+    - field: interface.events[]
+      targetKind: google.analytics
+      targetType: web
+      values:
+        - page_view
+        - custom_event
+    - field: configuration.env[].property
+      targetKind: google.analytics
+      targetType: web
+      values:
+        - measurementId
+
+  schemas:
+    - id: google-analytics-web
+      appliesToKind: google.analytics
+      appliesToInterfaceType: web
+      description: Validates browser-side Google Analytics event collection requirements.
+      schema:
+        $schema: https://json-schema.org/draft/2020-12/schema
+        type: object
+        required:
+          - kind
+          - interface
+          - configuration
+        properties:
+          name:
+            type: string
+            minLength: 1
+          optional:
+            type: boolean
+          kind:
+            const: google.analytics
+          interface:
+            type: object
+            required:
+              - type
+              - events
+            properties:
+              type:
+                const: web
+              events:
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  enum:
+                    - page_view
+                    - custom_event
+            additionalProperties: false
+          configuration:
+            type: object
+            required:
+              - env
+            properties:
+              env:
+                type: array
+                minItems: 1
+                uniqueItems: true
+                contains:
+                  type: object
+                  required:
+                    - property
+                    - name
+                  properties:
+                    property:
+                      const: measurementId
+                    name:
+                      type: string
+                      pattern: '^[A-Za-z_][A-Za-z0-9_]*$'
+                    sensitive:
+                      type: boolean
+                    required:
+                      type: boolean
+                  additionalProperties: false
+            additionalProperties: false
+        additionalProperties: false
+

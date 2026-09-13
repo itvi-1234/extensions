@@ -1,0 +1,80 @@
+apiVersion: runtimeconditions.io/v1alpha1
+kind: RuntimeConditionsExtensionDefinition
+
+metadata:
+  id: https://runtimeconditions.io/extensions/source-control/0.1.0/runtimeconditions.extension.yaml
+  version: 0.1.0
+
+spec:
+  kinds:
+    - name: source_control
+
+  interfaceTypes:
+    - name: git
+      targetKind: source_control
+
+  interfaceFields:
+    - name: provider
+      targetKind: source_control
+      targetType: git
+    - name: access
+      targetKind: source_control
+      targetType: git
+
+  fieldValues:
+    - field: interface.provider
+      targetKind: source_control
+      targetType: git
+      values:
+        - github
+    - field: interface.access[]
+      targetKind: source_control
+      targetType: git
+      values:
+        - clone
+        - fetch
+        - pull
+        - push
+
+  schemas:
+    - id: source-control-git
+      appliesToKind: source_control
+      appliesToInterfaceType: git
+      description: Validates Git source-control access requirements.
+      schema:
+        $schema: https://json-schema.org/draft/2020-12/schema
+        type: object
+        required:
+          - kind
+          - interface
+        properties:
+          name:
+            type: string
+            minLength: 1
+          optional:
+            type: boolean
+          kind:
+            const: source_control
+          interface:
+            type: object
+            required:
+              - type
+              - provider
+              - access
+            properties:
+              type:
+                const: git
+              provider:
+                const: github
+              access:
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  enum:
+                    - clone
+                    - fetch
+                    - pull
+                    - push
+            additionalProperties: false
+        additionalProperties: false
