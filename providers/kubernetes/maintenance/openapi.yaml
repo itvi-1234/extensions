@@ -24,10 +24,10 @@ sdk:
     sha256: 642b0eb32a68f326642aee70f3ff8530730616d2cc60b2994364ca199975bfb3
     semanticSha256: 6df0f8c041370f2bd133a3fe8dce763e8e89dbffa84ee81b45401d32203a58e8
 accepted:
-  sourceProjection: providers/kubernetes/api/model/generated/kubernetes-v1.36-openapi-projection.yaml
-  openapiReview: providers/kubernetes/api/model/generated/openapi-review.md
-  semanticBridge: providers/kubernetes/api/model/service-operations-semantic-bridge.yaml
-  extension: providers/kubernetes/api/releases/0.1.0/runtimeconditions.extension.yaml
-  serviceMapping: providers/kubernetes/api/model/generated/kubernetes-service-mapping.yaml
-  extensionReview: providers/kubernetes/api/model/generated/extension-review.md
+  sourceProjection: providers/kubernetes/model/generated/kubernetes-v1.36-openapi-projection.yaml
+  openapiReview: providers/kubernetes/model/generated/openapi-review.md
+  semanticBridge: providers/kubernetes/model/service-operations-semantic-bridge.yaml
+  extension: providers/kubernetes/releases/0.1.0/runtimeconditions.extension.yaml
+  serviceMapping: providers/kubernetes/model/generated/kubernetes-service-mapping.yaml
+  extensionReview: providers/kubernetes/model/generated/extension-review.md
 fixture: ../sdk/kubernetes/python/configmap-reader
