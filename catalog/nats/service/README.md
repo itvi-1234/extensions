@@ -23,7 +23,7 @@ The inventory, semantic bridge, and generated service mapping are language-neutr
 From the extensions repository root:
 
 ```sh
-python3 providers/nats/tools/compile_extension.py --inventory ../service-operations-inventories/nats/service-operations-inventory.yaml --bridge providers/nats/model/service-operations-semantic-bridge.yaml --extension-output providers/nats/releases/0.1.0/runtimeconditions.extension.yaml --service-mapping-output providers/nats/model/generated/nats-service-mapping.yaml
+python3 catalog/nats/service/tools/compile_extension.py --inventory ../service-operations-inventories/nats/service-operations-inventory.yaml --bridge catalog/nats/service/model/service-operations-semantic-bridge.yaml --extension-output catalog/nats/service/releases/0.1.0/runtimeconditions.extension.yaml --service-mapping-output catalog/nats/service/model/generated/nats-service-mapping.yaml
 ```
 
 ## Current review boundary

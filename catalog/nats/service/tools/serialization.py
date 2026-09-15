@@ -12,7 +12,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
-_repo_root = Path(__file__).resolve().parents[3]
+_repo_root = Path(__file__).resolve().parents[4]
 _shared_path = _repo_root / "tooling" / "common" / "serialization.py"
 _spec = importlib.util.spec_from_file_location("_rc_shared_serialization", _shared_path)
 _module = importlib.util.module_from_spec(_spec)

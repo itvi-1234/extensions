@@ -28,24 +28,24 @@ The initial unchanged application is [`../../sdk/kubernetes/python/configmap-rea
 
 [`tools/compile_extension.py`](tools/compile_extension.py) applies the semantic bridge's action and access-scope translations, validates every resulting Condition operation against the approved open CRD-compatible schema, and emits the immutable extension plus [`model/generated/kubernetes-service-mapping.yaml`](model/generated/kubernetes-service-mapping.yaml). Resource, connect, and non-resource operations remain distinct validated forms; connect operations preserve HTTP method. The compiler also groups authoritative resource operations into unambiguous built-in group/version/kind selectors with plural resource name, namespaced state, and supported verb/scope pairs for dynamic SDKs.
 
-Install the authoring-only dependency with `python3 -m pip install -r providers/kubernetes/requirements.txt`, then run the projection from the extension repository root with an immutable local copy of the source model:
+Install the authoring-only dependency with `python3 -m pip install -r catalog/kubernetes/api/requirements.txt`, then run the projection from the extension repository root with an immutable local copy of the source model:
 
 ```sh
-python providers/kubernetes/tools/project_openapi.py \
+python catalog/kubernetes/api/tools/project_openapi.py \
   --model /absolute/path/to/kubernetes-v1.36.2-swagger.json \
   --source-repository https://github.com/kubernetes/kubernetes.git \
   --source-revision 24e2b02af5543d7910c2bb074c7264df5a8f0467 \
   --source-ref v1.36.2 \
   --source-path api/openapi-spec/swagger.json \
-  --projection-output providers/kubernetes/model/generated/kubernetes-v1.36-openapi-projection.yaml \
-  --review-output providers/kubernetes/model/generated/openapi-review.md
+  --projection-output catalog/kubernetes/api/model/generated/kubernetes-v1.36-openapi-projection.yaml \
+  --review-output catalog/kubernetes/api/model/generated/openapi-review.md
 
-python providers/kubernetes/tools/compile_extension.py \
-  --source-projection providers/kubernetes/model/generated/kubernetes-v1.36-openapi-projection.yaml \
-  --bridge providers/kubernetes/model/service-operations-semantic-bridge.yaml \
-  --extension-output providers/kubernetes/releases/0.1.0/runtimeconditions.extension.yaml \
-  --service-mapping-output providers/kubernetes/model/generated/kubernetes-service-mapping.yaml \
-  --review-output providers/kubernetes/model/generated/extension-review.md
+python catalog/kubernetes/api/tools/compile_extension.py \
+  --source-projection catalog/kubernetes/api/model/generated/kubernetes-v1.36-openapi-projection.yaml \
+  --bridge catalog/kubernetes/api/model/service-operations-semantic-bridge.yaml \
+  --extension-output catalog/kubernetes/api/releases/0.1.0/runtimeconditions.extension.yaml \
+  --service-mapping-output catalog/kubernetes/api/model/generated/kubernetes-service-mapping.yaml \
+  --review-output catalog/kubernetes/api/model/generated/extension-review.md
 ```
 
 ## Current boundary

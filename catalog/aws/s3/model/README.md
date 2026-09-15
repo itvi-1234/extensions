@@ -28,7 +28,7 @@ Obtain a full or history-capable checkout of `https://github.com/aws/api-models-
 
 ```sh
 python3 extensions/tooling/smithy-runtime-conditions/tools/run_maintenance.py \
-  --manifest extensions/providers/aws/s3/maintenance/smithy.yaml \
+  --manifest extensions/catalog/aws/s3/maintenance/smithy.yaml \
   --models-root /absolute/path/to/api-models-aws \
   --extensions-root extensions \
   --output /tmp/aws-s3-extension-maintenance

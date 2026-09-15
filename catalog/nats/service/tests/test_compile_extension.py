@@ -16,7 +16,7 @@ from serialization import read_document  # noqa: E402
 class NATSServiceExtensionCompilationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.inventory = read_document(ROOT.parents[2] / "service-operations-inventories/nats/service-operations-inventory.yaml")
+        cls.inventory = read_document(ROOT.parents[3] / "service-operations-inventories/nats/service-operations-inventory.yaml")
         cls.bridge = read_document(ROOT / "model/service-operations-semantic-bridge.yaml")
         cls.extension, cls.service_mapping = build(cls.inventory, cls.bridge)
         cls.validator = Draft202012Validator(cls.extension["spec"]["schemas"][0]["schema"])

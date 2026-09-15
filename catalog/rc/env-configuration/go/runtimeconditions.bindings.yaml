@@ -7,7 +7,7 @@ metadata:
   language: go
 
 go:
-  importPath: github.com/runtimeconditions/extensions/vocabularies/env-configuration/go
+  importPath: github.com/runtimeconditions/extensions/catalog/rc/env-configuration/go
   package: envconfiguration
 
   options:

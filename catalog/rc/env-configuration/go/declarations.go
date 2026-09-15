@@ -2,7 +2,7 @@
 // Environment Configuration Runtime Conditions extension.
 package envconfiguration
 
-import common "github.com/runtimeconditions/extensions/vocabularies/common-integrations/go"
+import common "github.com/runtimeconditions/extensions/catalog/rc/common-integrations/go"
 
 // EnvOption configures an environment variable mapping declaration.
 type EnvOption interface {
