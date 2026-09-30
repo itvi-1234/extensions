@@ -1,0 +1,22 @@
+apiVersion: runtimeconditions.io/v1alpha1
+kind: RuntimeConditionsExtensionDefinition
+metadata:
+  id: urn:runtimeconditions:go-fixture:value-member-collision
+  version: 1.0.0
+spec:
+  kinds:
+    - name: service
+  conditionFields:
+    - name: mode
+      appliesToKinds: [service]
+  schemas:
+    - id: service
+      description: Distinct exact values that derive the same Go enum member.
+      appliesToKind: service
+      schema:
+        type: object
+        properties:
+          mode:
+            type: string
+            enum: [apiUrl, api_url]
+        additionalProperties: false

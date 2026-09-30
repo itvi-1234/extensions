@@ -1,0 +1,4 @@
+category: symbol
+code: RCG2010
+coordinate: condition-field:service::mode
+message: Go value member "ModeApiUrl" collides between exact values "apiUrl" and "api_url"

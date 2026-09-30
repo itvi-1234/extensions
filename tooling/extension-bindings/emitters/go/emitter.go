@@ -2,6 +2,8 @@ package goemitter
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"go/format"
 	"sort"
@@ -130,7 +132,7 @@ func buildPackageIR(model normalizer.BindingModel, target PackageTarget) (*packa
 		})
 		ir.declarations = append(ir.declarations, &declarationIR{
 			model: declaration, function: function, fieldInterface: fieldInterface,
-			markerMethod: markerMethod(declarationTokens),
+			markerMethod: markerMethod(declaration),
 		})
 	}
 	for _, declaration := range model.Vocabulary.ImportedDeclarations {
@@ -177,7 +179,7 @@ func buildPackageIR(model normalizer.BindingModel, target PackageTarget) (*packa
 		if err != nil {
 			return nil, err
 		}
-		ir.addMethod(typeValue, markerMethod(declarationTokens))
+		ir.addMethod(typeValue, markerMethod(declaration))
 	}
 
 	for _, field := range model.Vocabulary.ConditionFields {
@@ -211,7 +213,7 @@ func buildPackageIR(model normalizer.BindingModel, target PackageTarget) (*packa
 		if err != nil {
 			return nil, err
 		}
-		ir.addMethod(typeValue, markerMethod(declarationTokens))
+		ir.addMethod(typeValue, markerMethod(declaration))
 	}
 	if err := ir.discoverStructuralTypes(); err != nil {
 		return nil, err
@@ -340,7 +342,7 @@ func (ir *packageIR) referenceForShape(context shapeContext, shape normalizer.Sh
 		if err != nil {
 			return typeReference{}, err
 		}
-		return typeReference{key: definition.key, pointer: !required && definition.kind == "struct"}, nil
+		return typeReference{key: definition.key, pointer: optionalPointer(definition, required)}, nil
 	}
 	if shape.Kind == "scalar" && len(ir.stringMembers(context, shape)) == 0 {
 		return typeReference{builtin: goScalar(shape.Scalar), pointer: !required}, nil
@@ -359,7 +361,17 @@ func (ir *packageIR) referenceForShape(context shapeContext, shape normalizer.Sh
 	if err != nil {
 		return typeReference{}, err
 	}
-	return typeReference{key: typeValue.key, pointer: !required && typeValue.kind == "struct"}, nil
+	return typeReference{key: typeValue.key, pointer: optionalPointer(typeValue, required)}, nil
+}
+
+func optionalPointer(typeValue *typeIR, required bool) bool {
+	if required {
+		return false
+	}
+	if typeValue.kind == "struct" {
+		return true
+	}
+	return typeValue.kind == "scalar" && len(typeValue.members) != 0
 }
 
 func (ir *packageIR) referenceForArrayItem(context shapeContext, shape normalizer.Shape) (typeReference, error) {
@@ -739,7 +751,7 @@ func (ir *packageIR) renderConformance() ([]byte, error) {
 	}
 	for _, declaration := range ir.model.Vocabulary.ImportedDeclarations {
 		declarationTokens := goTokens(declaration.Kind)
-		method := markerMethod(declarationTokens)
+		method := markerMethod(declaration)
 		localName := "imported" + pascal(declarationTokens) + "Field"
 		fmt.Fprintf(&buffer, "\ntype %s interface { %s() }\n", localName, method)
 		for _, key := range keys {
@@ -1016,8 +1028,10 @@ func cloneTokenGroups(groups [][]string) [][]string {
 	return result
 }
 
-func markerMethod(tokens []string) string {
-	return "RuntimeConditions" + pascal(tokens) + "Field"
+func markerMethod(declaration normalizer.DeclarationModel) string {
+	identity := declaration.Owner + "\x00" + declaration.Coordinate
+	digest := sha256.Sum256([]byte(identity))
+	return "RuntimeConditions" + pascal(goTokens(declaration.Kind)) + "Field" + hex.EncodeToString(digest[:])
 }
 
 func unionMethod(name string) string {

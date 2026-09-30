@@ -1,0 +1,4 @@
+category: symbol
+code: RCG2011
+coordinate: condition-field:service::9patch
+message: Go source name for generated type "condition-field:service::9patch" produces invalid identifier "9Patch"

@@ -1,0 +1,27 @@
+apiVersion: runtimeconditions.io/v1alpha1
+kind: RuntimeConditionsExtensionDefinition
+metadata:
+  id: urn:runtimeconditions:go-fixture:optional-enum-fields
+  version: 1.0.0
+spec:
+  kinds:
+    - name: service
+  schemas:
+    - id: service-settings
+      description: Optional and required enum properties for Go emitter coverage.
+      appliesToKind: service
+      schema:
+        type: object
+        properties:
+          settings:
+            type: object
+            properties:
+              mode:
+                type: string
+                enum: [fast, safe]
+              required_mode:
+                type: string
+                enum: [strict, relaxed]
+            required: [required_mode]
+            additionalProperties: false
+        additionalProperties: false

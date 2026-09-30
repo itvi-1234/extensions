@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"go/ast"
+	"go/parser"
 	"go/token"
+	"go/types"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,6 +46,102 @@ func TestGoRejectsLeadingDigitIdentifiers(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "RCG2011") {
 		t.Fatalf("leading-digit identifier error = %v, want RCG2011", err)
 	}
+}
+
+func TestOptionalEnumFieldsUsePointers(t *testing.T) {
+	fixture := filepath.Join("testdata", "optional-enum-fields")
+	model := normalizeFixture(t, fixture, "urn:runtimeconditions:go-fixture:optional-enum-fields")
+	target, err := LoadPackageTarget(filepath.Join(fixture, "package-target.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	output := filepath.Join(t.TempDir(), "generated")
+	if err := Emit(model, target, output); err != nil {
+		t.Fatal(err)
+	}
+
+	file, err := parser.ParseFile(token.NewFileSet(), filepath.Join(output, generatedGoFile), nil, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	settings := findStructType(t, file, "Settings")
+	fields := map[string]ast.Expr{}
+	for _, field := range settings.Fields.List {
+		for _, name := range field.Names {
+			fields[name.Name] = field.Type
+		}
+	}
+	if _, ok := fields["Mode"].(*ast.StarExpr); !ok {
+		t.Errorf("optional enum field Mode has type %T; want a pointer", fields["Mode"])
+	}
+	if _, ok := fields["RequiredMode"].(*ast.StarExpr); ok {
+		t.Errorf("required enum field RequiredMode has pointer type %T", fields["RequiredMode"])
+	}
+}
+
+func TestMarkerMethodsUseOwnerCoordinate(t *testing.T) {
+	fixture := filepath.Join("testdata", "marker-owner-coordinate")
+	const ownerA = "urn:runtimeconditions:go-fixture:marker-owner-a"
+	const ownerB = "urn:runtimeconditions:go-fixture:marker-owner-b"
+	modelA := normalizeFixture(t, fixture, ownerA)
+	modelB := normalizeFixture(t, fixture, ownerB)
+	targetA, err := LoadPackageTarget(filepath.Join(fixture, "package-target-owner-a.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetB, err := LoadPackageTarget(filepath.Join(fixture, "package-target-owner-b.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	targetACopy := targetA
+	targetACopy.PackageKey = "marker-owner-a-copy"
+	targetACopy.ModulePath = "example.com/runtimeconditions/marker-owner-a-copy"
+	targetACopy.PackageName = "markerownercopy"
+
+	outputA := filepath.Join(t.TempDir(), "owner-a")
+	outputB := filepath.Join(t.TempDir(), "owner-b")
+	outputACopy := filepath.Join(t.TempDir(), "owner-a-copy")
+	for _, item := range []struct {
+		model  normalizer.BindingModel
+		target PackageTarget
+		output string
+	}{
+		{modelA, targetA, outputA},
+		{modelB, targetB, outputB},
+		{modelA, targetACopy, outputACopy},
+	} {
+		if err := Emit(item.model, item.target, item.output); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	packageA := typeCheckGeneratedPackage(t, outputA, targetA.ModulePath)
+	packageB := typeCheckGeneratedPackage(t, outputB, targetB.ModulePath)
+	packageACopy := typeCheckGeneratedPackage(t, outputACopy, targetACopy.ModulePath)
+	fieldA := packageType(t, packageA, "Zone")
+	fieldInterfaceA := packageType(t, packageA, "ServiceField").Underlying().(*types.Interface)
+	fieldInterfaceB := packageType(t, packageB, "ServiceField").Underlying().(*types.Interface)
+	fieldInterfaceACopy := packageType(t, packageACopy, "ServiceField").Underlying().(*types.Interface)
+	if !types.Implements(fieldA, fieldInterfaceA) {
+		t.Fatal("owner A field does not implement its own declaration marker")
+	}
+	if types.Implements(fieldA, fieldInterfaceB) {
+		t.Fatal("owner A field unexpectedly implements the distinct owner B marker")
+	}
+	if !types.Implements(fieldA, fieldInterfaceACopy) {
+		t.Fatal("owner A field does not implement the same declaration marker in a second package")
+	}
+}
+
+func TestLeadingDigitEmissionHasExactDiagnostic(t *testing.T) {
+	fixture := filepath.Join("testdata", "negative", "leading-digit")
+	model := normalizeFixture(t, fixture, "urn:runtimeconditions:go-fixture:leading-digit")
+	target, err := LoadPackageTarget(filepath.Join(fixture, "package-target.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = Emit(model, target, filepath.Join(t.TempDir(), "generated"))
+	assertExactDiagnostic(t, err, filepath.Join(fixture, "diagnostic.yaml"))
 }
 
 func TestEmitterRejectsInvalidInputs(t *testing.T) {
@@ -226,15 +325,31 @@ func TestFixedSymbolCollisionHasExactDiagnostic(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = Emit(model, target, filepath.Join(t.TempDir(), "output"))
+	assertExactDiagnostic(t, err, filepath.Join(fixture, "diagnostic.yaml"))
+}
+
+func TestSameDomainMemberCollisionHasExactDiagnostic(t *testing.T) {
+	fixture := filepath.Join("testdata", "negative", "value-member-collision")
+	model := normalizeFixture(t, fixture, "urn:runtimeconditions:go-fixture:value-member-collision")
+	target, err := LoadPackageTarget(filepath.Join(fixture, "package-target.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = Emit(model, target, filepath.Join(t.TempDir(), "generated"))
+	assertExactDiagnostic(t, err, filepath.Join(fixture, "diagnostic.yaml"))
+}
+
+func assertExactDiagnostic(t *testing.T, actualError error, expectedPath string) {
+	t.Helper()
 	var diagnosticError *DiagnosticError
-	if !errors.As(err, &diagnosticError) {
-		t.Fatalf("error = %T %v, want DiagnosticError", err, err)
+	if !errors.As(actualError, &diagnosticError) {
+		t.Fatalf("error = %T %v, want DiagnosticError", actualError, actualError)
 	}
 	actual, err := yaml.Marshal(diagnosticError.Diagnostic)
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected, err := os.ReadFile(filepath.Join(fixture, "diagnostic.yaml"))
+	expected, err := os.ReadFile(expectedPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,20 +358,54 @@ func TestFixedSymbolCollisionHasExactDiagnostic(t *testing.T) {
 	}
 }
 
-func TestSameDomainMemberCollisionFails(t *testing.T) {
-	model := loadExpectedModel(t, "10-scoped-domains-collisions")
-	for index := range model.Vocabulary.ValueDomains {
-		if model.Vocabulary.ValueDomains[index].InterfaceType == "http" && model.Vocabulary.ValueDomains[index].Path == "mode" {
-			model.Vocabulary.ValueDomains[index].Values = []normalizer.NormalizedValue{
-				{Value: "apiUrl"},
-				{Value: "api_url"},
+func findStructType(t *testing.T, file *ast.File, name string) *ast.StructType {
+	t.Helper()
+	for _, declaration := range file.Decls {
+		group, ok := declaration.(*ast.GenDecl)
+		if !ok {
+			continue
+		}
+		for _, spec := range group.Specs {
+			typeSpec, ok := spec.(*ast.TypeSpec)
+			if !ok || typeSpec.Name.Name != name {
+				continue
 			}
+			structure, ok := typeSpec.Type.(*ast.StructType)
+			if !ok {
+				t.Fatalf("generated type %s has type %T, want struct", name, typeSpec.Type)
+			}
+			return structure
 		}
 	}
-	err := Emit(model, loadTestTarget(t, "10-scoped-domains-collisions.yaml"), filepath.Join(t.TempDir(), "output"))
-	if err == nil || !strings.Contains(err.Error(), "RCG2010") {
-		t.Fatalf("same-domain collision error = %v", err)
+	t.Fatalf("generated source has no type %s", name)
+	return nil
+}
+
+func typeCheckGeneratedPackage(t *testing.T, directory, importPath string) *types.Package {
+	t.Helper()
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, filepath.Join(directory, generatedGoFile), nil, 0)
+	if err != nil {
+		t.Fatal(err)
 	}
+	packageValue, err := new(types.Config).Check(importPath, fset, []*ast.File{file}, nil)
+	if err != nil {
+		t.Fatalf("type-check generated package %s: %v", importPath, err)
+	}
+	return packageValue
+}
+
+func packageType(t *testing.T, packageValue *types.Package, name string) types.Type {
+	t.Helper()
+	object := packageValue.Scope().Lookup(name)
+	if object == nil {
+		t.Fatalf("package %s has no exported type %s", packageValue.Path(), name)
+	}
+	typeName, ok := object.(*types.TypeName)
+	if !ok {
+		t.Fatalf("package object %s has type %T, want type name", name, object)
+	}
+	return typeName.Type()
 }
 
 func normalizeFixture(t *testing.T, root, rootID string) normalizer.BindingModel {

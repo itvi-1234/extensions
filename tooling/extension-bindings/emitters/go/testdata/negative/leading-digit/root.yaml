@@ -1,0 +1,20 @@
+apiVersion: runtimeconditions.io/v1alpha1
+kind: RuntimeConditionsExtensionDefinition
+metadata:
+  id: urn:runtimeconditions:go-fixture:leading-digit
+  version: 1.0.0
+spec:
+  kinds:
+    - name: service
+  conditionFields:
+    - name: 9patch
+      appliesToKinds: [service]
+  schemas:
+    - id: service
+      description: Leading-digit source name for a Go emitter diagnostic fixture.
+      appliesToKind: service
+      schema:
+        type: object
+        properties:
+          9patch: {type: string}
+        additionalProperties: false

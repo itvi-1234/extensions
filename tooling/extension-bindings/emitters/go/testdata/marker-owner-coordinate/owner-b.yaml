@@ -1,0 +1,20 @@
+apiVersion: runtimeconditions.io/v1alpha1
+kind: RuntimeConditionsExtensionDefinition
+metadata:
+  id: urn:runtimeconditions:go-fixture:marker-owner-b
+  version: 1.0.0
+spec:
+  kinds:
+    - name: service
+  conditionFields:
+    - name: zone
+      appliesToKinds: [service]
+  schemas:
+    - id: service
+      description: Marker contract owned by the second independent extension.
+      appliesToKind: service
+      schema:
+        type: object
+        properties:
+          zone: {type: string}
+        additionalProperties: false

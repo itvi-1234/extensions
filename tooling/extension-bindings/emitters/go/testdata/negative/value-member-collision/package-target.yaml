@@ -1,0 +1,9 @@
+apiVersion: runtimeconditions.io/go-package-target/v1alpha1
+kind: RuntimeConditionsGoPackageTarget
+packageKey: go-fixture-value-member-collision
+rootExtension: urn:runtimeconditions:go-fixture:value-member-collision
+modulePath: example.com/runtimeconditions/go-fixture/value-member-collision
+packageName: valuemembercollision
+version: v1.0.0
+minimumGoVersion: "1.22"
+publicationMode: github-tag
