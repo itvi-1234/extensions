@@ -1,14 +1,6 @@
-"""Enforce that catalog extensions namespace their kinds under their
-provider folder (catalog/<provider>/...), per the spec's namespacing rule
-(docs/sixth-draft.md, section on vocabulary namespacing).
-
-Only checks `kind` for now, not `interfaceType` - several existing
-extensions (aws/s3, google/analytics) have interfaceTypes that would also
-need namespacing, but those are generated from upstream models and need
-per-extension owner sign-off before renaming. See runtimeconditions/extensions#3.
-
-Canonical copy - see tooling/common/serialization.py for why this lives here
-instead of per-extension.
+"""Enforce that catalog extension kinds are namespaced under their
+provider folder (catalog/<provider>/...). Doesn't check interfaceType yet -
+see runtimeconditions/extensions#3.
 """
 
 from __future__ import annotations
