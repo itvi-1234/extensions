@@ -3,20 +3,20 @@ kind: RuntimeConditionsExtensionDefinition
 metadata:
   id: https://runtimeconditions.io/extensions/nats-service/0.1.0/runtimeconditions.extension.yaml
   version: 0.1.0
-  semanticSha256: 84a3797300ed1912858b393ca46512f2363ae838cb38bce26e687017026bb7e2
+  semanticSha256: aef0e170f79d739a505a0ab1a257000a9cc2b5fc85cec537fdcfb69e556aceab
 spec:
   kinds:
-  - name: nats
+  - name: nats.service
   interfaceTypes:
   - name: service
-    targetKind: nats
+    targetKind: nats.service
   interfaceFields:
   - name: operations
-    targetKind: nats
+    targetKind: nats.service
     targetType: service
   fieldValues:
   - field: interface.operations[].resource
-    targetKind: nats
+    targetKind: nats.service
     targetType: service
     values:
     - connection
@@ -26,7 +26,7 @@ spec:
     - key_value
     - object_store
   - field: interface.operations[].action
-    targetKind: nats
+    targetKind: nats.service
     targetType: service
     values:
     - connect
@@ -43,7 +43,7 @@ spec:
     - write
   schemas:
   - id: nats-service-interface
-    appliesToKind: nats
+    appliesToKind: nats.service
     appliesToInterfaceType: service
     description: Validates adapter-actionable NATS connection, subject authorization, and JetStream resource requirements.
     schema:
@@ -54,7 +54,7 @@ spec:
       - interface
       properties:
         kind:
-          const: nats
+          const: nats.service
         interface:
           type: object
           required:

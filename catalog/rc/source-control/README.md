@@ -12,7 +12,7 @@ Example Condition:
 
 ```yaml
 - name: application-source
-  kind: source_control
+  kind: rc.source_control
   interface:
     type: git
     provider: github

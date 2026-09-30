@@ -14,7 +14,7 @@ The language-neutral source is [`runtimeconditions/service-operations-inventorie
 
 An operation is retained only when it can change service enablement, NATS subject authorization, JetStream API authorization, or resource provisioning and policy. Retry options, callback shapes, asynchronous return types, message encoding, client buffering, and other SDK behavior are not extension semantics unless a downstream adapter would act differently because of them.
 
-The semantic bridge selects one `kind: nats` condition and `interface.type: service`. Each stable inventory name such as `subject.publish`, `stream.create`, or `object_store.watch` maps to one fixed Condition operation form. It is not a runtime-selected resource/action combination. “Service operation” is used instead of “endpoint” because integrations such as NATS are not expressed solely as HTTP endpoints.
+The semantic bridge selects one `kind: nats.service` condition and `interface.type: service`. Each stable inventory name such as `subject.publish`, `stream.create`, or `object_store.watch` maps to one fixed Condition operation form. It is not a runtime-selected resource/action combination. “Service operation” is used instead of “endpoint” because integrations such as NATS are not expressed solely as HTTP endpoints.
 
 The inventory, semantic bridge, and generated service mapping are language-neutral; none describes public SDK methods. They contain no Go packages, JavaScript modules, classes, methods, arguments, or return types. A Go, Python, JavaScript, Java, or other NATS SDK supplies only the language-specific symbols, field bindings, state flow, and delegation needed to reach these shared operations.
 

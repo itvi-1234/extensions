@@ -9,7 +9,7 @@ The extension must describe what a workload requires from a Kubernetes API. It m
 The initial typed-client call produces the following extension-defined condition operation:
 
 ```yaml
-kind: kubernetes
+kind: kubernetes.api
 interface:
   type: api
   operations:

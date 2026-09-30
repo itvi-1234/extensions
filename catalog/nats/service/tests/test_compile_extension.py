@@ -22,7 +22,7 @@ class NATSServiceExtensionCompilationTest(unittest.TestCase):
         cls.validator = Draft202012Validator(cls.extension["spec"]["schemas"][0]["schema"])
 
     def assert_valid_operation(self, operation):
-        condition = {"kind": "nats", "interface": {"type": "service", "operations": [operation]}}
+        condition = {"kind": "nats.service", "interface": {"type": "service", "operations": [operation]}}
         self.assertEqual(list(self.validator.iter_errors(condition)), [])
 
     def test_compiles_exact_extension_coordinates(self):
@@ -78,15 +78,15 @@ class NATSServiceExtensionCompilationTest(unittest.TestCase):
         self.assert_valid_operation({"resource": "object_store", "action": "watch", "bucket": "configuration"})
 
     def test_rejects_open_resource_action_combinations(self):
-        condition = {"kind": "nats", "interface": {"type": "service", "operations": [{"resource": "subject", "action": "write", "subject": "orders.created"}]}}
+        condition = {"kind": "nats.service", "interface": {"type": "service", "operations": [{"resource": "subject", "action": "write", "subject": "orders.created"}]}}
         self.assertTrue(list(self.validator.iter_errors(condition)))
 
     def test_rejects_one_operation_with_multiple_actions(self):
-        condition = {"kind": "nats", "interface": {"type": "service", "operations": [{"resource": "key_value", "action": ["read", "write"], "bucket": "profiles"}]}}
+        condition = {"kind": "nats.service", "interface": {"type": "service", "operations": [{"resource": "key_value", "action": ["read", "write"], "bucket": "profiles"}]}}
         self.assertTrue(list(self.validator.iter_errors(condition)))
 
     def test_rejects_fields_not_declared_for_one_operation(self):
-        condition = {"kind": "nats", "interface": {"type": "service", "operations": [{"resource": "stream", "action": "inspect", "name": "ORDERS", "subjects": ["orders.>"]}]}}
+        condition = {"kind": "nats.service", "interface": {"type": "service", "operations": [{"resource": "stream", "action": "inspect", "name": "ORDERS", "subjects": ["orders.>"]}]}}
         self.assertTrue(list(self.validator.iter_errors(condition)))
 
 
