@@ -131,7 +131,9 @@ language source package      language source package
 format, compile, profile generation, semantic validation, package inspection
                       |
                       v
-checksummed release set -> target GitHub Releases -> external registries
+verified package artifacts -> package-manager tags
+                           -> one source-commit GitHub Release
+                           -> configured external registries
 ```
 
 The dependency lock is resolution and supply-chain evidence. The normalized
@@ -171,8 +173,6 @@ tooling/extension-bindings/
     runtimeconditions.package-catalog.schema.yaml
     runtimeconditions.toolchain-lock.schema.yaml
     runtimeconditions.file-manifest.schema.yaml
-    runtimeconditions.build-plan.schema.yaml
-    runtimeconditions.verification-summary.schema.yaml
     conformance/
       cases/
       expected/
@@ -251,16 +251,13 @@ bindings/
   binding-promote.yml
 ```
 
-`bindings/<package-key>/<language>/` contains non-editable generated source.
-`package-key` is declared in `packages.yaml`; it is not inferred from extension
-semantics. Generated build archives MUST NOT be committed.
-
-The external-registry workflow MUST NOT be added until external publication is
-authorized. When authorized, its fixed path is:
-
-```text
-.github/workflows/binding-publish.yml
-```
+`bindings/<package-key>/<language>/` contains the committed, human-readable
+generated package tree for one target. Every configured target uses this
+reviewable repository location regardless of whether it is distributed from a
+Git tag or through an external registry. Generated files are non-editable and
+MUST be changed only by regeneration. Compiled, transpiled, minified, and
+archived package outputs MUST NOT be committed. `package-key` is declared in
+`packages.yaml`; it is not inferred from extension semantics.
 
 Implementation MUST be divided into reviewed phases. Before any phase that adds,
 edits, or deletes more than five files, the exact file list, including tests,
@@ -297,6 +294,10 @@ Every nested language-target entry MUST contain:
   repository tags or `registry` for pushed artifacts;
 - the external registry identifier when publication mode is `registry`, even
   while external publication is disabled.
+
+Publication mode controls how a verified package is delivered. It MUST NOT
+control whether the target's generated package tree is committed or available
+for source review.
 
 The immutable build-target key is `<package-key>:<language>`. Package keys and
 language keys MUST each be unique within their containing mapping.
@@ -708,11 +709,19 @@ or unsupported language version.
 
 Every emitter MUST generate:
 
-1. Language-native source.
+1. Human-readable, formatter-compliant language-native source.
 2. Native package-manager metadata.
 3. `runtimeconditions.bindings.yaml`.
 4. Conformance source exercising every declaration, object type, field, enum
    value, collection shape, map shape, and union shape at least once.
+
+The generated package tree is the source-review surface for the target. An
+emitter MUST NOT minify, obfuscate, or remove formatting from generated source.
+For an ecosystem that compiles or transpiles source, the committed tree MUST
+contain the readable source supplied to that process, not its bytecode,
+transpiled, bundled, or minified output. Readable JavaScript emitted for a
+JavaScript target is source; JavaScript compiled from a TypeScript target is a
+package-build output.
 
 After an emitter succeeds, the orchestrator MUST assemble the final generated
 package tree by adding:
@@ -720,8 +729,9 @@ package tree by adding:
 1. `runtimeconditions.extension.yaml` for the root extension from the validated
    resolver input;
 2. the exact `runtimeconditions.binding-model.yaml` consumed by the emitter;
-3. `runtimeconditions.binding-release.yaml`, including the dependency lock and
-   complete source-resolution provenance; and
+3. `runtimeconditions.binding-release.yaml`, including the dependency lock,
+   complete source-resolution provenance, repository-relative generated-source
+   path, and expected Section 14 target release tag; and
 4. a file manifest containing the relative path and SHA-256 of every generated
    file except the manifest itself.
 
@@ -931,7 +941,8 @@ Determinism is accepted only when:
 3. Running on Linux and macOS yields byte-identical checkpoints.
 4. Each emitter run three times from a new empty directory yields identical file
    manifests and identical file bytes.
-5. A second full repository generation produces a zero-byte Git diff.
+5. A second full repository generation for every configured target, regardless
+   of publication mode, produces a zero-byte Git diff.
 6. Every extension definition found under configured catalog roots normalizes
    successfully or fails with a documented unsupported keyword; an extension
    identifier or vocabulary value special case MUST NOT cause a failure.
@@ -1029,6 +1040,14 @@ bindings/<package-key>/<language>/v<major>.<minor>.<patch>
 This is a Git tag, not a filesystem path. The tag prefix exactly matches the
 target's generated repository directory.
 
+Because every target's generated package tree is committed, this tag MUST
+provide an immutable, file-by-file GitHub view of the exact generated source for
+that package version. Where a package manager supports source-repository
+metadata, the generated native package metadata MUST identify the source
+repository and `bindings/<package-key>/<language>` directory. The generated
+binding release metadata and promotion summary MUST identify the exact target
+release tag.
+
 Reaching a breaking major version in any supported package manager MUST update
 that package manager's required package coordinate and MUST regenerate every
 dependent binding target that imports or otherwise depends on it.
@@ -1105,9 +1124,11 @@ The command behaviors and persistent filesystem effects are fixed:
   `--input` is omitted, it verifies the selected committed
   `bindings/<package-key>/<language>` directories. It writes no report file
   unless `--report <path>` is supplied.
-- `package` performs resolve through verification. It requires
-  `--output <directory>` and writes only final package archives, release
-  archives, and their required manifests to that directory.
+- `package` performs clean generation, requires the result to match the selected
+  committed target directories byte-for-byte, verifies the committed trees,
+  and packages those committed trees. It requires `--output <directory>` and
+  writes only final package archives, release archives, and their required
+  manifests to that directory.
 - `plan-release` compares committed targets with their previous GitHub release
   manifests and prints the build plan and required SemVer impact. It writes a
   plan file only when `--output <path>` is supplied.
@@ -1117,7 +1138,7 @@ The command behaviors and persistent filesystem effects are fixed:
 - `update` performs the same clean full generation and verification, then
   atomically synchronizes only the selected `bindings/<package-key>/<language>`
   directories, including removal of stale generated files. It leaves no other
-  persistent files.
+  persistent files. It updates selected targets regardless of publication mode.
 
 The orchestrator MUST NOT create a fixed intermediate directory tree. It MUST
 create an intermediate file only when an invoked tool requires a filesystem
@@ -1139,17 +1160,31 @@ summary. It MUST never modify extension YAML.
 ### 16.1 Reusable build workflow
 
 `.github/workflows/_binding-build.yml` is the only workflow that builds binding
-artifacts. It MUST be callable with `workflow_call` and receive exactly two
-inputs: `targets`, a comma-separated list of `<package-key>:<language>` build
-target keys, and `network`, a boolean network policy. It MUST perform:
+artifacts. It is a reusable workflow definition, not a generated artifact. It
+exists so pull-request checks and promotion execute the same build and
+verification steps instead of maintaining two implementations that can drift.
+It MUST be callable with `workflow_call` and receive one input: `targets`, a
+comma-separated list of `<package-key>:<language>` build target keys. GitHub
+Actions jobs use normal network access for extension resolution, dependency
+installation, and package-manager operations. The workflow MUST perform:
 
 ```text
-plan -> resolve -> normalize -> emit -> verify -> package -> assemble release set
+plan -> resolve -> normalize -> emit -> compare committed source
+     -> verify committed source -> package committed source
 ```
 
-The `plan` job MUST write `binding-build-plan.yaml`. The plan MUST include every
-root target, extension closure, language package dependency, build group,
-toolchain version, package version, and expected output path.
+Before verification or packaging, each emitted target tree MUST match its
+committed `bindings/<package-key>/<language>` tree byte-for-byte. A difference
+fails the workflow. Verification and packaging MUST then consume the committed
+tree, so a package is built from the source reviewed in the pull request and
+retained at the target release tag. Compiler, transpiler, and package-manager
+outputs may be produced from that committed source, but the workflow MUST NOT
+replace it with separately generated source.
+
+The `plan` job MUST compute the selected targets, language-package dependency
+edges, and build groups in memory and expose only the matrix data required by
+later jobs through GitHub Actions job outputs. It MUST NOT write or upload a
+build-plan file.
 
 Build groups are connected dependency components within one language. Every
 independent build group MUST be a separate matrix entry, allowing the Actions
@@ -1159,9 +1194,12 @@ group so that dynamic dependency ordering is handled by the orchestrator, not by
 guessed GitHub `needs` relationships.
 
 The reusable workflow MUST have `contents: read`, no registry credentials, and
-no release permissions. It MUST upload one artifact per build group plus one
-aggregate release-set artifact. Artifact names MUST include the workflow run ID,
-language, package key, and model digest prefix.
+no release permissions. It MUST upload one workflow artifact for each built
+target, named `<package-key>-<language>`, containing that target's verified
+package outputs. Workflow artifacts are already scoped to one Actions run, so
+their names MUST NOT repeat the run ID, commit, version, or digest. The source
+commit is recorded by the Actions run, the promotion release tag points to that
+commit, and asset checksums establish byte identity.
 
 ### 16.2 Pull-request checks
 
@@ -1170,9 +1208,15 @@ definitions, package configuration, the binding-model schema, normalizer,
 resolver, orchestrator, emitters, profiler contracts, or generated bindings.
 
 It MUST call `_binding-build.yml`, compare regenerated source to committed
-source, publish the API and version-classification summary to the workflow
-summary, and upload candidate artifacts. It MUST use no write permission and
-perform no tagging or publication.
+source, and publish the API and version-classification summary to the workflow
+summary. Calling the reusable workflow ensures this check uses the exact build
+and verification implementation used by promotion. It MUST use no write
+permission and perform no tagging or publication.
+
+A pull request that changes an extension definition, generation rule, package
+configuration, or locked toolchain MUST include every affected generated target
+tree in the same pull request. Those generated changes MUST be visible as
+ordinary GitHub source diffs before merge.
 
 Required quantitative results are:
 
@@ -1191,100 +1235,137 @@ reusable workflow and a boolean `dry_run`. Requested versions MUST come only
 from the committed `packages.yaml`; arbitrary versions and source refs are
 forbidden.
 
-The workflow MUST call `_binding-build.yml` once. After the aggregate release set
-is built and verified, a separate job guarded by the protected
+The workflow MUST call `_binding-build.yml` once. After all selected target
+artifacts are built and verified, a separate job guarded by the protected
 `binding-github-release` environment MUST:
 
-1. Download the aggregate artifact from the same workflow run.
+1. Download each selected target artifact from the same workflow run.
 2. Recompute and verify every file digest.
 3. Verify the source commit is still the default-branch head selected by the
    workflow.
 4. Verify declared package versions satisfy the compatibility classifier.
-5. Preflight every target and reject a tag or release collision unless the
-   existing tag, commit, release manifest, and asset digests are all exact
-   matches.
+5. Preflight every target package tag, the source-commit release tag, and every
+   selected asset name. Reject a tag that names another commit or an existing
+   package asset whose bytes differ.
 6. Process targets in package-dependency topological order.
 7. For each target not already promoted exactly, create its exact Section 14 tag
    on that commit.
-8. For each target not already promoted exactly, create one GitHub Release
-   attached to that target's tag and name it
-   `<package-key> <language> v<version>`.
-9. Upload only that target's exact verified artifacts and release manifest to
-   its GitHub Release.
-10. Record every release URL, asset URL, and digest in the workflow summary.
+8. Create or reuse one GitHub Release for the promoted source commit, attached
+   to the non-language-specific tag `bindings/releases/<full-commit-sha>` and
+   named `Runtime Conditions bindings <short-commit-sha>`.
+9. Upload the selected language-specific package artifacts as assets of that
+   source-commit release, rejecting any existing asset whose bytes differ.
+10. Upload one `SHA256SUMS` file covering the release's package assets.
+11. Record the release URL, asset URLs, package coordinates, package versions,
+    and digests in the workflow summary.
 
 The approval occurs after build and verification. With `dry_run: true`, the
 workflow MUST perform every verification through tag and release collision
 checks and then stop before its first mutation. With `dry_run: false`, it MUST
 perform the mutations above. The promotion job MUST NOT rebuild, reformat,
-regenerate, or alter an artifact. The aggregate release-set workflow artifact
-is verification and transfer evidence only; it MUST NOT be published as a
-GitHub Release and MUST NOT receive a tag. An interrupted promotion MUST be
-resumable: an exact existing target is skipped, and a non-exact collision stops
-the workflow before any additional target is mutated.
+regenerate, or alter a package artifact. An interrupted promotion MUST be
+resumable: an exact existing tag or release asset is skipped, and a non-exact
+collision stops the workflow before any additional target is mutated.
 
 ### 16.4 External publication
 
-When external publication is authorized,
-`.github/workflows/binding-publish.yml` MUST trigger only from a published GitHub
-Release. Each run handles the single target identified by that release's tag. It
-MUST download release assets, verify the release manifest and every digest, and
-publish those exact bytes through one protected environment per registry. It
+When external publication is authorized, `binding-promote.yml` MUST continue
+after creation or verification of the source-commit GitHub Release. Registry
+publication jobs MUST download the package assets from that release, verify
+`SHA256SUMS` and the package's embedded binding release metadata, and publish
+those exact bytes through one protected environment per registry. These jobs
 MUST never invoke an emitter or package builder.
 
 Targets with `github-tag` publication mode MUST stop after GitHub promotion.
 Targets with `registry` publication mode MUST publish only to their configured
-registry. A manual retry MUST accept one existing release tag, verify that
-release again, and contact only its configured registry. Registry rate limits
-MUST be respected by serializing publication per registry and preventing
-concurrent publication of the same package coordinate. A registry response with
+registry. A manual retry MUST rerun `binding-promote.yml` for the existing
+source-commit release and selected targets; exact tags and assets are reused,
+and only unpublished registry targets are contacted. Registry rate limits MUST
+be respected by serializing publication per registry and preventing concurrent
+publication of the same package coordinate. A registry response with
 `Retry-After` MUST be retried at that exact delay. Without `Retry-After`, the
 workflow MUST make at most five retries after 30, 60, 120, 240, and 480 seconds,
-then fail without contacting another registry. External publication remains
-absent until this workflow is separately approved.
+then fail without contacting another registry. Registry publication jobs remain
+disabled until they are separately approved.
 
 ## 17. Output retention and publication
 
-The repository MUST commit:
+The repository is the review surface for generated bindings. It MUST commit the
+following authoritative inputs and tests:
 
 - tooling source and tests;
 - model schemas;
-- conformance inputs and expected normalized outputs;
-- package and toolchain configuration;
-- generated package source;
-- generated binding manifests;
-- generated normalized checkpoints;
-- generated conformance source and expected profiles;
-- generated release metadata that is independent of archive digests.
+- conformance inputs, expected normalized outputs, expected diagnostics, and
+  other approved golden fixtures; and
+- package and toolchain configuration.
+
+It MUST also commit one complete generated package tree at
+`bindings/<package-key>/<language>` for every configured target, regardless of
+publication mode. Each generated tree MUST contain only deterministic,
+reviewable files required to understand, verify, build, or use that target:
+
+1. Formatted, human-readable language-native production source.
+2. Native package metadata, dependency declarations, and static package files
+   required to build and test the source.
+3. Generated conformance source and expected profiles, kept in an explicitly
+   named test or conformance location. These are review and verification source,
+   not reports from a particular run.
+4. Exactly one package-local copy of each Runtime Conditions resource required
+   by Sections 10 and 11: the root extension definition, binding manifest,
+   normalized binding model, and binding release metadata.
+5. The deterministic file manifest required by Section 10.
+
+`runtimeconditions.binding-release.yaml` is package provenance, not a CI-run
+record. Its committed contents MUST be derivable from declared package inputs,
+resolved extension content, and the locked toolchain. It MUST NOT contain an
+archive digest, timestamp, host path, workflow run identifier, publication URL,
+registry response, or other value known only during a particular build or
+publication run. The committed normalized model, binding manifest, binding
+release metadata, conformance data, and file manifest MUST exist only in their
+required generated-package locations; duplicate checkpoint or report trees MUST
+NOT be committed.
 
 The repository MUST NOT commit:
 
-- package-manager caches;
-- temporary staging directories;
-- wheels, source distributions, JARs, or generic package archives;
-- CI logs;
-- workflow artifact downloads;
-- credentials;
-- host-specific lock state.
+- package-manager caches, temporary directories, or staging trees;
+- wheels, source distributions, JARs, npm tarballs, generic package archives,
+  native binaries, bytecode, or class files;
+- transpiled, bundled, or minified output when it is derived from a more
+  readable committed source language;
+- source maps, archive checksums, registry responses, or publication receipts;
+- API-comparison, compatibility, conformance, or CI reports;
+- CI logs or workflow artifact downloads;
+- build timestamps, workflow run identifiers, or other run-specific metadata;
+- credentials or host-specific lock state; or
+- duplicate out-of-tree copies of package resources, normalized models,
+  manifests, conformance outputs, or release metadata.
 
-Each target-specific GitHub Release MUST contain:
+Every change to a generation input MUST commit the affected generated package
+changes in the same pull request. Pull-request checks MUST regenerate all
+affected targets and require byte equality with those committed trees. Release
+packaging MUST consume the committed trees and MUST NOT regenerate or rewrite
+their source. The default branch therefore provides the current generated
+source, and each Section 14 target release tag provides the immutable generated
+source for one published package version. A separate generated-code branch MUST
+NOT be the authoritative source for a released package.
 
-1. `runtimeconditions.binding-release.yaml`.
-2. `runtimeconditions.binding-model.yaml`.
-3. The source archive for its target.
-4. The native package archive for its target except ecosystems distributed
-   directly from version-control tags.
-5. `SHA256SUMS` covering every release asset except `SHA256SUMS` itself.
-6. Toolchain provenance.
-7. AST-derived API and compatibility reports.
-8. Conformance expected profiles.
+Each source-commit GitHub Release MUST contain only:
+
+1. The final source and native package archives required by the selected
+   targets, except ecosystems distributed directly from version-control tags.
+2. `SHA256SUMS` covering every uploaded package asset except `SHA256SUMS`
+   itself.
+
+The normalized model, binding release metadata, toolchain provenance, and
+required Runtime Conditions resources remain inside each package as specified
+elsewhere in this document. API comparisons, compatibility classifications,
+and conformance results belong in the Actions workflow summary and MUST NOT be
+duplicated as release assets.
 
 Generated packages MUST place Runtime Conditions resources at the exact Section
 11 locations. Published packages MUST include the root extension definition,
 binding manifest, normalized model, and binding release manifest.
-Dependency extension definitions are supplied by their own dependency packages;
-the aggregate GitHub release set MUST additionally contain the complete extension
-closure for offline verification.
+Dependency extension definitions are supplied by their own dependency packages.
 
 ## 18. Security and operational requirements
 
@@ -1368,17 +1449,19 @@ Exit requires:
 
 Deliver `packages.yaml`, `toolchain.lock.yaml`, the orchestrator, build planning,
 version classification, repository output comparison, and generated package
-trees.
+trees for every target regardless of publication mode.
 
 Exit requires:
 
 - all 16 gates in Section 13 for every generated target;
 - a clean full build from an empty work directory;
 - a second full build with a zero-byte Git diff;
+- byte-for-byte equality between packaged source and the committed generated
+  package tree;
 - correct topological language-package build ordering;
 - exact package archive content checks;
-- successful local execution with network disabled using a populated cache;
-- successful local execution with network enabled from an empty cache.
+- successful local execution using each supported network-backed resolver
+  scheme.
 
 ### Phase 6: pull-request and GitHub promotion workflows
 
@@ -1390,13 +1473,16 @@ Exit requires:
 - one pull-request run with no write permissions and no publication;
 - one manually approved dry-run promotion that performs no release mutation;
 - one approved GitHub release using artifacts built before approval;
+- package source metadata and every target release tag resolve to the committed
+  generated directory for the released version;
 - matching local and Actions artifact SHA-256 values;
 - zero rebuild steps after the protected-environment approval.
 
 ### Phase 7: external registry publication
 
-This phase starts only after explicit approval. It delivers
-`binding-publish.yml` and registry-specific credential environments.
+This phase starts only after explicit approval. It adds registry-publication
+jobs to `binding-promote.yml` and provides registry-specific credential
+environments.
 
 Exit requires, for each enabled registry:
 
