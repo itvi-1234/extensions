@@ -1,0 +1,11 @@
+apiVersion: runtimeconditions.io/python-package-target/v1alpha1
+kind: RuntimeConditionsPythonPackageTarget
+packageKey: conformance-owned-kind-interface
+rootExtension: urn:runtimeconditions:conformance:owned-kind-interface
+distributionName: runtimeconditions-conformance-owned-kind-interface
+importPackage: runtimeconditions_conformance_owned_kind_interface
+version: 1.0.0
+sourceDirectory: bindings/conformance-owned-kind-interface/python
+minimumPythonVersion: '3.11'
+publicationMode: github-tag
+repositoryUrl: https://github.com/runtimeconditions/extensions

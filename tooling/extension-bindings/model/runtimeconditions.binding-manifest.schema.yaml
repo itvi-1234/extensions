@@ -49,6 +49,36 @@ properties:
       semanticSha256:
         $ref: '#/$defs/sha256'
   package:
+    oneOf:
+      - $ref: '#/$defs/goPackage'
+      - $ref: '#/$defs/pythonPackage'
+  symbols:
+    type: array
+allOf:
+  - if:
+      properties:
+        package:
+          properties:
+            language:
+              const: go
+    then:
+      properties:
+        symbols:
+          items:
+            $ref: '#/$defs/symbol'
+  - if:
+      properties:
+        package:
+          properties:
+            language:
+              const: python
+    then:
+      properties:
+        symbols:
+          items:
+            $ref: '#/$defs/pythonSymbol'
+$defs:
+  goPackage:
     type: object
     additionalProperties: false
     required: [language, coordinate, name, minimumGoVersion]
@@ -64,11 +94,25 @@ properties:
       minimumGoVersion:
         type: string
         pattern: '^[0-9]+\.[0-9]+$'
-  symbols:
-    type: array
-    items:
-      $ref: '#/$defs/symbol'
-$defs:
+  pythonPackage:
+    type: object
+    additionalProperties: false
+    required: [language, coordinate, name, minimumPythonVersion]
+    properties:
+      language:
+        const: python
+      coordinate:
+        type: string
+        pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+      name:
+        type: string
+        pattern: '^[a-z][a-z0-9_]*$'
+      minimumPythonVersion:
+        type: string
+        pattern: '^[0-9]+\.[0-9]+$'
+  pythonIdentifier:
+    type: string
+    pattern: '^(?:[^\W\d_]|_)\w*$'
   sha256:
     type: string
     pattern: '^[0-9a-f]{64}$'
@@ -105,6 +149,40 @@ $defs:
       parent:
         type: string
         pattern: '^\p{L}[\p{L}\p{N}_]*$'
+      file:
+        type: string
+        pattern: '^[^/](?:.*[^/])?$'
+  pythonSymbol:
+    type: object
+    additionalProperties: false
+    required: [construct, coordinate, nativeName]
+    properties:
+      construct:
+        enum:
+          - any
+          - collection
+          - collection-element
+          - declaration-call
+          - field
+          - imported-marker-contract
+          - map
+          - map-entry
+          - marker-contract
+          - object-construction
+          - omitted-optional
+          - scalar
+          - union
+          - value-domain
+          - value-member
+      coordinate:
+        type: string
+        minLength: 1
+      sourceName:
+        type: string
+      nativeName:
+        $ref: '#/$defs/pythonIdentifier'
+      parent:
+        $ref: '#/$defs/pythonIdentifier'
       file:
         type: string
         pattern: '^[^/](?:.*[^/])?$'

@@ -1,0 +1,749 @@
+"""Step 2 loading, naming, and in-memory type-plan tests."""
+
+from __future__ import annotations
+
+import ast
+from copy import deepcopy
+from dataclasses import FrozenInstanceError, replace
+from importlib import import_module
+from importlib import resources
+import json
+from pathlib import Path
+import tomllib
+
+import pytest
+import yaml
+from jsonschema import Draft202012Validator, ValidationError
+from packaging.requirements import Requirement
+from packaging.version import Version
+
+from runtimeconditions_binding_emitter import (
+    build_plan,
+    emit_package,
+    emit_sources,
+    load_model,
+    load_target,
+    render_package,
+    render_resources,
+    render_sources,
+)
+from runtimeconditions_binding_emitter.metadata import SETUPTOOLS_VERSION
+from runtimeconditions_binding_emitter.naming import (
+    Symbol,
+    allocate_symbols,
+    python_name,
+)
+from runtimeconditions_binding_emitter.package import DiagnosticError, PackageDependency
+
+
+TOOLING = Path(__file__).resolve().parents[3]
+MODELS = TOOLING / "model/conformance/expected"
+TARGET = TOOLING / "emitters/python/testdata/package-target.yaml"
+
+
+def _plan(case: str):
+    model = load_model(MODELS / case / "runtimeconditions.binding-model.yaml")
+    target = load_target(TARGET)
+    root = model["rootExtension"]["id"]
+    dependencies = next(
+        item.get("dependencies", [])
+        for item in model["extensions"]
+        if item["id"] == root
+    )
+    resolved = tuple(
+        PackageDependency(item, f"test-{index}", f"test_{index}", "1.0.0")
+        for index, item in enumerate(dependencies)
+    )
+    return build_plan(
+        model, replace(target, root_extension=root, dependencies=resolved)
+    )
+
+
+@pytest.mark.parametrize(
+    "case",
+    sorted(
+        path.parent.name
+        for path in MODELS.glob("*/runtimeconditions.binding-model.yaml")
+    ),
+)
+def test_positive_models_have_allocated_types(case: str) -> None:
+    plan = _plan(case)
+    assert plan.types
+    assert len({item.name for item in plan.types}) == len(plan.types)
+    assert all("Any" not in item.annotation for item in plan.types)
+    assert all(
+        "Any" not in field.annotation for item in plan.types for field in item.fields
+    )
+
+
+def test_collections_recursive_references_and_domains() -> None:
+    collections = _plan("09-collections-and-maps")
+    annotations = {
+        item.annotation for item in collections.types if item.kind == "alias"
+    }
+    assert any(value.startswith("Sequence[") for value in annotations)
+    assert any(value.startswith("dict[str, ") for value in annotations)
+    recursive = _plan("06-recursive-reference")
+    assert any(
+        "Node" in item.annotation for item in recursive.types if item.kind == "alias"
+    )
+    domains = _plan("10-scoped-domains-collisions")
+    enums = [item for item in domains.types if item.kind == "enum"]
+    assert len(enums) == 2
+    assert {value for item in enums for _, value in item.members} == {
+        "direct",
+        "proxy",
+        "streaming",
+    }
+    assert all(
+        item.alias_rhs == json.dumps(item.annotation, ensure_ascii=False)
+        for item in recursive.types
+        if item.kind == "alias"
+    )
+
+
+def test_additive_types_reference_the_owning_protocol() -> None:
+    direct = _plan("02-additive-field")
+    assert len(direct.imported_declarations) == 1
+    assert all(
+        item.marker and item.marker.provider_import == "test_0"
+        for item in direct.types
+        if item.marker
+    )
+    assert not any("base-service-http" in item.coordinate for item in direct.types)
+    transitive = _plan("03-transitive-closure")
+    assert transitive.imported_declarations[0].provider_import == "test_0"
+    assert any(
+        item.marker and item.marker.owner == transitive.imported_declarations[0].owner
+        for item in transitive.types
+    )
+
+
+def test_same_kind_from_different_owners_has_distinct_marker() -> None:
+    first = _plan("01-owned-kind-interface")
+    second = _plan("10-scoped-domains-collisions")
+    assert first.declarations[0].kind == second.declarations[0].kind == "service"
+    assert first.declarations[0].method != second.declarations[0].method
+
+
+def test_any_uses_recursive_json_value_alias() -> None:
+    model = deepcopy(
+        load_model(
+            MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+        )
+    )
+    shape = model["schemas"][0]["projection"]["properties"][1]["shape"]
+    shape.pop("scalar")
+    shape["kind"] = "any"
+    plan = build_plan(model, load_target(TARGET))
+    assert plan.uses_json_value
+    assert "Sequence[JSONValue]" in plan.json_value_alias_rhs
+    assert any(
+        field.annotation == "JSONValue" for item in plan.types for field in item.fields
+    )
+    sources = render_sources(plan, model)
+    bindings_ast = ast.parse(sources[f"src/{plan.target.import_package}/bindings.py"])
+    json_alias = next(
+        node
+        for node in bindings_ast.body
+        if isinstance(node, ast.AnnAssign)
+        and isinstance(node.target, ast.Name)
+        and node.target.id == "JSONValue"
+    )
+    assert ast.literal_eval(json_alias.value) == ast.literal_eval(
+        plan.json_value_alias_rhs
+    )
+    manifest_path = f"src/{plan.target.import_package}/runtimeconditions.bindings.yaml"
+    manifest = yaml.safe_load(render_resources(plan, model)[manifest_path])
+    assert any(
+        item["construct"] == "any" and item["nativeName"] == "JSONValue"
+        for item in manifest["symbols"]
+    )
+
+
+def test_required_nullable_value_has_no_initializer_default() -> None:
+    model = deepcopy(
+        load_model(
+            MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+        )
+    )
+    shape = model["schemas"][0]["projection"]["properties"][1]["shape"]
+    original = deepcopy(shape)
+    nullable = deepcopy(shape)
+    nullable["scalar"] = "null"
+    shape.clear()
+    shape.update(
+        {
+            "kind": "union",
+            "variants": [original, nullable],
+            "provenance": original["provenance"],
+        }
+    )
+    plan = build_plan(model, load_target(TARGET))
+    region = next(item for item in plan.types if item.name == "Region")
+    assert [
+        (field.name, field.required, field.default_none) for field in region.fields
+    ] == [("value", True, False)]
+    source = render_sources(plan, model)[
+        f"src/{plan.target.import_package}/bindings.py"
+    ]
+    assert "value: RegionValue\n" in source
+    assert 'RegionValue: TypeAlias = "str | None"' in source
+
+
+def test_renderer_rejects_a_different_model() -> None:
+    model = load_model(
+        MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+    )
+    plan = build_plan(model, load_target(TARGET))
+    changed = deepcopy(model)
+    changed["metadata"]["semanticSha256"] = "0" * 64
+    with pytest.raises(DiagnosticError) as error:
+        render_sources(plan, changed)
+    assert str(error.value) == (
+        "RCP1003 model: emission plan does not match supplied model"
+    )
+
+
+def test_source_emission_writes_only_the_three_api_files(tmp_path: Path) -> None:
+    model = load_model(
+        MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+    )
+    plan = build_plan(model, load_target(TARGET))
+    output = tmp_path / "binding-source"
+    expected = render_sources(plan, model)
+    assert emit_sources(plan, model, output) == tuple(sorted(expected))
+    assert {
+        path.relative_to(output).as_posix()
+        for path in output.rglob("*")
+        if path.is_file()
+    } == set(expected)
+    assert {
+        path.relative_to(output).as_posix(): path.read_text(encoding="utf-8")
+        for path in output.rglob("*")
+        if path.is_file()
+    } == expected
+    with pytest.raises(DiagnosticError) as error:
+        emit_sources(plan, model, output)
+    assert str(error.value) == (
+        "RCP3001 conformance-owned-kind-interface: "
+        "output directory must be new or empty and not a symbolic link"
+    )
+
+
+def test_requiredness_is_separate_from_nullability() -> None:
+    plan = _plan("01-owned-kind-interface")
+    interface = next(item for item in plan.types if item.name == "Http")
+    region = next(item for item in plan.types if item.name == "Region")
+    assert [
+        (field.name, field.annotation, field.required, field.default_none)
+        for field in interface.fields
+    ] == [("endpoint", "str", True, False)]
+    assert [
+        (field.name, field.annotation, field.required, field.default_none)
+        for field in region.fields
+    ] == [("value", "str", True, False)]
+    assert all(item.is_declaration_field for item in (interface, region))
+    optional = _plan("07-object-alternatives")
+    assert any(
+        field.default_none and field.annotation.endswith(" | None")
+        for item in optional.types
+        for field in item.fields
+    )
+
+
+def test_target_model_mismatch_has_exact_diagnostic() -> None:
+    model = load_model(
+        MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+    )
+    target = replace(load_target(TARGET), root_extension="other")
+    with pytest.raises(DiagnosticError) as error:
+        build_plan(model, target)
+    assert str(error.value) == (
+        "RCP1009 conformance-owned-kind-interface /rootExtension: target root 'other' differs "
+        "from model root 'urn:runtimeconditions:conformance:owned-kind-interface'"
+    )
+
+
+def test_duplicate_yaml_key_is_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "target.yaml"
+    path.write_text("apiVersion: a\napiVersion: b\n", encoding="utf-8")
+    with pytest.raises(DiagnosticError) as error:
+        load_target(path)
+    assert (
+        str(error.value)
+        == "RCP1002 package-target: duplicate YAML mapping key 'apiVersion'"
+    )
+
+
+def test_unsupported_shape_has_exact_diagnostic(tmp_path: Path) -> None:
+    source = (
+        MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+    ).read_text()
+    path = tmp_path / "model.yaml"
+    path.write_text(source.replace("kind: scalar", "kind: mystery", 1))
+    with pytest.raises(DiagnosticError) as error:
+        load_model(path)
+    assert error.value.diagnostic.code == "RCP1010"
+    assert "unknown structural node 'mystery'" in str(error.value)
+
+
+def test_invalid_scalar_shape_has_a_diagnostic(tmp_path: Path) -> None:
+    source = (
+        MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+    ).read_text()
+    path = tmp_path / "model.yaml"
+    path.write_text(source.replace("scalar: string", "scalar: [string]", 1))
+    with pytest.raises(DiagnosticError) as error:
+        load_model(path)
+    assert error.value.diagnostic.code == "RCP1003"
+    assert error.value.diagnostic.json_pointer.endswith("/scalar")
+
+
+def test_python_name_boundaries_and_fixed_collision() -> None:
+    assert python_name("HTTPServer2URL", "pascal", "test") == "HttpServer2Url"
+    assert python_name("2-way", "snake", "test") == "x_2_way"
+    assert python_name("2-way", "pascal", "test") == "X2Way"
+    assert python_name("class", "snake", "test") == "class_"
+    assert python_name("__init__", "snake", "test") == "rc___init__"
+    symbols = [
+        Symbol("fixed", "kind:service", "ServiceField", "pascal", fixed=True),
+        Symbol("other", "field:service", "ServiceField", "pascal", parents=("scope",)),
+    ]
+    with pytest.raises(DiagnosticError) as error:
+        allocate_symbols("package", symbols)
+    assert str(error.value) == (
+        "RCP2001 package: fixed symbol 'ServiceField' conflicts: field:service and kind:service"
+    )
+
+
+def test_nonfixed_collision_uses_parent_path() -> None:
+    symbols = [
+        Symbol("left", "scope:left:a", "a", "pascal", parents=("left",)),
+        Symbol("right", "scope:right:a", "a", "pascal", parents=("right",)),
+    ]
+    assert allocate_symbols("package", symbols) == {"left": "LeftA", "right": "RightA"}
+
+
+def _write_sources(root: Path, sources: dict[str, str]) -> None:
+    for relative_path, source in sources.items():
+        destination = root / relative_path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(source, encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        "01-owned-kind-interface",
+        "06-recursive-reference",
+        "07-object-alternatives",
+        "08-heterogeneous-union",
+        "09-collections-and-maps",
+        "10-scoped-domains-collisions",
+        "11-source-name-preservation",
+    ],
+)
+def test_rendered_api_imports_and_conformance_runs(
+    case: str, tmp_path: Path, monkeypatch
+) -> None:
+    model = load_model(MODELS / case / "runtimeconditions.binding-model.yaml")
+    plan = _plan(case)
+    package_name = "generated_" + case.replace("-", "_")
+    plan = replace(plan, target=replace(plan.target, import_package=package_name))
+    sources = render_sources(plan, model)
+    assert sources == render_sources(plan, model)
+    assert sorted(path.rsplit("/", 1)[-1] for path in sources) == [
+        "__init__.py",
+        "_conformance.py",
+        "bindings.py",
+    ]
+    for source in sources.values():
+        ast.parse(source, feature_version=(3, 11))
+        assert model["metadata"]["semanticSha256"] in source.splitlines()[0]
+        assert "DO NOT EDIT" in source.splitlines()[0]
+        assert "Any" not in source
+    _write_sources(tmp_path, sources)
+    monkeypatch.syspath_prepend(str(tmp_path / "src"))
+    package = import_module(package_name)
+    assert package.__all__ == sorted(package.__all__)
+    assert set(package.__all__) == set(
+        import_module(package_name + ".bindings").__all__
+    )
+    assert import_module(package_name + "._conformance").exercise() is None
+
+
+def test_declaration_uses_flat_frozen_keyword_only_fields(
+    tmp_path: Path, monkeypatch
+) -> None:
+    case = "01-owned-kind-interface"
+    model = load_model(MODELS / case / "runtimeconditions.binding-model.yaml")
+    plan = replace(
+        _plan(case), target=replace(_plan(case).target, import_package="flat_binding")
+    )
+    _write_sources(tmp_path, render_sources(plan, model))
+    monkeypatch.syspath_prepend(str(tmp_path / "src"))
+    binding = import_module("flat_binding")
+    interface = binding.Http(endpoint="https://example.test")
+    region = binding.Region(value="west")
+    assert isinstance(binding.service(interface, region), binding.Declaration)
+    with pytest.raises(TypeError):
+        binding.Http("https://example.test")
+    with pytest.raises(FrozenInstanceError):
+        region.value = "east"
+
+
+def test_conformance_covers_object_alternative_fields_separately() -> None:
+    case = "07-object-alternatives"
+    model = load_model(MODELS / case / "runtimeconditions.binding-model.yaml")
+    plan = _plan(case)
+    source = render_sources(plan, model)[
+        f"src/{plan.target.import_package}/_conformance.py"
+    ]
+    calls = [
+        node
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "Configuration"
+    ]
+    alternatives = {
+        tuple(
+            (keyword.arg, ast.literal_eval(keyword.value)) for keyword in call.keywords
+        )
+        for call in calls
+    }
+    assert alternatives == {
+        (("command", "sample"), ("image", None)),
+        (("command", None), ("image", "sample")),
+    }
+    assert source.count("b.deployment(_object") == 2
+
+
+def test_conformance_keeps_scoped_declarations_separate() -> None:
+    case = "10-scoped-domains-collisions"
+    model = load_model(MODELS / case / "runtimeconditions.binding-model.yaml")
+    plan = _plan(case)
+    source = render_sources(plan, model)[
+        f"src/{plan.target.import_package}/_conformance.py"
+    ]
+    calls = [line for line in source.splitlines() if "b.service(" in line]
+    assert len(calls) == 2
+    indexed = {
+        item.name: f"_object_{index}"
+        for index, item in enumerate(sorted(plan.types, key=lambda entry: entry.name))
+    }
+    grpc = indexed[
+        next(item.name for item in plan.types if item.name.endswith("GrpcMode"))
+    ]
+    http = indexed[
+        next(item.name for item in plan.types if item.name.endswith("HttpMode"))
+    ]
+    assert all(not (grpc in line and http in line) for line in calls)
+
+
+def test_direct_additive_protocol_is_owned_by_dependency(
+    tmp_path: Path, monkeypatch
+) -> None:
+    model = load_model(
+        MODELS / "02-additive-field/runtimeconditions.binding-model.yaml"
+    )
+    base_id = model["vocabulary"]["importedDeclarations"][0]["owner"]
+    base_model = deepcopy(model)
+    base_extension = next(item for item in model["extensions"] if item["id"] == base_id)
+    base_model["rootExtension"] = dict(base_extension)
+    base_model["extensions"] = [base_extension]
+    base_model["vocabulary"]["ownedDeclarations"] = base_model["vocabulary"][
+        "importedDeclarations"
+    ]
+    base_model["vocabulary"]["importedDeclarations"] = []
+    target = load_target(TARGET)
+    base_target = replace(
+        target, root_extension=base_id, import_package="owner_binding"
+    )
+    _write_sources(
+        tmp_path, render_sources(build_plan(base_model, base_target), base_model)
+    )
+    addon_target = replace(
+        target,
+        root_extension=model["rootExtension"]["id"],
+        import_package="direct_addon_binding",
+        dependencies=(
+            PackageDependency(base_id, "owner-binding", "owner_binding", "1.0.0"),
+        ),
+    )
+    _write_sources(tmp_path, render_sources(build_plan(model, addon_target), model))
+    monkeypatch.syspath_prepend(str(tmp_path / "src"))
+    owner = import_module("owner_binding")
+    addon = import_module("direct_addon_binding")
+    assert addon.ServiceField is owner.ServiceField
+    assert addon.service is owner.service
+    marker = next(
+        name for name in vars(owner.ServiceField) if name.startswith("rc_marker_")
+    )
+    assert hasattr(addon.Credential, marker)
+    assert isinstance(
+        owner.service(addon.Credential(token="sample")), owner.Declaration
+    )
+    assert import_module("direct_addon_binding._conformance").exercise() is None
+
+
+def test_transitive_additive_protocol_reexports_through_direct_dependency(
+    tmp_path: Path, monkeypatch
+) -> None:
+    model = load_model(
+        MODELS / "03-transitive-closure/runtimeconditions.binding-model.yaml"
+    )
+    imported = model["vocabulary"]["importedDeclarations"][0]
+    leaf_id = imported["owner"]
+    root_id = model["rootExtension"]["id"]
+    middle_extension = next(
+        item for item in model["extensions"] if leaf_id in item.get("dependencies", [])
+    )
+    middle_id = middle_extension["id"]
+    leaf_extension = next(item for item in model["extensions"] if item["id"] == leaf_id)
+    target = load_target(TARGET)
+
+    leaf_model = deepcopy(model)
+    leaf_model["rootExtension"] = dict(leaf_extension)
+    leaf_model["extensions"] = [leaf_extension]
+    leaf_model["vocabulary"]["ownedDeclarations"] = leaf_model["vocabulary"][
+        "importedDeclarations"
+    ]
+    leaf_model["vocabulary"]["importedDeclarations"] = []
+    leaf_target = replace(target, root_extension=leaf_id, import_package="leaf_binding")
+    _write_sources(
+        tmp_path, render_sources(build_plan(leaf_model, leaf_target), leaf_model)
+    )
+
+    middle_model = deepcopy(model)
+    middle_model["rootExtension"] = dict(middle_extension)
+    middle_model["extensions"] = [leaf_extension, middle_extension]
+    middle_target = replace(
+        target,
+        root_extension=middle_id,
+        import_package="middle_binding",
+        dependencies=(
+            PackageDependency(leaf_id, "leaf-binding", "leaf_binding", "1.0.0"),
+        ),
+    )
+    _write_sources(
+        tmp_path, render_sources(build_plan(middle_model, middle_target), middle_model)
+    )
+
+    root_target = replace(
+        target,
+        root_extension=root_id,
+        import_package="root_binding",
+        dependencies=(
+            PackageDependency(middle_id, "middle-binding", "middle_binding", "1.0.0"),
+        ),
+    )
+    _write_sources(tmp_path, render_sources(build_plan(model, root_target), model))
+    monkeypatch.syspath_prepend(str(tmp_path / "src"))
+    leaf = import_module("leaf_binding")
+    middle = import_module("middle_binding")
+    root = import_module("root_binding")
+    assert root.WorkerField is middle.WorkerField is leaf.WorkerField
+    assert root.worker is leaf.worker
+    marker = next(
+        name for name in vars(leaf.WorkerField) if name.startswith("rc_marker_")
+    )
+    assert hasattr(root.Command, marker)
+    assert isinstance(root.worker(root.Command(value="sample")), leaf.Declaration)
+    assert import_module("root_binding._conformance").exercise() is None
+
+
+@pytest.mark.parametrize(
+    "case",
+    sorted(
+        path.parent.name
+        for path in MODELS.glob("*/runtimeconditions.binding-model.yaml")
+    ),
+)
+def test_package_metadata_and_manifest_are_deterministic(case: str) -> None:
+    model = load_model(MODELS / case / "runtimeconditions.binding-model.yaml")
+    plan = _plan(case)
+    files = render_package(plan, model)
+    assert files == render_package(plan, model)
+    prefix = f"src/{plan.target.import_package}"
+    assert set(files) == {
+        "pyproject.toml",
+        f"{prefix}/__init__.py",
+        f"{prefix}/bindings.py",
+        f"{prefix}/_conformance.py",
+        f"{prefix}/py.typed",
+        f"{prefix}/runtimeconditions.bindings.yaml",
+    }
+    assert files[f"{prefix}/py.typed"] == ""
+    metadata = tomllib.loads(files["pyproject.toml"])
+    assert metadata["build-system"]["requires"] == [f"setuptools=={SETUPTOOLS_VERSION}"]
+    assert metadata["project"]["name"] == plan.target.distribution_name
+    assert metadata["project"]["requires-python"] == ">=3.11"
+    assert (
+        str(Version(metadata["project"]["version"])) == metadata["project"]["version"]
+    )
+    assert all(
+        Requirement(dependency).name
+        for dependency in metadata["project"]["dependencies"]
+    )
+    assert metadata["tool"]["setuptools"]["package-data"][
+        plan.target.import_package
+    ] == ["py.typed", "runtimeconditions.bindings.yaml"]
+    manifest_source = files[f"{prefix}/runtimeconditions.bindings.yaml"]
+    assert manifest_source.startswith("# Code generated by ")
+    manifest = yaml.safe_load(manifest_source)
+    assert manifest["generated"]["nonEditable"] is True
+    assert manifest["model"]["semanticSha256"] == model["metadata"]["semanticSha256"]
+    assert manifest["extension"] == {
+        "id": model["rootExtension"]["id"],
+        "semanticSha256": model["rootExtension"]["semanticSha256"],
+    }
+    assert manifest["package"] == {
+        "language": "python",
+        "coordinate": plan.target.distribution_name,
+        "name": plan.target.import_package,
+        "minimumPythonVersion": "3.11",
+    }
+    symbols = manifest["symbols"]
+    assert symbols == sorted(
+        symbols,
+        key=lambda item: (
+            item["coordinate"],
+            item["construct"],
+            item["nativeName"],
+            item.get("parent", ""),
+        ),
+    )
+    assert all(item["coordinate"] and item["nativeName"] for item in symbols)
+    assert (
+        "declaration-call" in {item["construct"] for item in symbols}
+        or plan.imported_declarations
+    )
+
+
+def test_manifest_covers_collection_map_enum_optional_and_imported_symbols() -> None:
+    cases = {
+        "09-collections-and-maps": {
+            "collection",
+            "collection-element",
+            "map",
+            "map-entry",
+        },
+        "10-scoped-domains-collisions": {"value-domain", "value-member"},
+        "07-object-alternatives": {"omitted-optional"},
+        "02-additive-field": {"imported-marker-contract"},
+    }
+    for case, constructs in cases.items():
+        model = load_model(MODELS / case / "runtimeconditions.binding-model.yaml")
+        plan = _plan(case)
+        path = f"src/{plan.target.import_package}/runtimeconditions.bindings.yaml"
+        manifest = yaml.safe_load(render_resources(plan, model)[path])
+        assert constructs <= {item["construct"] for item in manifest["symbols"]}
+    imported = [
+        item
+        for item in manifest["symbols"]
+        if item["construct"] == "imported-marker-contract"
+    ]
+    assert all("file" not in item for item in imported)
+    source_model = load_model(
+        MODELS / "11-source-name-preservation/runtimeconditions.binding-model.yaml"
+    )
+    source_plan = _plan("11-source-name-preservation")
+    source_path = (
+        f"src/{source_plan.target.import_package}/runtimeconditions.bindings.yaml"
+    )
+    source_manifest = yaml.safe_load(
+        render_resources(source_plan, source_model)[source_path]
+    )
+    assert any(item.get("sourceName") == "café" for item in source_manifest["symbols"])
+
+
+def test_package_versions_and_direct_dependency_intervals() -> None:
+    model = load_model(
+        MODELS / "02-additive-field/runtimeconditions.binding-model.yaml"
+    )
+    plan = _plan("02-additive-field")
+    target = replace(
+        plan.target,
+        version="1.2.3-rc.4",
+        dependencies=(replace(plan.target.dependencies[0], version="0.4.5-beta.2"),),
+    )
+    metadata = tomllib.loads(
+        render_resources(replace(plan, target=target), model)["pyproject.toml"]
+    )
+    assert metadata["project"]["version"] == "1.2.3rc4"
+    assert metadata["project"]["dependencies"] == ["test-0>=0.4.5b2,<0.5.0"]
+    stable = replace(
+        target, dependencies=(replace(target.dependencies[0], version="2.1.3"),)
+    )
+    metadata = tomllib.loads(
+        render_resources(replace(plan, target=stable), model)["pyproject.toml"]
+    )
+    assert metadata["project"]["dependencies"] == ["test-0>=2.1.3,<3.0.0"]
+
+
+def test_package_emission_writes_six_files_and_rejects_occupied_output(
+    tmp_path: Path,
+) -> None:
+    model = load_model(
+        MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+    )
+    plan = _plan("01-owned-kind-interface")
+    files = render_package(plan, model)
+    output = tmp_path / "package"
+    assert emit_package(plan, model, output) == tuple(sorted(files))
+    assert {
+        path.relative_to(output).as_posix(): path.read_text(encoding="utf-8")
+        for path in output.rglob("*")
+        if path.is_file()
+    } == files
+    with pytest.raises(DiagnosticError) as error:
+        emit_package(plan, model, output)
+    assert error.value.diagnostic.code == "RCP3001"
+
+
+def test_manifest_is_at_fixed_import_package_resource_path(
+    tmp_path: Path, monkeypatch
+) -> None:
+    model = load_model(
+        MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+    )
+    plan = _plan("01-owned-kind-interface")
+    plan = replace(plan, target=replace(plan.target, import_package="resource_binding"))
+    files = render_package(plan, model)
+    _write_sources(tmp_path, files)
+    monkeypatch.syspath_prepend(str(tmp_path / "src"))
+    package = import_module("resource_binding")
+    expected = files["src/resource_binding/runtimeconditions.bindings.yaml"]
+    assert (
+        resources.files(package)
+        .joinpath("runtimeconditions.bindings.yaml")
+        .read_text(encoding="utf-8")
+        == expected
+    )
+    assert resources.files(package).joinpath("py.typed").read_bytes() == b""
+
+
+def test_manifest_schema_accepts_python_and_rejects_wrong_language_fields() -> None:
+    schema = yaml.safe_load(
+        (TOOLING / "model/runtimeconditions.binding-manifest.schema.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+    model = load_model(
+        MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+    )
+    plan = _plan("01-owned-kind-interface")
+    path = f"src/{plan.target.import_package}/runtimeconditions.bindings.yaml"
+    manifest = yaml.safe_load(render_resources(plan, model)[path])
+    Draft202012Validator(schema).validate(manifest)
+    invalid = deepcopy(manifest)
+    invalid["package"]["minimumGoVersion"] = "1.22"
+    with pytest.raises(ValidationError):
+        Draft202012Validator(schema).validate(invalid)
+
+
+def test_generated_backend_pin_matches_toolchain_lock() -> None:
+    lock = yaml.safe_load((TOOLING / "toolchain.lock.yaml").read_text(encoding="utf-8"))
+    assert lock["python"]["tools"]["setuptools"] == SETUPTOOLS_VERSION
