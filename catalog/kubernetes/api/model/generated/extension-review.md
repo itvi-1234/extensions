@@ -8,8 +8,8 @@ The approved Kubernetes operation forms compile into an immutable extension rele
 
 - Extension: `https://runtimeconditions.io/extensions/kubernetes-api/0.1.0/runtimeconditions.extension.yaml`
 - Version: `0.1.0`
-- Extension semantic SHA-256: `b051163962d807642703a6626f1f9297de6681fb5773182c50e3dbde1774d62e`
-- Service-mapping semantic SHA-256: `55e5307e0d614988f68742801ee384d6b0da8c9ee292af9e26da538d8060f59f`
+- Extension semantic SHA-256: `74325613d6fad555e7ab3fc195fe373b16c1f1a7ab77cedacee06a96c4353896`
+- Service-mapping semantic SHA-256: `51e251ef09d58c2f8dc8c1e36033c060bfc8ef0fa1ebe19dc045b71c04303e66`
 - Authoritative operations: 1123
 - Resource operations: 1058
 - Non-resource operations: 65

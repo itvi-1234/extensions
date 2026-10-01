@@ -51,7 +51,7 @@ class KubernetesExtensionCompilationTest(unittest.TestCase):
 
     def test_schema_accepts_crd_coordinates_but_rejects_combinatorial_operation(self):
         valid = {
-            "kind": "kubernetes",
+            "kind": "kubernetes.api",
             "interface": {
                 "type": "api",
                 "operations": [{"verb": "patch", "apiGroup": "widgets.example.io", "apiVersion": "v1alpha1", "resource": "widgets", "scope": "namespaced", "subresource": "status"}],
@@ -59,7 +59,7 @@ class KubernetesExtensionCompilationTest(unittest.TestCase):
         }
         self.assertEqual(list(self.validator.iter_errors(valid)), [])
         invalid = {
-            "kind": "kubernetes",
+            "kind": "kubernetes.api",
             "interface": {
                 "type": "api",
                 "operations": [{"verb": ["get", "patch"], "apiGroup": "widgets.example.io", "apiVersion": "v1", "resource": "widgets", "scope": ["cluster", "namespaced"]}],

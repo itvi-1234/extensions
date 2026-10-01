@@ -1,0 +1,38 @@
+name: Enforce kind namespacing
+
+on:
+  pull_request:
+    paths:
+      - "catalog/**/releases/**/runtimeconditions.extension.yaml"
+      - "tooling/common/check_kind_namespacing.py"
+      - "tooling/common/serialization.py"
+  push:
+    branches:
+      - main
+    paths:
+      - "catalog/**/releases/**/runtimeconditions.extension.yaml"
+      - "tooling/common/check_kind_namespacing.py"
+      - "tooling/common/serialization.py"
+
+permissions:
+  contents: read
+
+jobs:
+  check-namespacing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install prerequisites
+        run: python -m pip install --disable-pip-version-check -r tooling/smithy-runtime-conditions/requirements.txt
+
+      - name: Check kind namespacing
+        run: python tooling/common/check_kind_namespacing.py

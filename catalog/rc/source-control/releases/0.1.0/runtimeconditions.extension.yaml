@@ -7,28 +7,28 @@ metadata:
 
 spec:
   kinds:
-    - name: source_control
+    - name: rc.source_control
 
   interfaceTypes:
     - name: git
-      targetKind: source_control
+      targetKind: rc.source_control
 
   interfaceFields:
     - name: provider
-      targetKind: source_control
+      targetKind: rc.source_control
       targetType: git
     - name: access
-      targetKind: source_control
+      targetKind: rc.source_control
       targetType: git
 
   fieldValues:
     - field: interface.provider
-      targetKind: source_control
+      targetKind: rc.source_control
       targetType: git
       values:
         - github
     - field: interface.access[]
-      targetKind: source_control
+      targetKind: rc.source_control
       targetType: git
       values:
         - clone
@@ -38,7 +38,7 @@ spec:
 
   schemas:
     - id: source-control-git
-      appliesToKind: source_control
+      appliesToKind: rc.source_control
       appliesToInterfaceType: git
       description: Validates Git source-control access requirements.
       schema:
@@ -54,7 +54,7 @@ spec:
           optional:
             type: boolean
           kind:
-            const: source_control
+            const: rc.source_control
           interface:
             type: object
             required:

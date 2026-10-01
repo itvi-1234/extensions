@@ -11,7 +11,7 @@ operationSource:
 extension:
   id: https://runtimeconditions.io/extensions/nats-service/0.1.0/runtimeconditions.extension.yaml
   version: 0.1.0
-  conditionKind: nats
+  conditionKind: nats.service
   interfaceType: service
 conditionFields:
   subject:
