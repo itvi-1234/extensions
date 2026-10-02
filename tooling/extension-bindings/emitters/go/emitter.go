@@ -29,7 +29,7 @@ type typeReference struct {
 }
 
 type fieldIR struct {
-	coordinate string
+	provenance normalizer.Provenance
 	sourceName string
 	name       string
 	typeRef    typeReference
@@ -39,18 +39,33 @@ type fieldIR struct {
 type typeIR struct {
 	key           string
 	coordinate    string
+	provenance    normalizer.Provenance
 	sourceName    string
 	request       *symbolRequest
 	kind          string
 	underlying    string
 	fields        []fieldIR
 	element       typeReference
+	elementSource normalizer.Provenance
 	methods       map[string]bool
 	members       []normalizer.NormalizedValue
+	domain        string
 	unionVariants []string
+	variantSource []normalizer.Provenance
 	unionParents  []string
 	building      bool
 	built         bool
+}
+
+type rootBindingIR struct {
+	role                  string
+	provenance            normalizer.Provenance
+	declarationCoordinate string
+	scope                 normalizer.ScopeModel
+	sourceName            string
+	path                  []normalizer.PathSegment
+	value                 typeReference
+	fixedInterfaceType    string
 }
 
 type constantIR struct {
@@ -84,7 +99,7 @@ type packageIR struct {
 	constants          []constantIR
 	schemas            map[string]normalizer.NormalizedSchema
 	domains            map[string]normalizer.ValueDomainModel
-	manifestSymbols    []ManifestSymbol
+	rootBindings       []rootBindingIR
 }
 
 func Emit(model normalizer.BindingModel, target PackageTarget, output string) error {
@@ -180,6 +195,13 @@ func buildPackageIR(model normalizer.BindingModel, target PackageTarget) (*packa
 			return nil, err
 		}
 		ir.addMethod(typeValue, markerMethod(declaration))
+		ir.rootBindings = append(ir.rootBindings, rootBindingIR{
+			role: "interface", provenance: interfaceModel.Provenance,
+			declarationCoordinate: declaration.Coordinate, scope: scope,
+			sourceName: interfaceModel.Type,
+			path:       []normalizer.PathSegment{{Name: "interface"}},
+			value:      typeReference{key: typeValue.key}, fixedInterfaceType: interfaceModel.Type,
+		})
 	}
 
 	for _, field := range model.Vocabulary.ConditionFields {
@@ -206,14 +228,21 @@ func buildPackageIR(model normalizer.BindingModel, target PackageTarget) (*packa
 		declarationTokens := goTokens(declaration.Kind)
 		prefixes = append(prefixes, declarationTokens)
 		context := shapeContext{scope: scope, path: path, semanticPath: clonePath(path)}
+		sourceName := field.Segments[len(field.Segments)-1].Name
 		typeValue, err := ir.ensureNamedShape(
-			"condition-field:"+field.Coordinate, field.Coordinate, field.Path,
+			"condition-field:"+field.Coordinate, field.Coordinate, sourceName,
 			goTokens(field.Path), prefixes, context, shape,
 		)
 		if err != nil {
 			return nil, err
 		}
 		ir.addMethod(typeValue, markerMethod(declaration))
+		ir.rootBindings = append(ir.rootBindings, rootBindingIR{
+			role: "condition-field", provenance: field.Provenance,
+			declarationCoordinate: declaration.Coordinate, scope: scope,
+			sourceName: sourceName, path: append([]normalizer.PathSegment(nil), field.Segments...),
+			value: typeReference{key: typeValue.key},
+		})
 	}
 	if err := ir.discoverStructuralTypes(); err != nil {
 		return nil, err
@@ -222,7 +251,6 @@ func buildPackageIR(model normalizer.BindingModel, target PackageTarget) (*packa
 	if err := ir.allocatePackageSymbols(); err != nil {
 		return nil, err
 	}
-	ir.buildManifestSymbols()
 	return ir, nil
 }
 
@@ -255,11 +283,20 @@ func (ir *packageIR) ensureNamedShape(key, coordinate, sourceName string, base [
 		}
 		shape = resolved.Shape
 	}
+	typeValue.provenance = shape.Provenance
 	switch shape.Kind {
 	case "scalar":
 		typeValue.kind = "scalar"
 		typeValue.underlying = goScalar(shape.Scalar)
 		typeValue.members = ir.stringMembers(context, shape)
+		if domain, ok := ir.domains[scopePathKey(context.scope.Kind, context.scope.InterfaceType, pathString(context.semanticPath))]; ok && shape.Scalar == "string" {
+			for _, value := range domain.Values {
+				if _, isString := value.Value.(string); isString {
+					typeValue.domain = domain.Coordinate
+					break
+				}
+			}
+		}
 	case "object":
 		typeValue.kind = "struct"
 		fieldNames := map[string]string{}
@@ -284,7 +321,7 @@ func (ir *packageIR) ensureNamedShape(key, coordinate, sourceName string, base [
 				return nil, err
 			}
 			typeValue.fields = append(typeValue.fields, fieldIR{
-				coordinate: property.Provenance.Coordinate + property.Provenance.JSONPointer,
+				provenance: property.Provenance,
 				sourceName: property.Name, name: fieldName, typeRef: reference, required: property.Required,
 			})
 		}
@@ -307,6 +344,7 @@ func (ir *packageIR) ensureNamedShape(key, coordinate, sourceName string, base [
 			return nil, err
 		}
 		typeValue.element = reference
+		typeValue.elementSource = shape.Items.Provenance
 	case "map":
 		typeValue.kind = "map"
 		if shape.MapValues == nil {
@@ -317,6 +355,7 @@ func (ir *packageIR) ensureNamedShape(key, coordinate, sourceName string, base [
 			return nil, err
 		}
 		typeValue.element = reference
+		typeValue.elementSource = shape.MapValues.Provenance
 	case "union":
 		typeValue.kind = "union"
 		for index, variant := range shape.Variants {
@@ -325,6 +364,7 @@ func (ir *packageIR) ensureNamedShape(key, coordinate, sourceName string, base [
 				return nil, err
 			}
 			typeValue.unionVariants = append(typeValue.unionVariants, variantKey)
+			typeValue.variantSource = append(typeValue.variantSource, variant.Provenance)
 		}
 	case "any":
 		typeValue.kind = "any"
@@ -381,7 +421,7 @@ func (ir *packageIR) referenceForArrayItem(context shapeContext, shape normalize
 		prefixes := pathPrefixes(context.path)
 		prefixes = append(prefixes, scopePrefixes(ir.model, context.scope)...)
 		key := "array-item:" + context.scope.Coordinate + ":" + pathString(context.path) + ":" + shape.Kind
-		typeValue, err := ir.ensureNamedShape(key, shape.Provenance.Coordinate+shape.Provenance.JSONPointer, last.name+"[]", base, prefixes, context, shape)
+		typeValue, err := ir.ensureNamedShape(key, shape.Provenance.Coordinate+shape.Provenance.JSONPointer, last.name, base, prefixes, context, shape)
 		if err != nil {
 			return typeReference{}, err
 		}
@@ -397,7 +437,7 @@ func (ir *packageIR) referenceForMapValue(context shapeContext, shape normalizer
 		prefixes := pathPrefixes(context.path)
 		prefixes = append(prefixes, scopePrefixes(ir.model, context.scope)...)
 		key := "map-value:" + context.scope.Coordinate + ":" + pathString(context.path) + ":" + shape.Kind
-		typeValue, err := ir.ensureNamedShape(key, shape.Provenance.Coordinate+shape.Provenance.JSONPointer, last.name+" value", base, prefixes, context, shape)
+		typeValue, err := ir.ensureNamedShape(key, shape.Provenance.Coordinate+shape.Provenance.JSONPointer, last.name, base, prefixes, context, shape)
 		if err != nil {
 			return typeReference{}, err
 		}
@@ -457,7 +497,7 @@ func (ir *packageIR) ensureUnionVariant(union *typeIR, context shapeContext, ind
 	base := append(append([]string(nil), union.request.base...), label)
 	key := fmt.Sprintf("%s:variant:%d", union.key, index)
 	variantContext := context
-	typeValue, err := ir.ensureNamedShape(key, shape.Provenance.Coordinate+shape.Provenance.JSONPointer, label, base, union.request.prefixGroups, variantContext, shape)
+	typeValue, err := ir.ensureNamedShape(key, shape.Provenance.Coordinate+shape.Provenance.JSONPointer, union.sourceName, base, union.request.prefixGroups, variantContext, shape)
 	if err != nil {
 		return "", err
 	}
@@ -520,9 +560,20 @@ func (ir *packageIR) discoverStructuralTypes() error {
 				continue
 			}
 			context := shapeContext{scope: scope, path: path, semanticPath: clonePath(path)}
-			if _, err := ir.referenceForShape(context, property.Shape, property.Required); err != nil {
+			reference, err := ir.referenceForShape(context, property.Shape, property.Required)
+			if err != nil {
 				return err
 			}
+			declaration, ok := ir.declarationsByKind[scope.Kind]
+			if !ok {
+				return diagnostic("model", "RCG2003", scope.Coordinate, fmt.Sprintf("kind %q has no declaration contract", scope.Kind))
+			}
+			ir.rootBindings = append(ir.rootBindings, rootBindingIR{
+				role: "schema-field", provenance: property.Provenance,
+				declarationCoordinate: declaration.Coordinate, scope: scope,
+				sourceName: property.Name, path: []normalizer.PathSegment{{Name: property.Name}},
+				value: reference,
+			})
 		}
 	}
 	return nil
@@ -849,7 +900,7 @@ func (ir *packageIR) renderGoMod() []byte {
 }
 
 func (ir *packageIR) manifest() Manifest {
-	return Manifest{
+	manifest := Manifest{
 		APIVersion: ManifestAPIVersion,
 		Kind:       ManifestKind,
 		Generated:  ManifestGenerated{NonEditable: true, Emitter: EmitterName, Version: EmitterVersion},
@@ -857,61 +908,115 @@ func (ir *packageIR) manifest() Manifest {
 		Extension:  ManifestExtension{ID: ir.model.RootExtension.ID, SemanticSHA256: ir.model.RootExtension.SemanticSHA256},
 		Package: ManifestPackage{
 			Language: "go", Coordinate: ir.target.ModulePath, Name: ir.target.PackageName,
-			MinimumGoVersion: ir.target.MinimumGoVersion,
+			Version: ir.target.Version, MinimumGoVersion: ir.target.MinimumGoVersion,
 		},
-		Symbols: ir.manifestSymbols,
+		Declarations:            []ManifestDeclaration{},
+		ImportedMarkerContracts: []ManifestImportedMarker{},
+		RootBindings:            []ManifestRootBinding{},
+		Types:                   []ManifestNamedType{},
 	}
-}
-
-func (ir *packageIR) buildManifestSymbols() {
 	for _, declaration := range ir.declarations {
-		ir.manifestSymbols = append(ir.manifestSymbols,
-			ManifestSymbol{Construct: "declaration-call", Coordinate: declaration.model.Coordinate, SourceName: declaration.model.Kind, NativeName: declaration.function.name, File: generatedGoFile},
-			ManifestSymbol{Construct: "marker-contract", Coordinate: declaration.model.Coordinate, SourceName: declaration.model.Kind, NativeName: declaration.fieldInterface.name, File: generatedGoFile},
-		)
+		manifest.Declarations = append(manifest.Declarations, ManifestDeclaration{
+			ModelRef: manifestModelRef(declaration.model.Provenance), Owner: declaration.model.Owner,
+			SourceName: declaration.model.Kind, Function: declaration.function.name,
+			MarkerInterface: declaration.fieldInterface.name, MarkerMethod: declaration.markerMethod,
+			File: generatedGoFile,
+		})
 	}
 	for _, declaration := range ir.model.Vocabulary.ImportedDeclarations {
-		declarationTokens := goTokens(declaration.Kind)
-		ir.manifestSymbols = append(ir.manifestSymbols, ManifestSymbol{
-			Construct: "imported-marker-contract", Coordinate: declaration.Coordinate,
-			SourceName: declaration.Kind, NativeName: pascal(append(append([]string(nil), declarationTokens...), "field")),
+		manifest.ImportedMarkerContracts = append(manifest.ImportedMarkerContracts, ManifestImportedMarker{
+			ModelRef: manifestModelRef(declaration.Provenance), Owner: declaration.Owner,
+			SourceName:      declaration.Kind,
+			MarkerInterface: pascal(append(goTokens(declaration.Kind), "field")),
+			MarkerMethod:    markerMethod(declaration),
+		})
+	}
+	for _, root := range ir.rootBindings {
+		manifest.RootBindings = append(manifest.RootBindings, ManifestRootBinding{
+			Role: root.role, ModelRef: manifestModelRef(root.provenance),
+			DeclarationCoordinate: root.declarationCoordinate,
+			Scope:                 ManifestScope{Kind: root.scope.Kind, InterfaceType: root.scope.InterfaceType},
+			SourceName:            root.sourceName, Path: root.path,
+			Value: ir.manifestReference(root.value), FixedInterfaceType: root.fixedInterfaceType,
 		})
 	}
 	for _, key := range sortedTypeKeys(ir.types) {
 		typeValue := ir.types[key]
-		construct := map[string]string{"struct": "object-construction", "slice": "collection", "map": "map", "union": "union", "scalar": "scalar", "any": "any"}[typeValue.kind]
-		if len(typeValue.members) != 0 {
-			construct = "value-domain"
+		entry := ManifestNamedType{
+			ModelRef: manifestModelRef(typeValue.provenance), SourceName: typeValue.sourceName,
+			NativeName: typeValue.request.name,
+			Construct:  map[string]string{"struct": "object", "slice": "collection", "map": "map", "union": "union", "scalar": "scalar", "any": "any"}[typeValue.kind],
+			File:       generatedGoFile,
 		}
-		ir.manifestSymbols = append(ir.manifestSymbols, ManifestSymbol{
-			Construct: construct, Coordinate: typeValue.coordinate, SourceName: typeValue.sourceName,
-			NativeName: typeValue.request.name, File: generatedGoFile,
+		for _, declaration := range ir.model.Vocabulary.OwnedDeclarations {
+			method := markerMethod(declaration)
+			if typeValue.methods[method] {
+				entry.Implements = append(entry.Implements, ManifestImplements{DeclarationCoordinate: declaration.Coordinate, MarkerMethod: method})
+			}
+		}
+		for _, declaration := range ir.model.Vocabulary.ImportedDeclarations {
+			method := markerMethod(declaration)
+			if typeValue.methods[method] {
+				entry.Implements = append(entry.Implements, ManifestImplements{DeclarationCoordinate: declaration.Coordinate, MarkerMethod: method})
+			}
+		}
+		sort.Slice(entry.Implements, func(i, j int) bool {
+			return entry.Implements[i].DeclarationCoordinate < entry.Implements[j].DeclarationCoordinate
 		})
-		for _, field := range typeValue.fields {
-			ir.manifestSymbols = append(ir.manifestSymbols, ManifestSymbol{
-				Construct: "field", Coordinate: field.coordinate, SourceName: field.sourceName,
-				NativeName: field.name, Parent: typeValue.request.name, File: generatedGoFile,
+		if typeValue.kind == "scalar" {
+			entry.Underlying = typeValue.underlying
+		}
+		if typeValue.kind == "struct" {
+			fields := make([]ManifestField, 0, len(typeValue.fields))
+			for _, field := range typeValue.fields {
+				fields = append(fields, ManifestField{
+					ModelRef: manifestModelRef(field.provenance), SourceName: field.sourceName,
+					NativeName: field.name, Required: field.required,
+					Value: ir.manifestReference(field.typeRef),
+				})
+			}
+			entry.Fields = &fields
+		}
+		if typeValue.kind == "slice" || typeValue.kind == "map" {
+			entry.Element = &ManifestElement{ModelRef: manifestModelRef(typeValue.elementSource), Value: ir.manifestReference(typeValue.element)}
+		}
+		for index, variant := range typeValue.unionVariants {
+			entry.Variants = append(entry.Variants, ManifestVariant{
+				ModelRef: manifestModelRef(typeValue.variantSource[index]),
+				Value:    ir.manifestReference(typeReference{key: variant}),
 			})
-			if !field.required {
-				ir.manifestSymbols = append(ir.manifestSymbols, ManifestSymbol{
-					Construct: "omitted-optional", Coordinate: field.coordinate, SourceName: field.sourceName,
-					NativeName: field.name, Parent: typeValue.request.name, File: generatedGoFile,
+		}
+		memberRef := typeValue.provenance
+		if typeValue.domain != "" {
+			for _, domain := range ir.model.Vocabulary.ValueDomains {
+				if domain.Coordinate == typeValue.domain {
+					memberRef = domain.Provenance
+					break
+				}
+			}
+		}
+		for _, constant := range ir.constants {
+			if constant.typeKey == key {
+				entry.Members = append(entry.Members, ManifestMember{
+					ModelRef: manifestModelRef(memberRef), NativeName: constant.name, Value: constant.value,
 				})
 			}
 		}
-		if typeValue.kind == "slice" {
-			ir.manifestSymbols = append(ir.manifestSymbols, ManifestSymbol{Construct: "collection-element", Coordinate: typeValue.coordinate, NativeName: typeValue.request.name, File: generatedGoFile})
-		}
-		if typeValue.kind == "map" {
-			ir.manifestSymbols = append(ir.manifestSymbols, ManifestSymbol{Construct: "map-entry", Coordinate: typeValue.coordinate, NativeName: typeValue.request.name, File: generatedGoFile})
-		}
+		manifest.Types = append(manifest.Types, entry)
 	}
-	for _, constant := range ir.constants {
-		ir.manifestSymbols = append(ir.manifestSymbols, ManifestSymbol{
-			Construct: "value-member", Coordinate: constant.coordinate, SourceName: constant.sourceName,
-			NativeName: constant.name, Parent: ir.types[constant.typeKey].request.name, File: generatedGoFile,
-		})
+	return manifest
+}
+
+func manifestModelRef(provenance normalizer.Provenance) ManifestModelRef {
+	return ManifestModelRef{Coordinate: provenance.Coordinate, JSONPointer: provenance.JSONPointer}
+}
+
+func (ir *packageIR) manifestReference(reference typeReference) ManifestReference {
+	result := ManifestReference{Builtin: reference.builtin, Pointer: reference.pointer}
+	if reference.key != "" {
+		result.Type = ir.types[reference.key].request.name
 	}
+	return result
 }
 
 func findScope(model normalizer.BindingModel, kind, interfaceType string) (normalizer.ScopeModel, bool) {

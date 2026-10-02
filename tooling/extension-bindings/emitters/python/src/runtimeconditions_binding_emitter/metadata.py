@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
+from typing import Any, cast
 
 import yaml
 
-from .emitter import EmissionPlan, TypePlan
+from .emitter import EmissionPlan, TypeExpr
 from .package import VERSION_PATTERN, fail
 
 EMITTER_NAME = "runtimeconditions-binding-emitter"
@@ -88,148 +88,242 @@ def _pyproject(plan: EmissionPlan, model: dict[str, Any]) -> str:
             "",
             "[tool.setuptools.packages.find]",
             'where = ["src"]',
-            f"include = [{json.dumps(target.import_package)}, "
-            f"{json.dumps(target.import_package + '.*')}]",
+            f"include = [{json.dumps(target.import_package)}, {json.dumps(target.import_package + '.*')}]",
             "",
             "[tool.setuptools.package-data]",
-            f"{json.dumps(target.import_package)} = "
-            '["py.typed", "runtimeconditions.bindings.yaml"]',
+            f'{json.dumps(target.import_package)} = ["py.typed", "runtimeconditions.bindings.yaml"]',
             "",
         )
     )
     return "\n".join(lines)
 
 
-def _type_construct(item: TypePlan) -> str:
-    if item.kind == "object":
-        return "object-construction"
-    if item.kind == "enum":
-        return "value-domain"
-    assert item.expression is not None
-    return {"array": "collection", "map": "map", "union": "union"}[item.expression.kind]
+def _location(provenance: dict[str, Any]) -> str:
+    return cast(str, provenance["coordinate"] + provenance.get("jsonPointer", ""))
 
 
-def _symbols(plan: EmissionPlan) -> list[dict[str, str]]:
-    symbols: list[dict[str, str]] = []
-    for coordinate, source_name in plan.any_coordinates:
-        symbols.append(
-            {
-                "construct": "any",
-                "coordinate": coordinate,
-                "sourceName": source_name,
-                "nativeName": "JSONValue",
-                "file": "bindings.py",
-            }
-        )
-    for declaration in plan.declarations:
-        symbols.extend(
-            (
-                {
-                    "construct": "declaration-call",
-                    "coordinate": declaration.coordinate,
-                    "sourceName": declaration.kind,
-                    "nativeName": declaration.function,
-                    "file": "bindings.py",
-                },
-                {
-                    "construct": "marker-contract",
-                    "coordinate": declaration.coordinate,
-                    "sourceName": declaration.kind,
-                    "nativeName": declaration.protocol,
-                    "file": "bindings.py",
-                },
+def _model_ref(provenance: dict[str, Any]) -> dict[str, str]:
+    result = {"coordinate": provenance["coordinate"]}
+    if pointer := provenance.get("jsonPointer"):
+        result["jsonPointer"] = pointer
+    return result
+
+
+def _model_locations(
+    model: dict[str, Any],
+) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    provenances: dict[str, dict[str, Any]] = {}
+    shapes: dict[str, dict[str, Any]] = {}
+
+    def add(item: dict[str, Any]) -> None:
+        provenance = item["provenance"]
+        location = _location(provenance)
+        previous = provenances.get(location)
+        if previous is not None and previous != provenance:
+            fail(
+                "model",
+                "RCP1012",
+                location,
+                "ambiguous legacy plan coordinate; separate model coordinate and JSON Pointer are required",
             )
-        )
-    for imported_declaration in plan.imported_declarations:
-        symbols.append(
-            {
-                "construct": "imported-marker-contract",
-                "coordinate": imported_declaration.coordinate,
-                "sourceName": imported_declaration.kind,
-                "nativeName": imported_declaration.protocol,
-            }
-        )
-    for item in plan.types:
-        symbols.append(
-            {
-                "construct": _type_construct(item),
-                "coordinate": item.coordinate,
-                "sourceName": item.source_name,
-                "nativeName": item.name,
-                "file": "bindings.py",
-            }
-        )
-        for field in item.fields:
-            symbols.append(
-                {
-                    "construct": "field",
-                    "coordinate": field.coordinate,
-                    "sourceName": field.source_name,
-                    "nativeName": field.name,
-                    "parent": item.name,
-                    "file": "bindings.py",
-                }
-            )
-            if field.default_none:
-                symbols.append(
-                    {
-                        "construct": "omitted-optional",
-                        "coordinate": field.coordinate,
-                        "sourceName": field.source_name,
-                        "nativeName": field.name,
-                        "parent": item.name,
-                        "file": "bindings.py",
-                    }
-                )
-        if item.kind == "enum":
-            for member, value in item.members:
-                symbols.append(
-                    {
-                        "construct": "value-member",
-                        "coordinate": item.coordinate
-                        + ":"
-                        + json.dumps(value, ensure_ascii=False),
-                        "sourceName": value,
-                        "nativeName": member,
-                        "parent": item.name,
-                        "file": "bindings.py",
-                    }
-                )
-        if item.kind == "alias" and item.expression is not None:
-            if item.expression.kind == "array":
-                symbols.append(
-                    {
-                        "construct": "collection-element",
-                        "coordinate": item.coordinate,
-                        "sourceName": item.source_name,
-                        "nativeName": item.name,
-                        "file": "bindings.py",
-                    }
-                )
-            elif item.expression.kind == "map":
-                symbols.append(
-                    {
-                        "construct": "map-entry",
-                        "coordinate": item.coordinate,
-                        "sourceName": item.source_name,
-                        "nativeName": item.name,
-                        "file": "bindings.py",
-                    }
-                )
-    return sorted(
-        symbols,
-        key=lambda item: (
-            item["coordinate"],
-            item["construct"],
-            item["nativeName"],
-            item.get("parent", ""),
-        ),
+        provenances[location] = provenance
+
+    def walk(shape: dict[str, Any]) -> None:
+        add(shape)
+        shapes[_location(shape["provenance"])] = shape
+        for property_ in shape.get("properties", []):
+            add(property_)
+            walk(property_["shape"])
+        for child in (shape.get("items"), shape.get("mapValues")):
+            if child is not None:
+                walk(child)
+        for child in shape.get("variants", []):
+            walk(child)
+
+    vocabulary = model["vocabulary"]
+    for group in (
+        "ownedDeclarations",
+        "importedDeclarations",
+        "interfaces",
+        "conditionFields",
+        "valueDomains",
+    ):
+        for item in vocabulary.get(group, []):
+            add(item)
+    for schema in model.get("schemas", []):
+        add(schema)
+        walk(schema["projection"])
+        for definition in schema.get("definitions", []):
+            add(definition)
+            walk(definition["shape"])
+    return provenances, shapes
+
+
+def _reference(expression: TypeExpr, plan: EmissionPlan) -> dict[str, Any]:
+    if expression.kind in {"object", "enum", "ref", "alias"}:
+        return {"type": plan.names[expression.symbol_key]}
+    builtin = {
+        "string": "str",
+        "boolean": "bool",
+        "integer": "int",
+        "number": "float",
+        "null": "None",
+        "any": "JSONValue",
+    }
+    return {"builtin": builtin[expression.kind]}
+
+
+def _structural_types(
+    plan: EmissionPlan,
+    provenances: dict[str, dict[str, Any]],
+    shapes: dict[str, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    contracts = {item.method: item.coordinate for item in plan.declarations}
+    contracts.update(
+        {item.method: item.coordinate for item in plan.imported_declarations}
     )
+    result: list[dict[str, Any]] = []
+    for item in plan.types:
+        shape = shapes[item.coordinate]
+        alias_kind = item.expression.kind if item.expression is not None else ""
+        construct = (
+            "wrapper"
+            if item.kind == "object" and shape["kind"] != "object"
+            else "object"
+            if item.kind == "object"
+            else "scalar"
+            if item.kind == "enum"
+            else {"array": "collection", "map": "map", "union": "union"}[alias_kind]
+        )
+        entry: dict[str, Any] = {
+            "modelRef": _model_ref(provenances[item.coordinate]),
+            "sourceName": item.source_name,
+            "nativeName": item.name,
+            "construct": construct,
+            "file": "bindings.py",
+        }
+        if item.kind == "enum":
+            entry["underlying"] = "str"
+            entry["members"] = [
+                {
+                    "modelRef": _model_ref(provenances[item.coordinate]),
+                    "nativeName": native,
+                    "value": value,
+                }
+                for native, value in item.members
+            ]
+        if item.kind == "object":
+            fields: list[dict[str, Any]] = []
+            for field in item.fields:
+                value = _reference(field.type_expr, plan)
+                if field.default_none:
+                    value["nullable"] = True
+                fields.append(
+                    {
+                        "modelRef": _model_ref(provenances[field.coordinate]),
+                        "sourceName": item.source_name
+                        if construct == "wrapper"
+                        else field.source_name,
+                        "nativeName": field.name,
+                        "required": field.required,
+                        "value": value,
+                        **({"synthetic": True} if construct == "wrapper" else {}),
+                    }
+                )
+            entry["fields"] = fields
+            if item.marker is not None:
+                entry["implements"] = [
+                    {
+                        "declarationCoordinate": contracts[item.marker.method],
+                        "markerMethod": item.marker.method,
+                    }
+                ]
+        if item.kind == "alias":
+            assert item.expression is not None
+            if construct in {"collection", "map"}:
+                child = shape["items" if construct == "collection" else "mapValues"]
+                entry["element"] = {
+                    "modelRef": _model_ref(child["provenance"]),
+                    "value": _reference(item.expression.arguments[0], plan),
+                }
+            else:
+                entry["variants"] = [
+                    {
+                        "modelRef": _model_ref(child["provenance"]),
+                        "value": _reference(expression, plan),
+                    }
+                    for child, expression in zip(
+                        shape["variants"], item.expression.arguments, strict=True
+                    )
+                ]
+        result.append(entry)
+    return sorted(result, key=lambda entry: entry["nativeName"])
 
 
 def _manifest(plan: EmissionPlan, model: dict[str, Any]) -> str:
+    provenances, shapes = _model_locations(model)
+    declarations = {
+        item["kind"]: item
+        for group in ("ownedDeclarations", "importedDeclarations")
+        for item in model["vocabulary"].get(group, [])
+    }
+    fields = {
+        (item["kind"], item.get("interfaceType", ""), item["path"]): item
+        for item in model["vocabulary"].get("conditionFields", [])
+        if item["owner"] == model["rootExtension"]["id"]
+    }
+    root_types = {
+        (item.schema_coordinate, item.source_name): item
+        for item in plan.types
+        if item.schema_coordinate and item.is_declaration_field
+    }
+    root_bindings: list[dict[str, Any]] = []
+    for schema in model.get("schemas", []):
+        if schema["owner"] != model["rootExtension"]["id"]:
+            continue
+        kind = schema.get("kind", schema["id"])
+        interface_type = schema.get("interfaceType", "")
+        for property_ in schema["projection"].get("properties", []):
+            name = property_["name"]
+            source_name = (
+                interface_type if name == "interface" and interface_type else name
+            )
+            native = root_types.get((schema["coordinate"], source_name))
+            if native is None:
+                fail(
+                    "model",
+                    "RCP1012",
+                    schema["coordinate"],
+                    f"root property {name!r} has no declaration field type",
+                )
+            vocabulary_field = fields.get((kind, interface_type, name))
+            role = (
+                "interface"
+                if name == "interface" and interface_type
+                else "condition-field"
+                if vocabulary_field is not None
+                else "schema-field"
+            )
+            binding: dict[str, Any] = {
+                "role": role,
+                "modelRef": _model_ref(property_["provenance"]),
+                "declarationCoordinate": declarations[kind]["coordinate"],
+                "scope": {"kind": kind},
+                "sourceName": source_name,
+                "path": [{"name": name}],
+                "value": {"type": native.name},
+                "schemaCoordinate": schema["coordinate"],
+            }
+            if interface_type:
+                binding["scope"]["interfaceType"] = interface_type
+            if role == "interface":
+                binding["fixedInterfaceType"] = interface_type
+            if vocabulary_field is not None:
+                binding["vocabularyCoordinate"] = vocabulary_field["coordinate"]
+            root_bindings.append(binding)
+
     document = {
-        "apiVersion": "runtimeconditions.io/bindings/v1alpha1",
+        "apiVersion": "runtimeconditions.io/bindings/v1alpha2",
         "kind": "RuntimeConditionsBindingManifest",
         "generated": {
             "nonEditable": True,
@@ -248,9 +342,41 @@ def _manifest(plan: EmissionPlan, model: dict[str, Any]) -> str:
             "language": "python",
             "coordinate": plan.target.distribution_name,
             "name": plan.target.import_package,
+            "version": _version(plan.target.version, plan.target.package_key),
             "minimumPythonVersion": plan.target.minimum_python_version,
         },
-        "symbols": _symbols(plan),
+        "declarations": [
+            {
+                "modelRef": _model_ref(provenances[item.coordinate]),
+                "owner": model["rootExtension"]["id"],
+                "sourceName": item.kind,
+                "function": item.function,
+                "markerInterface": item.protocol,
+                "markerMethod": item.method,
+                "file": "bindings.py",
+            }
+            for item in plan.declarations
+        ],
+        "importedMarkerContracts": [
+            {
+                "modelRef": _model_ref(provenances[item.coordinate]),
+                "owner": item.owner,
+                "sourceName": item.kind,
+                "markerInterface": item.protocol,
+                "markerMethod": item.method,
+                "providerPackage": item.provider_import,
+            }
+            for item in plan.imported_declarations
+        ],
+        "rootBindings": sorted(
+            root_bindings,
+            key=lambda item: (
+                item["declarationCoordinate"],
+                item["modelRef"]["coordinate"],
+                item["modelRef"].get("jsonPointer", ""),
+            ),
+        ),
+        "types": _structural_types(plan, provenances, shapes),
     }
     return _header(model) + yaml.safe_dump(
         document, sort_keys=False, allow_unicode=True, default_flow_style=False
@@ -264,6 +390,17 @@ def render_resources(plan: EmissionPlan, model: dict[str, Any]) -> dict[str, str
         or model["rootExtension"]["id"] != plan.target.root_extension
     ):
         fail("model", "RCP1003", "model", "emission plan does not match supplied model")
+    root = model["rootExtension"]
+    closure_roots = [item for item in model["extensions"] if item["id"] == root["id"]]
+    if len(closure_roots) != 1 or (
+        closure_roots[0]["semanticSha256"] != root["semanticSha256"]
+    ):
+        fail(
+            "model",
+            "RCP1003",
+            root["id"],
+            "root extension digest does not match model extension closure",
+        )
     prefix = f"src/{plan.target.import_package}"
     return {
         "pyproject.toml": _pyproject(plan, model),

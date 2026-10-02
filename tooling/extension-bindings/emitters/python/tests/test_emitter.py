@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import ast
+import json
+import tomllib
 from copy import deepcopy
 from dataclasses import FrozenInstanceError, replace
-from importlib import import_module
-from importlib import resources
-import json
+from importlib import import_module, resources
 from pathlib import Path
-import tomllib
 
 import pytest
 import yaml
@@ -34,7 +33,6 @@ from runtimeconditions_binding_emitter.naming import (
     python_name,
 )
 from runtimeconditions_binding_emitter.package import DiagnosticError, PackageDependency
-
 
 TOOLING = Path(__file__).resolve().parents[3]
 MODELS = TOOLING / "model/conformance/expected"
@@ -156,8 +154,9 @@ def test_any_uses_recursive_json_value_alias() -> None:
     manifest_path = f"src/{plan.target.import_package}/runtimeconditions.bindings.yaml"
     manifest = yaml.safe_load(render_resources(plan, model)[manifest_path])
     assert any(
-        item["construct"] == "any" and item["nativeName"] == "JSONValue"
-        for item in manifest["symbols"]
+        field["value"] == {"builtin": "JSONValue"}
+        for item in manifest["types"]
+        for field in item.get("fields", [])
     )
 
 
@@ -603,49 +602,130 @@ def test_package_metadata_and_manifest_are_deterministic(case: str) -> None:
         "language": "python",
         "coordinate": plan.target.distribution_name,
         "name": plan.target.import_package,
+        "version": "1.0.0",
         "minimumPythonVersion": "3.11",
     }
-    symbols = manifest["symbols"]
-    assert symbols == sorted(
-        symbols,
-        key=lambda item: (
-            item["coordinate"],
-            item["construct"],
-            item["nativeName"],
-            item.get("parent", ""),
-        ),
-    )
-    assert all(item["coordinate"] and item["nativeName"] for item in symbols)
-    assert (
-        "declaration-call" in {item["construct"] for item in symbols}
-        or plan.imported_declarations
-    )
+    assert manifest["apiVersion"] == "runtimeconditions.io/bindings/v1alpha2"
+    assert "symbols" not in manifest
+    types = manifest["types"]
+    assert types == sorted(types, key=lambda item: item["nativeName"])
+    assert {item["nativeName"] for item in types} == {item.name for item in plan.types}
+    names = {item["nativeName"] for item in types}
+    values = [item["value"] for item in manifest["rootBindings"]]
+    for item in types:
+        values.extend(field["value"] for field in item.get("fields", []))
+        values.extend([item["element"]["value"]] if "element" in item else [])
+        values.extend(variant["value"] for variant in item.get("variants", []))
+    assert all(value["type"] in names for value in values if "type" in value)
+
+    def coordinate(provenance: dict) -> tuple[str, str]:
+        return provenance["coordinate"], provenance.get("jsonPointer", "")
+
+    locations: set[tuple[str, str]] = set()
+    shapes: dict[tuple[str, str], dict] = {}
+
+    def walk(value: object) -> None:
+        if isinstance(value, dict):
+            if isinstance(value.get("provenance"), dict):
+                location = coordinate(value["provenance"])
+                locations.add(location)
+                if value.get("kind") in {
+                    "object",
+                    "array",
+                    "map",
+                    "union",
+                    "scalar",
+                    "any",
+                    "ref",
+                }:
+                    shapes[location] = value
+            for child in value.values():
+                walk(child)
+        elif isinstance(value, list):
+            for child in value:
+                walk(child)
+
+    walk(model)
+
+    def check_ref(entry: dict) -> None:
+        assert coordinate(entry["modelRef"]) in locations
+
+    for section in ("declarations", "importedMarkerContracts", "rootBindings"):
+        for entry in manifest[section]:
+            check_ref(entry)
+    for entry in types:
+        check_ref(entry)
+        shape = shapes[coordinate(entry["modelRef"])]
+        for field in entry.get("fields", []):
+            check_ref(field)
+        if entry["construct"] == "object" and shape["kind"] == "object":
+            assert {
+                (coordinate(field["modelRef"]), field["sourceName"])
+                for field in entry["fields"]
+            } == {
+                (coordinate(property_["provenance"]), property_["name"])
+                for property_ in shape.get("properties", [])
+            }
+        if "element" in entry:
+            check_ref(entry["element"])
+            child = shape[
+                "items" if entry["construct"] == "collection" else "mapValues"
+            ]
+            assert entry["element"]["modelRef"] == {
+                "coordinate": child["provenance"]["coordinate"],
+                **(
+                    {"jsonPointer": child["provenance"]["jsonPointer"]}
+                    if "jsonPointer" in child["provenance"]
+                    else {}
+                ),
+            }
+        if "variants" in entry:
+            assert len(entry["variants"]) == len(shape["variants"])
+            for variant, child in zip(
+                entry["variants"], shape["variants"], strict=True
+            ):
+                check_ref(variant)
+                assert coordinate(variant["modelRef"]) == coordinate(
+                    child["provenance"]
+                )
+        for member in entry.get("members", []):
+            check_ref(member)
+    assert len(manifest["declarations"]) == len(plan.declarations)
+    assert len(manifest["importedMarkerContracts"]) == len(plan.imported_declarations)
 
 
-def test_manifest_covers_collection_map_enum_optional_and_imported_symbols() -> None:
-    cases = {
-        "09-collections-and-maps": {
-            "collection",
-            "collection-element",
-            "map",
-            "map-entry",
-        },
-        "10-scoped-domains-collisions": {"value-domain", "value-member"},
-        "07-object-alternatives": {"omitted-optional"},
-        "02-additive-field": {"imported-marker-contract"},
-    }
-    for case, constructs in cases.items():
+def test_manifest_covers_collection_map_enum_optional_and_imported_contracts() -> None:
+    cases = (
+        "09-collections-and-maps",
+        "10-scoped-domains-collisions",
+        "07-object-alternatives",
+        "02-additive-field",
+    )
+    manifests = {}
+    for case in cases:
         model = load_model(MODELS / case / "runtimeconditions.binding-model.yaml")
         plan = _plan(case)
         path = f"src/{plan.target.import_package}/runtimeconditions.bindings.yaml"
-        manifest = yaml.safe_load(render_resources(plan, model)[path])
-        assert constructs <= {item["construct"] for item in manifest["symbols"]}
-    imported = [
-        item
-        for item in manifest["symbols"]
-        if item["construct"] == "imported-marker-contract"
-    ]
-    assert all("file" not in item for item in imported)
+        manifests[case] = yaml.safe_load(render_resources(plan, model)[path])
+    collections = manifests["09-collections-and-maps"]["types"]
+    assert {"collection", "map"} <= {item["construct"] for item in collections}
+    assert all(
+        "element" in item
+        for item in collections
+        if item["construct"] in {"collection", "map"}
+    )
+    assert any(
+        item["construct"] == "scalar" and item.get("members")
+        for item in manifests["10-scoped-domains-collisions"]["types"]
+    )
+    assert any(
+        field["value"].get("nullable") is True
+        for item in manifests["07-object-alternatives"]["types"]
+        for field in item.get("fields", [])
+    )
+    imported = manifests["02-additive-field"]["importedMarkerContracts"]
+    assert imported and all("file" not in item for item in imported)
+    assert all(item["providerPackage"] for item in imported)
     source_model = load_model(
         MODELS / "11-source-name-preservation/runtimeconditions.binding-model.yaml"
     )
@@ -656,7 +736,9 @@ def test_manifest_covers_collection_map_enum_optional_and_imported_symbols() -> 
     source_manifest = yaml.safe_load(
         render_resources(source_plan, source_model)[source_path]
     )
-    assert any(item.get("sourceName") == "café" for item in source_manifest["symbols"])
+    assert any(
+        item.get("sourceName") == "café" for item in source_manifest["rootBindings"]
+    )
 
 
 def test_package_versions_and_direct_dependency_intervals() -> None:
@@ -742,6 +824,32 @@ def test_manifest_schema_accepts_python_and_rejects_wrong_language_fields() -> N
     invalid["package"]["minimumGoVersion"] = "1.22"
     with pytest.raises(ValidationError):
         Draft202012Validator(schema).validate(invalid)
+
+
+def test_manifest_rejects_stale_root_extension_digest() -> None:
+    model = load_model(
+        MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+    )
+    plan = _plan("01-owned-kind-interface")
+    model["rootExtension"]["semanticSha256"] = "0" * 64
+    with pytest.raises(DiagnosticError) as error:
+        render_resources(plan, model)
+    assert error.value.diagnostic.code == "RCP1003"
+
+
+def test_manifest_rejects_ambiguous_legacy_plan_coordinate() -> None:
+    model = load_model(
+        MODELS / "01-owned-kind-interface/runtimeconditions.binding-model.yaml"
+    )
+    plan = _plan("01-owned-kind-interface")
+    properties = model["schemas"][0]["projection"]["properties"]
+    first = properties[0]["shape"]["provenance"]
+    second = properties[1]["shape"]["provenance"]
+    first["coordinate"] = second["coordinate"] + second.get("jsonPointer", "")
+    first.pop("jsonPointer", None)
+    with pytest.raises(DiagnosticError) as error:
+        render_resources(plan, model)
+    assert error.value.diagnostic.code == "RCP1012"
 
 
 def test_generated_backend_pin_matches_toolchain_lock() -> None:

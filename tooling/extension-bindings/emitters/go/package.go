@@ -25,7 +25,7 @@ const (
 	EmitterVersion          = "0.1.0"
 	PackageTargetAPIVersion = "runtimeconditions.io/go-package-target/v1alpha1"
 	PackageTargetKind       = "RuntimeConditionsGoPackageTarget"
-	ManifestAPIVersion      = "runtimeconditions.io/bindings/v1alpha1"
+	ManifestAPIVersion      = "runtimeconditions.io/bindings/v1alpha2"
 	ManifestKind            = "RuntimeConditionsBindingManifest"
 )
 
@@ -314,12 +314,20 @@ func validateInputs(model normalizer.BindingModel, target PackageTarget) error {
 		return diagnostic("package-config", "RCG1012", target.PackageKey, fmt.Sprintf("unsupported publication mode %q", target.PublicationMode))
 	}
 	rootDependencies := map[string]bool{}
+	rootFound := false
 	for _, extension := range model.Extensions {
 		if extension.ID == model.RootExtension.ID {
+			rootFound = true
+			if extension.SemanticSHA256 != model.RootExtension.SemanticSHA256 {
+				return diagnostic("model", "RCG1022", extension.ID, "root extension digest does not match model extension closure")
+			}
 			for _, dependency := range extension.Dependencies {
 				rootDependencies[dependency] = true
 			}
 		}
+	}
+	if !rootFound {
+		return diagnostic("model", "RCG1022", model.RootExtension.ID, "root extension is absent from model extension closure")
 	}
 	configured := map[string]bool{}
 	for _, dependency := range target.Dependencies {
@@ -339,7 +347,17 @@ func validateInputs(model normalizer.BindingModel, target PackageTarget) error {
 			return diagnostic("package-config", "RCG1015", target.PackageKey, fmt.Sprintf("direct extension dependency %q has no Go package target", dependency))
 		}
 	}
-	return validateShapes(model)
+	if err := validateShapes(model); err != nil {
+		return err
+	}
+	digest, err := normalizer.ModelSemanticSHA256(model)
+	if err != nil {
+		return diagnostic("model", "RCG1023", model.RootExtension.ID, fmt.Sprintf("cannot compute binding model digest: %v", err))
+	}
+	if digest != model.Metadata.SemanticSHA256 {
+		return diagnostic("model", "RCG1023", model.RootExtension.ID, "binding model digest does not match its normalized contents")
+	}
+	return nil
 }
 
 func validateShapes(model normalizer.BindingModel) error {
@@ -402,13 +420,16 @@ func validateShapes(model normalizer.BindingModel) error {
 }
 
 type Manifest struct {
-	APIVersion string            `yaml:"apiVersion"`
-	Kind       string            `yaml:"kind"`
-	Generated  ManifestGenerated `yaml:"generated"`
-	Model      ManifestModel     `yaml:"model"`
-	Extension  ManifestExtension `yaml:"extension"`
-	Package    ManifestPackage   `yaml:"package"`
-	Symbols    []ManifestSymbol  `yaml:"symbols"`
+	APIVersion              string                   `yaml:"apiVersion"`
+	Kind                    string                   `yaml:"kind"`
+	Generated               ManifestGenerated        `yaml:"generated"`
+	Model                   ManifestModel            `yaml:"model"`
+	Extension               ManifestExtension        `yaml:"extension"`
+	Package                 ManifestPackage          `yaml:"package"`
+	Declarations            []ManifestDeclaration    `yaml:"declarations"`
+	ImportedMarkerContracts []ManifestImportedMarker `yaml:"importedMarkerContracts"`
+	RootBindings            []ManifestRootBinding    `yaml:"rootBindings"`
+	Types                   []ManifestNamedType      `yaml:"types"`
 }
 
 type ManifestGenerated struct {
@@ -431,27 +452,122 @@ type ManifestPackage struct {
 	Language         string `yaml:"language"`
 	Coordinate       string `yaml:"coordinate"`
 	Name             string `yaml:"name"`
+	Version          string `yaml:"version"`
 	MinimumGoVersion string `yaml:"minimumGoVersion"`
 }
 
-type ManifestSymbol struct {
-	Construct  string `yaml:"construct"`
-	Coordinate string `yaml:"coordinate"`
-	SourceName string `yaml:"sourceName,omitempty"`
-	NativeName string `yaml:"nativeName"`
-	Parent     string `yaml:"parent,omitempty"`
-	File       string `yaml:"file,omitempty"`
+// A model reference keeps the coordinate and JSON Pointer separate. Joining
+// them would lose the boundary for URI coordinates and referenced definitions.
+type ManifestModelRef struct {
+	Coordinate  string `yaml:"coordinate"`
+	JSONPointer string `yaml:"jsonPointer,omitempty"`
+}
+
+type ManifestReference struct {
+	Type    string `yaml:"type,omitempty"`
+	Builtin string `yaml:"builtin,omitempty"`
+	Pointer bool   `yaml:"pointer,omitempty"`
+}
+
+type ManifestScope struct {
+	Kind          string `yaml:"kind"`
+	InterfaceType string `yaml:"interfaceType,omitempty"`
+}
+
+type ManifestDeclaration struct {
+	ModelRef        ManifestModelRef `yaml:"modelRef"`
+	Owner           string           `yaml:"owner"`
+	SourceName      string           `yaml:"sourceName"`
+	Function        string           `yaml:"function"`
+	MarkerInterface string           `yaml:"markerInterface"`
+	MarkerMethod    string           `yaml:"markerMethod"`
+	File            string           `yaml:"file"`
+}
+
+type ManifestImportedMarker struct {
+	ModelRef        ManifestModelRef `yaml:"modelRef"`
+	Owner           string           `yaml:"owner"`
+	SourceName      string           `yaml:"sourceName"`
+	MarkerInterface string           `yaml:"markerInterface"`
+	MarkerMethod    string           `yaml:"markerMethod"`
+}
+
+type ManifestRootBinding struct {
+	Role                  string                   `yaml:"role"`
+	ModelRef              ManifestModelRef         `yaml:"modelRef"`
+	DeclarationCoordinate string                   `yaml:"declarationCoordinate"`
+	Scope                 ManifestScope            `yaml:"scope"`
+	SourceName            string                   `yaml:"sourceName"`
+	Path                  []normalizer.PathSegment `yaml:"path"`
+	Value                 ManifestReference        `yaml:"value"`
+	FixedInterfaceType    string                   `yaml:"fixedInterfaceType,omitempty"`
+}
+
+type ManifestField struct {
+	ModelRef   ManifestModelRef  `yaml:"modelRef"`
+	SourceName string            `yaml:"sourceName"`
+	NativeName string            `yaml:"nativeName"`
+	Required   bool              `yaml:"required"`
+	Value      ManifestReference `yaml:"value"`
+}
+
+type ManifestElement struct {
+	ModelRef ManifestModelRef  `yaml:"modelRef"`
+	Value    ManifestReference `yaml:"value"`
+}
+
+type ManifestVariant struct {
+	ModelRef ManifestModelRef  `yaml:"modelRef"`
+	Value    ManifestReference `yaml:"value"`
+}
+
+type ManifestMember struct {
+	ModelRef   ManifestModelRef `yaml:"modelRef"`
+	NativeName string           `yaml:"nativeName"`
+	Value      string           `yaml:"value"`
+}
+
+type ManifestImplements struct {
+	DeclarationCoordinate string `yaml:"declarationCoordinate"`
+	MarkerMethod          string `yaml:"markerMethod"`
+}
+
+type ManifestNamedType struct {
+	ModelRef   ManifestModelRef     `yaml:"modelRef"`
+	SourceName string               `yaml:"sourceName"`
+	NativeName string               `yaml:"nativeName"`
+	Construct  string               `yaml:"construct"`
+	File       string               `yaml:"file"`
+	Implements []ManifestImplements `yaml:"implements,omitempty"`
+	Underlying string               `yaml:"underlying,omitempty"`
+	Fields     *[]ManifestField     `yaml:"fields,omitempty"`
+	Element    *ManifestElement     `yaml:"element,omitempty"`
+	Variants   []ManifestVariant    `yaml:"variants,omitempty"`
+	Members    []ManifestMember     `yaml:"members,omitempty"`
 }
 
 func marshalManifest(manifest Manifest) ([]byte, error) {
-	sort.Slice(manifest.Symbols, func(i, j int) bool {
-		if manifest.Symbols[i].Coordinate != manifest.Symbols[j].Coordinate {
-			return manifest.Symbols[i].Coordinate < manifest.Symbols[j].Coordinate
+	sort.Slice(manifest.Declarations, func(i, j int) bool {
+		return manifest.Declarations[i].Function < manifest.Declarations[j].Function
+	})
+	sort.Slice(manifest.ImportedMarkerContracts, func(i, j int) bool {
+		return manifest.ImportedMarkerContracts[i].ModelRef.Coordinate < manifest.ImportedMarkerContracts[j].ModelRef.Coordinate
+	})
+	sort.Slice(manifest.RootBindings, func(i, j int) bool {
+		a, b := manifest.RootBindings[i], manifest.RootBindings[j]
+		if a.DeclarationCoordinate != b.DeclarationCoordinate {
+			return a.DeclarationCoordinate < b.DeclarationCoordinate
 		}
-		if manifest.Symbols[i].Construct != manifest.Symbols[j].Construct {
-			return manifest.Symbols[i].Construct < manifest.Symbols[j].Construct
+		if a.ModelRef.Coordinate != b.ModelRef.Coordinate {
+			return a.ModelRef.Coordinate < b.ModelRef.Coordinate
 		}
-		return manifest.Symbols[i].NativeName < manifest.Symbols[j].NativeName
+		if a.ModelRef.JSONPointer != b.ModelRef.JSONPointer {
+			return a.ModelRef.JSONPointer < b.ModelRef.JSONPointer
+		}
+		return a.SourceName < b.SourceName
+	})
+	sort.Slice(manifest.Types, func(i, j int) bool {
+		return manifest.Types[i].NativeName < manifest.Types[j].NativeName
 	})
 	data, err := yaml.Marshal(manifest)
 	if err != nil {

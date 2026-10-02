@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/runtimeconditions/extensions/tooling/extension-bindings/normalizer"
 	"github.com/santhosh-tekuri/jsonschema/v6"
+	"gopkg.in/yaml.v3"
 )
 
 var positiveGoCases = []string{
@@ -70,6 +72,9 @@ func TestGoEmitterConformance(t *testing.T) {
 				filepath.Join("..", "..", "model", "runtimeconditions.binding-manifest.schema.yaml"),
 				filepath.Join(root.path, "runtimeconditions.bindings.yaml"),
 			)
+			for _, module := range modules {
+				assertStructuralManifest(t, module)
+			}
 
 			goWork := writeGoWork(t, workspace, modules, consumer)
 			for _, module := range modules {
@@ -89,6 +94,324 @@ func TestGoEmitterConformance(t *testing.T) {
 			assertDeterministicEmission(t, root.model, root.target, root.path)
 			assertArchive(t, root.path)
 		})
+	}
+}
+
+func TestManifestRejectsProvisionalInventoryAndStaleIdentity(t *testing.T) {
+	model := loadExpectedModel(t, "01-owned-kind-interface")
+	target := loadTestTarget(t, "01-owned-kind-interface.yaml")
+	output := filepath.Join(t.TempDir(), "package")
+	if err := Emit(model, target, output); err != nil {
+		t.Fatal(err)
+	}
+	schemaData, err := os.ReadFile(filepath.Join("..", "..", "model", "runtimeconditions.binding-manifest.schema.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	schemaValue, err := normalizer.ParseYAMLData(schemaData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	schemaJSON, err := json.Marshal(schemaValue)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resource, err := jsonschema.UnmarshalJSON(bytes.NewReader(schemaJSON))
+	if err != nil {
+		t.Fatal(err)
+	}
+	compiler := jsonschema.NewCompiler()
+	if err := compiler.AddResource("urn:runtimeconditions:test:structural-manifest", resource); err != nil {
+		t.Fatal(err)
+	}
+	schema, err := compiler.Compile("urn:runtimeconditions:test:structural-manifest")
+	if err != nil {
+		t.Fatal(err)
+	}
+	manifestData, err := os.ReadFile(filepath.Join(output, "runtimeconditions.bindings.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	manifest, err := normalizer.ParseYAMLData(manifestData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := schema.Validate(manifest); err != nil {
+		t.Fatalf("structural manifest rejected: %v", err)
+	}
+	for _, version := range []string{"runtimeconditions.io/bindings/v1alpha1", ManifestAPIVersion} {
+		legacy := make(map[string]any, len(manifest))
+		for key, value := range manifest {
+			legacy[key] = value
+		}
+		legacy["apiVersion"] = version
+		legacy["symbols"] = []any{}
+		delete(legacy, "declarations")
+		delete(legacy, "importedMarkerContracts")
+		delete(legacy, "rootBindings")
+		delete(legacy, "types")
+		if err := schema.Validate(legacy); err == nil {
+			t.Fatalf("provisional symbol inventory accepted as %s", version)
+		}
+	}
+
+	stale := model
+	stale.Metadata.SemanticSHA256 = strings.Repeat("0", 64)
+	if err := Emit(stale, target, filepath.Join(t.TempDir(), "stale-model")); err == nil || !strings.Contains(err.Error(), "RCG1023") {
+		t.Fatalf("stale model digest: %v", err)
+	}
+	stale = model
+	stale.RootExtension.SemanticSHA256 = strings.Repeat("0", 64)
+	if err := Emit(stale, target, filepath.Join(t.TempDir(), "stale-extension")); err == nil || !strings.Contains(err.Error(), "RCG1022") {
+		t.Fatalf("stale root extension digest: %v", err)
+	}
+}
+
+func assertStructuralManifest(t *testing.T, module generatedModule) {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(module.path, "runtimeconditions.bindings.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest Manifest
+	if err := yaml.Unmarshal(data, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	if manifest.APIVersion != ManifestAPIVersion || manifest.Model.APIVersion != module.model.APIVersion ||
+		manifest.Model.SemanticSHA256 != module.model.Metadata.SemanticSHA256 ||
+		manifest.Extension.ID != module.model.RootExtension.ID ||
+		manifest.Extension.SemanticSHA256 != module.model.RootExtension.SemanticSHA256 ||
+		manifest.Package.Coordinate != module.target.ModulePath ||
+		manifest.Package.Name != module.target.PackageName ||
+		manifest.Package.Version != module.target.Version {
+		t.Fatal("manifest identity differs from the normalized model or package target")
+	}
+
+	refs := map[ManifestModelRef]bool{}
+	shapes := map[ManifestModelRef]normalizer.Shape{}
+	memberValues := map[ManifestModelRef]map[string]bool{}
+	var walkShape func(normalizer.Shape)
+	walkShape = func(shape normalizer.Shape) {
+		ref := manifestModelRef(shape.Provenance)
+		refs[ref] = true
+		shapes[ref] = shape
+		for _, value := range shape.Values {
+			if stringValue, ok := value.Value.(string); ok {
+				if memberValues[ref] == nil {
+					memberValues[ref] = map[string]bool{}
+				}
+				memberValues[ref][stringValue] = true
+			}
+		}
+		for _, property := range shape.Properties {
+			refs[manifestModelRef(property.Provenance)] = true
+			walkShape(property.Shape)
+		}
+		if shape.Items != nil {
+			walkShape(*shape.Items)
+		}
+		if shape.MapValues != nil {
+			walkShape(*shape.MapValues)
+		}
+		for _, variant := range shape.Variants {
+			walkShape(variant)
+		}
+	}
+	for _, scope := range module.model.Scopes {
+		if scope.Projection != nil {
+			walkShape(*scope.Projection)
+		}
+	}
+	for _, schema := range module.model.Schemas {
+		walkShape(schema.Projection)
+		for _, definition := range schema.Definitions {
+			refs[manifestModelRef(definition.Provenance)] = true
+			walkShape(definition.Shape)
+		}
+	}
+	declarations := map[string]normalizer.DeclarationModel{}
+	for _, declaration := range module.model.Vocabulary.OwnedDeclarations {
+		declarations[declaration.Coordinate] = declaration
+		refs[manifestModelRef(declaration.Provenance)] = true
+	}
+	for _, declaration := range module.model.Vocabulary.ImportedDeclarations {
+		declarations[declaration.Coordinate] = declaration
+		refs[manifestModelRef(declaration.Provenance)] = true
+	}
+	for _, value := range module.model.Vocabulary.Interfaces {
+		refs[manifestModelRef(value.Provenance)] = true
+	}
+	for _, value := range module.model.Vocabulary.ConditionFields {
+		refs[manifestModelRef(value.Provenance)] = true
+	}
+	for _, value := range module.model.Vocabulary.ValueDomains {
+		ref := manifestModelRef(value.Provenance)
+		refs[ref] = true
+		for _, member := range value.Values {
+			if stringValue, ok := member.Value.(string); ok {
+				if memberValues[ref] == nil {
+					memberValues[ref] = map[string]bool{}
+				}
+				memberValues[ref][stringValue] = true
+			}
+		}
+	}
+	checkRef := func(ref ManifestModelRef) {
+		t.Helper()
+		if !refs[ref] {
+			t.Errorf("manifest references absent model location %+v", ref)
+		}
+	}
+	if len(manifest.Declarations) != len(module.model.Vocabulary.OwnedDeclarations) ||
+		len(manifest.ImportedMarkerContracts) != len(module.model.Vocabulary.ImportedDeclarations) {
+		t.Fatal("manifest declaration contracts do not cover normalized vocabulary")
+	}
+	for _, declaration := range manifest.Declarations {
+		checkRef(declaration.ModelRef)
+		model := declarations[declaration.ModelRef.Coordinate]
+		if model.Owner != declaration.Owner || model.Kind != declaration.SourceName ||
+			declaration.MarkerMethod != markerMethod(model) {
+			t.Errorf("declaration contract disagrees with model: %+v", declaration)
+		}
+	}
+	for _, imported := range manifest.ImportedMarkerContracts {
+		checkRef(imported.ModelRef)
+		model := declarations[imported.ModelRef.Coordinate]
+		if model.Owner != imported.Owner || model.Kind != imported.SourceName ||
+			imported.MarkerMethod != markerMethod(model) {
+			t.Errorf("imported marker contract disagrees with model: %+v", imported)
+		}
+	}
+
+	nativeTypes := map[string]ManifestNamedType{}
+	for _, entry := range manifest.Types {
+		checkRef(entry.ModelRef)
+		if _, exists := nativeTypes[entry.NativeName]; exists {
+			t.Errorf("duplicate native type %q", entry.NativeName)
+		}
+		nativeTypes[entry.NativeName] = entry
+	}
+	checkValue := func(value ManifestReference) {
+		t.Helper()
+		if value.Type != "" {
+			if _, exists := nativeTypes[value.Type]; !exists {
+				t.Errorf("dangling native type reference %q", value.Type)
+			}
+		} else if value.Builtin == "" {
+			t.Error("reference has neither native type nor builtin")
+		}
+	}
+	for _, binding := range manifest.RootBindings {
+		checkRef(binding.ModelRef)
+		checkValue(binding.Value)
+		if declaration, exists := declarations[binding.DeclarationCoordinate]; !exists || declaration.Kind != binding.Scope.Kind {
+			t.Errorf("root binding has no matching declaration: %+v", binding)
+		}
+		if len(binding.Path) == 0 ||
+			(binding.Role == "interface" && binding.SourceName != binding.FixedInterfaceType) ||
+			(binding.Role != "interface" && binding.SourceName != binding.Path[len(binding.Path)-1].Name) {
+			t.Errorf("root binding loses serialized path name: %+v", binding)
+		}
+		if binding.Role == "interface" || binding.Role == "condition-field" {
+			implemented := false
+			for _, contract := range nativeTypes[binding.Value.Type].Implements {
+				if contract.DeclarationCoordinate == binding.DeclarationCoordinate {
+					implemented = true
+				}
+			}
+			if !implemented {
+				t.Errorf("root binding type %q lacks declaration marker %q", binding.Value.Type, binding.DeclarationCoordinate)
+			}
+		}
+	}
+	for _, entry := range manifest.Types {
+		shape, hasShape := shapes[entry.ModelRef]
+		if hasShape {
+			construct := map[string]string{"object": "object", "scalar": "scalar", "array": "collection", "map": "map", "union": "union", "any": "any"}[shape.Kind]
+			if shape.Kind != "ref" && construct != entry.Construct {
+				t.Errorf("native type %s is %s but model is %s", entry.NativeName, entry.Construct, shape.Kind)
+			}
+		}
+		for _, contract := range entry.Implements {
+			declaration, exists := declarations[contract.DeclarationCoordinate]
+			if !exists || contract.MarkerMethod != markerMethod(declaration) {
+				t.Errorf("type %s has unknown marker contract %+v", entry.NativeName, contract)
+			}
+		}
+		if entry.Fields != nil {
+			interfaceShape := strings.HasPrefix(entry.ModelRef.Coordinate, "interface:")
+			if !interfaceShape && (!hasShape || shape.Kind != "object" || len(*entry.Fields) != len(shape.Properties)) {
+				t.Errorf("object %s fields do not match model shape", entry.NativeName)
+				continue
+			}
+			for index, field := range *entry.Fields {
+				checkRef(field.ModelRef)
+				checkValue(field.Value)
+				if !interfaceShape {
+					property := shape.Properties[index]
+					if field.ModelRef != manifestModelRef(property.Provenance) ||
+						field.SourceName != property.Name || field.Required != property.Required {
+						t.Errorf("field %s.%s differs from model property %s", entry.NativeName, field.NativeName, property.Name)
+					}
+					if !field.Required {
+						pointed := field.Value.Builtin != "" && field.Value.Builtin != "any"
+						if referenced, exists := nativeTypes[field.Value.Type]; exists {
+							pointed = referenced.Construct == "object" ||
+								(referenced.Construct == "scalar" && len(referenced.Members) != 0)
+						}
+						if field.Value.Pointer != pointed {
+							t.Errorf("optional field %s.%s has wrong native pointer shape", entry.NativeName, field.NativeName)
+						}
+					}
+				}
+			}
+		}
+		if entry.Element != nil {
+			checkRef(entry.Element.ModelRef)
+			checkValue(entry.Element.Value)
+			var child *normalizer.Shape
+			if hasShape && shape.Kind == "array" {
+				child = shape.Items
+			} else if hasShape && shape.Kind == "map" {
+				child = shape.MapValues
+			}
+			if child == nil || entry.Element.ModelRef != manifestModelRef(child.Provenance) {
+				t.Errorf("type %s element does not map to model child", entry.NativeName)
+			}
+		}
+		if len(entry.Variants) != 0 {
+			if !hasShape || shape.Kind != "union" || len(entry.Variants) != len(shape.Variants) {
+				t.Errorf("union %s variants do not match model shape", entry.NativeName)
+				continue
+			}
+			for index, variant := range entry.Variants {
+				checkRef(variant.ModelRef)
+				checkValue(variant.Value)
+				if variant.ModelRef != manifestModelRef(shape.Variants[index].Provenance) {
+					t.Errorf("union %s variant %d maps to wrong model child", entry.NativeName, index)
+				}
+			}
+		}
+		for _, member := range entry.Members {
+			checkRef(member.ModelRef)
+			if !memberValues[member.ModelRef][member.Value] {
+				t.Errorf("constant %s = %q is absent from model value domain", member.NativeName, member.Value)
+			}
+		}
+	}
+	for _, field := range module.model.Vocabulary.ConditionFields {
+		if field.Owner != module.model.RootExtension.ID {
+			continue
+		}
+		found := false
+		for _, binding := range manifest.RootBindings {
+			if binding.Role == "condition-field" && binding.ModelRef == manifestModelRef(field.Provenance) {
+				found = reflect.DeepEqual(binding.Path, field.Segments)
+			}
+		}
+		if !found {
+			t.Errorf("owned condition field %s has no exact root binding", field.Coordinate)
+		}
 	}
 }
 

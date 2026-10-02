@@ -88,9 +88,19 @@ therefore follows this order:
 4. Regenerate affected binding packages with the locked release.
 
 Every normalized checkpoint MUST record the binding-model API version and
-normalizer version and digest. Every generated binding manifest and release
-manifest MUST additionally record the emitter, orchestrator, and applicable
-profiler versions and digests.
+normalizer version and digest. Every generated binding manifest MUST record the
+applicable emitter version and digest. Every binding release manifest MUST
+additionally record the orchestrator and applicable profiler versions and
+digests used for verification.
+
+The Go and Python language-specific profilers are maintained, upgraded,
+standardized, and prepared for production use in the separate
+`go-rc-profiler` and `python-rc-profiler` repositories, respectively. Those
+repositories own their profiler source, tests, packaging, and CLI releases.
+Production binding verification MUST use separately released, installed
+profiler CLIs pinned by version and SHA-256 in `toolchain.lock.yaml`. Profiler
+source MUST NOT be embedded in `tooling/extension-bindings/` or distributed as
+part of its tooling release.
 
 ## 3. Fixed system architecture
 
@@ -128,7 +138,8 @@ language source package      language source package
         +-------------+------------+
                       |
                       v
-format, compile, profile generation, semantic validation, package inspection
+format, compile, profile generation through installed language-specific
+profiler CLIs, semantic validation, package inspection
                       |
                       v
 verified package artifacts -> package-manager tags
@@ -145,9 +156,12 @@ MUST NOT receive source-byte SHA-256 values, source backends, or source locators
 The shared resolver, validator, normalizer, and orchestrator MUST be written in
 Go. Every language emitter MUST be written in the language it emits. The Go
 emitter MUST be written in Go. The Python emitter MUST be written in Python.
-Every future emitter MUST follow the same rule. Each static source profiler MUST
-be written in the language it parses so that it uses that language's native
-parser and package metadata APIs.
+Every future emitter MUST follow the same rule. The Go profiler in
+`go-rc-profiler` MUST be written in Go, and the Python profiler in
+`python-rc-profiler` MUST be written in Python, so each uses its language's
+native parser and package metadata APIs. Future language-specific profilers
+MUST likewise be maintained outside `tooling/extension-bindings/` and written
+in the language they parse.
 
 An emitter MUST consume only the normalized binding model and its target package
 configuration. It MUST NOT read an extension YAML file, resolve dependencies,
@@ -221,25 +235,6 @@ tooling/extension-bindings/
       tests/test_emitter.py
       tests/test_conformance.py
 
-  profilers/
-    go/
-      go.mod
-      go.sum
-      profiler.go
-      resolver.go
-      profiler_test.go
-      conformance_test.go
-      cmd/rc-go-profiler/main.go
-
-    python/
-      pyproject.toml
-      src/runtimeconditions_python_profiler/__init__.py
-      src/runtimeconditions_python_profiler/profiler.py
-      src/runtimeconditions_python_profiler/resolver.py
-      src/runtimeconditions_python_profiler/__main__.py
-      tests/test_profiler.py
-      tests/test_conformance.py
-
 bindings/
   <package-key>/
     go/
@@ -250,6 +245,11 @@ bindings/
   binding-checks.yml
   binding-promote.yml
 ```
+
+The Go and Python profiler codebases are separate repositories named
+`go-rc-profiler` and `python-rc-profiler`. Their installed CLIs consume generated
+binding packages; neither profiler source tree is part of this repository
+layout or required on an end user's computer or CI server.
 
 `bindings/<package-key>/<language>/` contains the committed, human-readable
 generated package tree for one target. Every configured target uses this
@@ -884,9 +884,11 @@ Generated packages MUST place `runtimeconditions.bindings.yaml`,
 - JavaScript and TypeScript: `runtimeconditions/` at the resolved npm package
   root.
 
-Profilers MUST begin from the imported package symbol, ask the native package
-manager for its resolved artifact location, and read only the fixed location
-above. Recursive cache or filesystem searches are forbidden.
+The installed `go-rc-profiler` and `python-rc-profiler` CLIs MUST begin from the
+imported package symbol, ask the native package manager for its resolved
+artifact location, and read only the fixed location above. Recursive cache or
+filesystem searches are forbidden. Profiling an application MUST NOT require a
+checkout of this repository or either profiler repository.
 
 Profilers MUST parse source and static metadata. They MUST NOT execute application
 or package code. They MUST resolve imported packages through the native package
@@ -958,6 +960,11 @@ Generated-target verification applies cumulatively by implementation phase:
 - Phase 2 and Phase 3 require gates 1 through 8, 12, 14, and 16.
 - Phase 4 additionally requires gates 9 through 11.
 - Phase 5 and every later phase require all 16 gates.
+
+Profile-generation gates MUST invoke the separately installed, applicable Go
+or Python profiler CLI against binding packages resolved through the language's
+native package manager. A source checkout of this repository MUST NOT be a
+profiler runtime input.
 
 The verification gates are:
 
@@ -1205,7 +1212,8 @@ commit, and asset checksums establish byte identity.
 
 `.github/workflows/binding-checks.yml` MUST run for changes to extension
 definitions, package configuration, the binding-model schema, normalizer,
-resolver, orchestrator, emitters, profiler contracts, or generated bindings.
+resolver, orchestrator, emitters, binding-manifest contracts consumed by the
+external profilers, or generated bindings.
 
 It MUST call `_binding-build.yml`, compare regenerated source to committed
 source, and publish the API and version-classification summary to the workflow
@@ -1429,11 +1437,14 @@ Exit requires Section 13 gates 1 through 8, 12, 14, and 16 for every positive
 conformance model, plus exact expected failures for every negative model relevant
 to Python.
 
-### Phase 4: structural binding manifests and profiler support
+### Phase 4: structural binding manifests and external profiler integration
 
-Deliver the structural binding-manifest schema, Go and Python profiler support
-for every construct in Section 11, and expected profile YAML for every positive
-conformance declaration.
+Deliver the structural binding-manifest schema and its emitter output, upgrade
+and standardize the separate `go-rc-profiler` and `python-rc-profiler` codebases
+to consume every construct in Section 11 as installed CLIs, and deliver expected
+profile YAML for every positive conformance declaration. The profiler upgrades
+are made in their own repositories; this phase MUST NOT add profiler source
+under `tooling/extension-bindings/`.
 
 Exit requires:
 
@@ -1443,6 +1454,8 @@ Exit requires:
 - expected semantic failure for 100% of negative declarations;
 - zero application or package-code execution;
 - native package-manager resolution tests for local and packaged dependencies;
+- installed-profiler tests in an isolated end-user environment without an
+  `extensions` or profiler repository checkout;
 - complete extension closure validation for every generated profile.
 
 ### Phase 5: local orchestration and committed generated packages
@@ -1499,8 +1512,9 @@ Exit requires, for each enabled registry:
 The system is production-ready only when all seven phases are complete for every
 enabled language and registry, every check in Sections 6.4, 7, 12, and 13 passes,
 the default branch has zero generated-source drift, all production workflows use
-released locked tooling, and a complete binding release can be reproduced from
-its release manifest with byte-identical outputs.
+released locked tooling and separately released locked Go and Python profiler
+CLIs, and a complete binding release can be reproduced from its release
+manifest with byte-identical outputs.
 
 Until then, generated packages MUST be labeled pre-release, external registry
 publication MUST remain disabled, and GitHub Releases MUST state which production
