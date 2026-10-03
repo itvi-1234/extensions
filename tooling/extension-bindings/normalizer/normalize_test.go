@@ -24,9 +24,9 @@ func testSchemas(t *testing.T) *Schemas {
 func testNormalizeConfig() NormalizeConfig {
 	return NormalizeConfig{
 		CoreProfileSchema: CoreProfileIdentity{
-			ID:             "urn:runtimeconditions:test:core-profile-schema",
-			Version:        "0.0.0-test",
-			SemanticSHA256: strings.Repeat("c", 64),
+			ID:             "https://runtimeconditions.io/schemas/profile/0.1.0/runtimeconditions.profile.schema.yaml",
+			Version:        "0.1.0",
+			SemanticSHA256: "49890a0f3e7276d1e480d654176672d977df9c63094f3a24983b0a8102e1a3e3",
 		},
 		Normalizer: ToolIdentity{
 			Name: NormalizerName, Version: NormalizerVersion, SHA256: strings.Repeat("d", 64),

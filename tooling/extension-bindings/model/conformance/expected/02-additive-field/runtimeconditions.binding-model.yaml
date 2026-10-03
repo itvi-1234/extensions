@@ -1,15 +1,15 @@
 apiVersion: runtimeconditions.io/binding-model/v1alpha1
 kind: RuntimeConditionsBindingModel
 metadata:
-    semanticSha256: d912038a34f5c6c1962494342c866cdc84ea1546234b353a0e633b05290de7a0
+    semanticSha256: cc67a0aeb4da58c99239b707b1ead3080579c48870defed7395e2398f1ecfe7e
     normalizer:
         name: rc-binding-model
         version: 0.1.0
         sha256: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 coreProfileSchema:
-    id: urn:runtimeconditions:test:core-profile-schema
-    version: 0.0.0-test
-    semanticSha256: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+    id: https://runtimeconditions.io/schemas/profile/0.1.0/runtimeconditions.profile.schema.yaml
+    version: 0.1.0
+    semanticSha256: 49890a0f3e7276d1e480d654176672d977df9c63094f3a24983b0a8102e1a3e3
 rootExtension:
     id: urn:runtimeconditions:conformance:additive-field
     version: 1.0.0

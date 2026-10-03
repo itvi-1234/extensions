@@ -6,13 +6,27 @@ metadata:
 spec:
   kinds:
     - name: selector
+  interfaceTypes:
+    - name: target
+      targetKind: selector
   schemas:
     - id: heterogeneous-target
       description: Heterogeneous target union.
       appliesToKind: selector
+      appliesToInterfaceType: target
       schema:
         type: object
+        required: [kind, interface]
         properties:
+          kind:
+            const: selector
+          interface:
+            type: object
+            required: [type]
+            properties:
+              type:
+                const: target
+            additionalProperties: false
           target:
             oneOf:
               - type: string

@@ -16,7 +16,17 @@ spec:
       appliesToInterfaceType: node
       schema:
         type: object
+        required: [kind, interface]
         properties:
+          kind:
+            const: tree
+          interface:
+            type: object
+            required: [type]
+            properties:
+              type:
+                const: node
+            additionalProperties: false
           root:
             $ref: '#/$defs/node'
         $defs:

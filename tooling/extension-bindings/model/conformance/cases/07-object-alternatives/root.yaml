@@ -16,7 +16,17 @@ spec:
       appliesToInterfaceType: process
       schema:
         type: object
+        required: [kind, interface]
         properties:
+          kind:
+            const: deployment
+          interface:
+            type: object
+            required: [type]
+            properties:
+              type:
+                const: process
+            additionalProperties: false
           configuration:
             oneOf:
               - type: object

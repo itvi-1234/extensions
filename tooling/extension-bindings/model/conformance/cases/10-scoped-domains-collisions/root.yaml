@@ -34,7 +34,17 @@ spec:
       appliesToInterfaceType: http
       schema:
         type: object
+        required: [kind, interface]
         properties:
+          kind:
+            const: service
+          interface:
+            type: object
+            required: [type]
+            properties:
+              type:
+                const: http
+            additionalProperties: false
           mode:
             type: string
             enum: [direct, proxy]
@@ -47,7 +57,17 @@ spec:
       appliesToInterfaceType: grpc
       schema:
         type: object
+        required: [kind, interface]
         properties:
+          kind:
+            const: service
+          interface:
+            type: object
+            required: [type]
+            properties:
+              type:
+                const: grpc
+            additionalProperties: false
           mode:
             const: streaming
         additionalProperties: false

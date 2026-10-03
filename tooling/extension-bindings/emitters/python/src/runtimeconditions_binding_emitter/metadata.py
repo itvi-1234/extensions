@@ -91,7 +91,7 @@ def _pyproject(plan: EmissionPlan, model: dict[str, Any]) -> str:
             f"include = [{json.dumps(target.import_package)}, {json.dumps(target.import_package + '.*')}]",
             "",
             "[tool.setuptools.package-data]",
-            f'{json.dumps(target.import_package)} = ["py.typed", "runtimeconditions.bindings.yaml"]',
+            f'{json.dumps(target.import_package)} = ["py.typed", "runtimeconditions.bindings.yaml", "runtimeconditions.binding-model.yaml", "runtimeconditions.extension.yaml", "runtimeconditions.binding-release.yaml"]',
             "",
         )
     )
@@ -272,11 +272,6 @@ def _manifest(plan: EmissionPlan, model: dict[str, Any]) -> str:
         for item in model["vocabulary"].get("conditionFields", [])
         if item["owner"] == model["rootExtension"]["id"]
     }
-    root_types = {
-        (item.schema_coordinate, item.source_name): item
-        for item in plan.types
-        if item.schema_coordinate and item.is_declaration_field
-    }
     root_bindings: list[dict[str, Any]] = []
     for schema in model.get("schemas", []):
         if schema["owner"] != model["rootExtension"]["id"]:
@@ -288,8 +283,9 @@ def _manifest(plan: EmissionPlan, model: dict[str, Any]) -> str:
             source_name = (
                 interface_type if name == "interface" and interface_type else name
             )
-            native = root_types.get((schema["coordinate"], source_name))
-            if native is None:
+            # Source names and referenced shapes need not identify a unique property.
+            native_name = plan.names.get(f"type:field:{schema['coordinate']}:{name}")
+            if native_name is None:
                 fail(
                     "model",
                     "RCP1012",
@@ -311,7 +307,7 @@ def _manifest(plan: EmissionPlan, model: dict[str, Any]) -> str:
                 "scope": {"kind": kind},
                 "sourceName": source_name,
                 "path": [{"name": name}],
-                "value": {"type": native.name},
+                "value": {"type": native_name},
                 "schemaCoordinate": schema["coordinate"],
             }
             if interface_type:

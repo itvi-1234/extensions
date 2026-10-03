@@ -89,9 +89,11 @@ therefore follows this order:
 
 Every normalized checkpoint MUST record the binding-model API version and
 normalizer version and digest. Every generated binding manifest MUST record the
-applicable emitter version and digest. Every binding release manifest MUST
-additionally record the orchestrator and applicable profiler versions and
-digests used for verification.
+applicable emitter version and digest. Every production binding release manifest
+MUST additionally record the orchestrator and applicable profiler versions and
+digests used for verification. Phase 4 test-only binding release manifests MUST
+identify the actual fixture assembler and verification tools by version and
+digest; they MUST NOT claim production orchestration or promotion provenance.
 
 The Go and Python language-specific profilers are maintained, upgraded,
 standardized, and prepared for production use in the separate
@@ -723,8 +725,8 @@ transpiled, bundled, or minified output. Readable JavaScript emitted for a
 JavaScript target is source; JavaScript compiled from a TypeScript target is a
 package-build output.
 
-After an emitter succeeds, the orchestrator MUST assemble the final generated
-package tree by adding:
+After an emitter succeeds, the Phase 5 production orchestrator MUST assemble the
+final generated package tree by adding:
 
 1. `runtimeconditions.extension.yaml` for the root extension from the validated
    resolver input;
@@ -735,8 +737,26 @@ package tree by adding:
 4. a file manifest containing the relative path and SHA-256 of every generated
    file except the manifest itself.
 
-The orchestrator MUST NOT modify emitter-produced source, package metadata,
+Phase 4 MUST provide a limited, deterministic fixture assembler for Go and
+Python installed-package verification before the production orchestrator exists.
+It MUST add the four Section 11 resources at their final package-local locations
+using the exact emitter model, validated root extension, and real resolver
+provenance and dependency lock. It MUST validate the shared, versioned binding
+release schema and cross-check package identity, model and extension digests,
+and resolved dependency identities and digests. Fixture release manifests MUST
+identify their test-only status and actual assembly provenance; placeholders or
+invented production provenance are forbidden. The assembled packages MUST be
+installable through the native package manager, with all four resources present
+in the installed package. Fixture assembly MUST cover an owned declaration
+package and direct and transitive additive dependency packages for both
+languages. This fixture assembler does not perform production
+build planning, version classification, repository synchronization, promotion,
+or publication.
+
+Neither assembler MUST modify emitter-produced source, package metadata,
 binding metadata, conformance source, or expected profiles during assembly.
+The emitters MUST therefore generate package metadata that includes all four
+resources when Phase 4 assembly adds them.
 Source-byte digests, source backends, and source locators MUST appear only in
 `runtimeconditions.binding-release.yaml`; they MUST NOT appear in emitter-produced
 files or generated source headers.
@@ -958,7 +978,8 @@ bytes are deliberately outside that comparison.
 Generated-target verification applies cumulatively by implementation phase:
 
 - Phase 2 and Phase 3 require gates 1 through 8, 12, 14, and 16.
-- Phase 4 additionally requires gates 9 through 11.
+- Phase 4 additionally requires gates 9 through 11 and gate 13 for Go and Python
+  installed-package fixtures.
 - Phase 5 and every later phase require all 16 gates.
 
 Profile-generation gates MUST invoke the separately installed, applicable Go
@@ -1439,7 +1460,9 @@ to Python.
 
 ### Phase 4: structural binding manifests and external profiler integration
 
-Deliver the structural binding-manifest schema and its emitter output, upgrade
+Deliver the structural binding-manifest schema and its emitter output, the
+shared, versioned `runtimeconditions.binding-release.schema.yaml`, and the
+limited Go and Python test-package assembly specified in Section 10. Upgrade
 and standardize the separate `go-rc-profiler` and `python-rc-profiler` codebases
 to consume every construct in Section 11 as installed CLIs, and deliver expected
 profile YAML for every positive conformance declaration. The profiler upgrades
@@ -1448,8 +1471,15 @@ under `tooling/extension-bindings/`.
 
 Exit requires:
 
-- Section 13 gates 1 through 12, 14, and 16 for every positive conformance
-  model;
+- Section 13 gates 1 through 14 and 16 for every positive Go and Python
+  conformance model, with gate 13 applied to assembled test packages;
+- schema-valid, test-only binding release manifests with real provenance and
+  matching package, model, extension, and dependency identities and digests;
+- all four Section 11 resources at their final locations in Go packages resolved
+  by `go list -json` and installed Python distributions read through
+  `importlib.resources`;
+- owned, direct-additive, and transitive-additive packages installed through
+  native Go and Python dependency management;
 - exact profile generation for 100% of positive conformance declarations;
 - expected semantic failure for 100% of negative declarations;
 - zero application or package-code execution;
@@ -1460,9 +1490,11 @@ Exit requires:
 
 ### Phase 5: local orchestration and committed generated packages
 
-Deliver `packages.yaml`, `toolchain.lock.yaml`, the orchestrator, build planning,
-version classification, repository output comparison, and generated package
-trees for every target regardless of publication mode.
+Deliver `packages.yaml`, `toolchain.lock.yaml`, the production orchestrator,
+build planning, version classification, repository output comparison, and
+generated package trees for every target regardless of publication mode. The
+production orchestrator replaces the Phase 4 fixture assembler for generated
+targets and supplies production binding release provenance.
 
 Exit requires:
 

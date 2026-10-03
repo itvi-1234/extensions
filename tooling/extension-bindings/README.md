@@ -88,5 +88,29 @@ Phase 2 keeps its conformance-only package targets under
 `emitters/go/testdata/package-targets/`. They are temporary test configuration,
 not the production package catalog; Phase 5 introduces the permanent catalog
 and generated package locations. The generated `runtimeconditions.bindings.yaml`
-uses the provisional Phase 2 schema in `model/` and remains an input to the
-structural manifest work in Phase 4.
+uses the structural v1alpha2 schema in `model/`.
+
+## Installed Go profiler fixture
+
+The Go emitter test `TestInstalledGoProfilerBindingPackage` is a limited Phase
+4 fixture assembler and installed-package check. It emits an owned-declaration
+module, adds the exact normalized model and validated root extension, and
+builds a schema-valid test-only release manifest from the resolver's real
+dependency lock and the actual assembler and profiler binary digests.
+
+Set `RC_GO_PROFILER_BIN` to an absolute path to an installed profiler binary,
+then run from `emitters/go/`:
+
+```text
+RC_GO_PROFILER_BIN=/path/to/go-rc-profiler go test . -run TestInstalledGoProfilerBindingPackage -count=1 -v
+```
+
+The test creates a local Go module proxy outside the profiler repository and
+downloads the assembled module into an isolated workload. It then disables
+`GOPROXY` before invoking the profiler. The profiler receives only the workload
+directory and the binding package resolved by Go. A second case changes the
+installed root extension bytes and requires the release source digest check to
+reject the package.
+
+This is the first owned-declaration fixture. Direct and transitive additive
+packages and the Python fixtures remain for the wider Phase 4 gate.

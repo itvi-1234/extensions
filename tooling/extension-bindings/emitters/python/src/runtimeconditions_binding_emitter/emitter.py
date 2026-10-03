@@ -471,12 +471,17 @@ def build_plan(model: dict[str, Any], target: PackageTarget) -> EmissionPlan:
                 if property_name == "interface" and interface
                 else property_name
             )
+            field_parents = (
+                (property_name,) + scope
+                if property_name == "interface" and interface
+                else scope
+            )
             key = f"type:field:{schema_coordinate}:{property_name}"
             declaration_field_schemas[key] = schema_coordinate
             shape = property_["shape"]
             if shape["kind"] == "object":
                 register_shape(
-                    shape, key, field_source, scope, schema_coordinate, marker
+                    shape, key, field_source, field_parents, schema_coordinate, marker
                 )
                 continue
             if marker is None:
@@ -490,7 +495,7 @@ def build_plan(model: dict[str, Any], target: PackageTarget) -> EmissionPlan:
                 "provenance"
             ].get("jsonPointer", "")
             symbols.append(
-                Symbol(key, coordinate, field_source, "pascal", parents=scope)
+                Symbol(key, coordinate, field_source, "pascal", parents=field_parents)
             )
             symbols.append(
                 Symbol(
@@ -512,7 +517,7 @@ def build_plan(model: dict[str, Any], target: PackageTarget) -> EmissionPlan:
                 shape,
                 f"type:{key}:value",
                 field_source + " Value",
-                scope,
+                field_parents,
                 schema_coordinate,
             )
             raw_types[key] = (

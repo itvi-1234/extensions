@@ -26,7 +26,17 @@ spec:
       appliesToInterfaceType: http_server2_url
       schema:
         type: object
+        required: [kind, interface]
         properties:
+          kind:
+            const: class
+          interface:
+            type: object
+            required: [type]
+            properties:
+              type:
+                const: http_server2_url
+            additionalProperties: false
           patch9: {type: string}
           café: {type: string}
           api_url: {type: string}

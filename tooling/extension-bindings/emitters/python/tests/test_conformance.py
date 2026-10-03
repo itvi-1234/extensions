@@ -365,7 +365,11 @@ def _mutate_negative(case: str, model: dict) -> None:
         second["kind"] = "Service"
         model["vocabulary"]["ownedDeclarations"].append(second)
     elif case == "enum-member-collision":
-        shape = model["schemas"][0]["projection"]["properties"][0]["shape"]
+        shape = next(
+            item["shape"]
+            for item in model["schemas"][0]["projection"]["properties"]
+            if item["name"] == "mode"
+        )
         shape["values"].append({"value": shape["values"][0]["value"].upper()})
     elif case == "unnameable-field":
         model["schemas"][0]["projection"]["properties"][1]["name"] = "💥"

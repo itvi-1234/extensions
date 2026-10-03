@@ -6,13 +6,27 @@ metadata:
 spec:
   kinds:
     - name: collection
+  interfaceTypes:
+    - name: items
+      targetKind: collection
   schemas:
     - id: collection-shapes
       description: Scalar arrays, object arrays, and schema-valued maps.
       appliesToKind: collection
+      appliesToInterfaceType: items
       schema:
         type: object
+        required: [kind, interface]
         properties:
+          kind:
+            const: collection
+          interface:
+            type: object
+            required: [type]
+            properties:
+              type:
+                const: items
+            additionalProperties: false
           tags:
             type: array
             items:

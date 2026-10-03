@@ -3,6 +3,22 @@
 This file records follow-up work. It is not an amendment to
 `IMPLEMENTATION.md` and does not change the current implementation contract.
 
+## Distribute and synchronize profiler contract schemas
+
+`go-rc-profiler` currently keeps checked-in copies of the binding manifest,
+binding model, binding release, and extension semantic schemas under
+`extensioncheck/schema/`.
+`go:embed` puts those local files in the profiler binary; it does not fetch or
+synchronize them with `tooling/extension-bindings/model/`. The copies can drift
+when a schema changes.
+
+Define a versioned, checksummed way for each independently released profiler to
+consume these contract schemas. Automate copying or generating the profiler's
+embedded schema assets from that pinned source, and add a release check that
+detects drift and rejects unsupported contract versions. The installed profiler
+must remain self-contained and must never require an `extensions` checkout or a
+runtime network fetch for schema validation.
+
 ## Standardize emitter diagnostic codes
 
 Define and document a shared diagnostic-code standard before treating the
