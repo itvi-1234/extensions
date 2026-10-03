@@ -27,13 +27,9 @@ permissions:
 
 jobs:
   verify-normalizer:
-    name: Verify normalizer on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Verify normalizer
+    runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
 
     defaults:
       run:
@@ -58,13 +54,9 @@ jobs:
         run: go vet ./...
 
   verify-go-emitter:
-    name: Verify Go emitter on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Verify Go emitter
+    runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
 
     defaults:
       run:

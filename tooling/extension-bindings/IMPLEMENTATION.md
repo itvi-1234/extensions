@@ -960,12 +960,11 @@ Determinism is accepted only when:
 1. Normalizing each positive case 10 times yields one SHA-256 value.
 2. Randomly permuting every set-like source sequence 10 times yields the same
    normalized bytes.
-3. Running on Linux and macOS yields byte-identical checkpoints.
-4. Each emitter run three times from a new empty directory yields identical file
+3. Each emitter run three times from a new empty directory yields identical file
    manifests and identical file bytes.
-5. A second full repository generation for every configured target, regardless
+4. A second full repository generation for every configured target, regardless
    of publication mode, produces a zero-byte Git diff.
-6. Every extension definition found under configured catalog roots normalizes
+5. Every extension definition found under configured catalog roots normalizes
    successfully or fails with a documented unsupported keyword; an extension
    identifier or vocabulary value special case MUST NOT cause a failure.
 

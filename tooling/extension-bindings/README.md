@@ -20,7 +20,7 @@ The tests normalize every extension definition discovered under the repository
 catalog, verify all resolver backends, compare the 12 committed conformance
 cases with their exact expected models or diagnostics, and run the required
 100-iteration determinism checks. The repository workflow runs the same suite
-on Linux and macOS.
+on Linux.
 
 From `emitters/go/`, run:
 
