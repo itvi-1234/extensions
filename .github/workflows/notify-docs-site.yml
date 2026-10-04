@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - "catalog/**/releases/**/runtimeconditions.extension.yaml"
+      - "catalog/rc/common-integrations/common-integrations-v1alpha1.yaml"
+      - "catalog/rc/env-configuration/env-configuration-v1alpha1.yaml"
       - "tooling/common/build_extensions_site.py"
       - "tooling/common/serialization.py"
 
