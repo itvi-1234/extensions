@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "catalog/**/releases/**/runtimeconditions.extension.yaml"
+      - "catalog/rc/**/*.yaml"
       - "tooling/common/build_extensions_site.py"
       - "tooling/common/serialization.py"
 

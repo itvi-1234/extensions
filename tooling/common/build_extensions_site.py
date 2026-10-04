@@ -26,6 +26,11 @@ EXPECTED_HOST = "runtimeconditions.io"
 
 def build(output_dir: Path) -> int:
     extension_paths = sorted(CATALOG_ROOT.glob("*/*/releases/*/runtimeconditions.extension.yaml"))
+    extension_paths += sorted(
+        path
+        for path in CATALOG_ROOT.glob("*/*/*.yaml")
+        if read_document(path).get("kind") == "RuntimeConditionsExtensionDefinition"
+    )
     if not extension_paths:
         print("No extensions found under catalog/.", file=sys.stderr)
         return 1
