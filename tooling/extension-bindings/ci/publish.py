@@ -21,7 +21,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "common"))
 from go_bindings import GoBinding, load_bindings, validate_source
 from serialization import read_document
-from generate import git, select_targets, summarize
+from generation import git, select_targets, summarize
 
 SUFFIXES = (".module.zip", ".source.zip", ".runtimeconditions.binding-model.yaml",
             ".runtimeconditions.binding-release.yaml", ".runtimeconditions.bindings.yaml",
@@ -54,7 +54,7 @@ def ordered_targets(root: Path, requested: str) -> list[GoBinding]:
         state[binding.target] = "done"
         result.append(binding)
 
-    for target, _, _ in select_targets(root / "tooling/extension-bindings/packages.yaml", requested):
+    for target, _, _ in select_targets(root / "tooling/extension-bindings/packages.yaml", requested, ("go",)):
         visit(bindings[target])
     if len({binding.go_version for binding in result}) != 1:
         raise ValueError("publication requires one exact Go compiler for the dependency closure")

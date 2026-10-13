@@ -4,21 +4,23 @@
 standing overrides govern generation and publication.
 The shared Go resolver and normalizer feed native Go and Python emitters.
 The Go orchestrator exposes eight commands through Go's standard `flag` package.
-GitHub Actions generates and commits Go bindings to `main`, then a separate
-manual workflow publishes verified Go module tags and release assets. Python
-automation and registry publication remain later work.
+GitHub Actions generates and commits Go and Python bindings to `main`, then a
+separate manual workflow publishes verified Go module tags and release assets.
+Registry publication of Python bindings remains later work.
 
-## Automatic Go binding generation
+## Automatic Go and Python binding generation
 
 `.github/workflows/binding-generate.yml` runs on relevant `main` changes to the
-extension catalog, delivery configuration, schemas, Go generation tooling, and
-the workflow or its helper. The initial automatic targets are the verified Phase 5
-pair, `common-integrations:go,env-configuration:go`. The repository variable
-`BINDING_GENERATION_TARGETS` replaces that default with a comma-separated list of
-`package-key:go` targets, or `all` to select every configured Go target. Manual
-dispatch on `main` accepts the same values; an empty `targets` input uses the
-automatic selection. Python targets are deliberately disabled until the separate
-Python profiler build is fixed.
+extension catalog, delivery configuration, schemas, Go and Python generation
+tooling, and the workflow or its helper. The initial automatic targets are the
+verified pair in both languages,
+`common-integrations:go,env-configuration:go,common-integrations:python,env-configuration:python`.
+The repository variable `BINDING_GENERATION_TARGETS` replaces that default with a
+comma-separated list of `package-key:go` and `package-key:python` targets, or
+`all` to select every configured target. Manual dispatch on `main` accepts the
+same values; an empty `targets` input uses the automatic selection. A run needs
+one exact version per language, so mixed catalog versions must be generated
+separately.
 
 The initial pair completes generation and verification. An all-catalog rehearsal
 stops at `aws-s3:go`: the catalog requests a URI/version identity, while its local
@@ -28,11 +30,27 @@ skip an unresolved selected target or commit a partial failed generation.
 
 The workflow checks out current `main` and uses `.github/actions/binding-tools`
 to select the exact catalog Go compiler, install the checksummed Go profiler
-release and core schema artifact, and build workspace `rc`. The shared Go
+release and core schema artifact, and build workspace `rc`. When a Python target
+is selected, the action also builds an isolated tooling environment on the
+catalog's exact Python interpreter from the fully pinned
+`ci/python-tooling-requirements.txt` and installs the checksummed Python profiler
+wheel release into it; the run fails if the runner's interpreter differs from the
+catalog. The Python emitter tests run in that environment before generation,
+except `test_packages.py`, which builds package archives and requires the
+interpreter pinned in `toolchain.lock.yaml` (3.11.16, while `packages.yaml` selects
+3.12.10 for generation). The shared Go
 tooling tests remain independent of profiler binaries. It runs `rc bindings update`, which
 generates and verifies candidates before synchronizing their source directories.
-Only changes beneath the selected `bindings/<package-key>/go` directories are
-staged and committed by `github-actions[bot]`. Unchanged output creates no commit.
+Only changes beneath the selected `bindings/<package-key>/<language>` directories
+are staged and committed by `github-actions[bot]`. Unchanged output creates no commit.
+
+Generation is split per language under `ci/`: `generate-go.py` and
+`generate-python.py` each select their own targets from the shared list, read
+their own tool environment, and run `rc bindings update` for their language
+only. Language-neutral selection and commit-back live in `generation.py`, which
+the workflow calls once to commit everything the language scripts verified. A
+new language adds a `generate-<language>.py` that owns its environment
+variables and tooling.
 
 Runs are serialized. The commit helper checks that `main` still points to the
 generation input commit and uses an ordinary fast-forward push. If another
@@ -50,9 +68,9 @@ so the generated commit does not recursively run this automation. See
 This is development generation with actual workspace tool identities. It does
 not create package tags, publish releases, or contact a registry. The pinned core
 schema snapshot supplies version 0.2.0 while the default website URL is unavailable;
-both it and the independently released Go profiler archive are checked before use.
-The Python helper runtime is separate from generated Python bindings and does
-not install or build the Python profiler. After a successful generation run,
+both it and the independently released Go and Python profiler artifacts are
+checked before use. The helper runtime that selects targets and commits is
+separate from the Python tooling environment used for generation. After a successful generation run,
 the workflow explicitly dispatches the existing docs build using
 `DOCS_REPO_DISPATCH_TOKEN`, including when no generated commit was needed.
 
@@ -247,9 +265,10 @@ and file digests. YAML reports identify `scope: package-structure` and mark gate
 7–11 `not-applicable`; they do not claim those checks ran for each package.
 
 Real-extension package generation is an explicit use of these commands. The
-automatic workflow currently commits the Go common/env pair. Python publication
-still needs a separately released Python profiler artifact. A checksummed GitHub
-wheel release is sufficient for that artifact; PyPI publication is not required.
+automatic workflow currently commits the Go and Python common/env pairs. The
+workflow uses the released, checksummed Python profiler wheel from GitHub; PyPI
+publication is not required for generation. Publishing the generated Python
+packages to a registry remains later work.
 
 ## Local verification
 

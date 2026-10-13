@@ -1,8 +1,8 @@
-name: Prepare Go binding tools
-description: Select targets, install the exact compiler and prerequisites, and build the shared generator
+name: Prepare binding tools
+description: Select targets, install the exact compilers and prerequisites, and build the shared generator
 inputs:
   targets:
-    description: Comma-separated package-key:go targets, or all
+    description: Comma-separated package-key:go or package-key:python targets, or all
     required: true
   publication:
     description: Include the committed package dependency closure for publication
@@ -11,11 +11,17 @@ outputs:
   go-version:
     description: Exact catalog Go version
     value: ${{ steps.configure.outputs.go-version }}
+  python-version:
+    description: Exact catalog Python version, empty when no Python target is selected
+    value: ${{ steps.configure.outputs.python-version }}
+  has-python:
+    description: Whether a Python target is selected
+    value: ${{ steps.configure.outputs.has-python }}
   source-commit:
     description: Checked-out source commit
     value: ${{ steps.configure.outputs.source-commit }}
   targets:
-    description: Selected Go targets
+    description: Selected targets
     value: ${{ steps.configure.outputs.targets }}
   rc:
     description: Built generator path
@@ -34,7 +40,7 @@ runs:
       run: |
         printf 'PYTHONPYCACHEPREFIX=%s\n' "$RUNNER_TEMP/python-bytecode" >> "$GITHUB_ENV"
         python -m pip install --disable-pip-version-check PyYAML==6.0.3
-    - name: Select Go targets and exact compiler
+    - name: Select targets and exact compilers
       id: configure
       shell: bash
       env:
@@ -44,7 +50,9 @@ runs:
         if [[ "$PUBLICATION" == true ]]; then
           python tooling/extension-bindings/ci/publish.py configure --targets "$INPUT_TARGETS"
         else
-          python tooling/extension-bindings/ci/generate.py configure --targets "$INPUT_TARGETS"
+          python tooling/extension-bindings/ci/generation.py configure --targets "$INPUT_TARGETS"
+          python tooling/extension-bindings/ci/generate-go.py configure --targets "$INPUT_TARGETS"
+          python tooling/extension-bindings/ci/generate-python.py configure --targets "$INPUT_TARGETS"
         fi
     - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
       with:
@@ -72,6 +80,36 @@ runs:
         tar -xzf "$RUNNER_TEMP/binding-tools/go-profiler.tar.gz" -C "$RUNNER_TEMP/binding-tools"
         test -x "$RUNNER_TEMP/binding-tools/go-rc-profiler"
         printf 'RC_GO_PROFILER_BIN=%s\n' "$RUNNER_TEMP/binding-tools/go-rc-profiler" >> "$GITHUB_ENV"
+    - name: Install the pinned Python tooling and checksummed profiler
+      if: steps.configure.outputs.has-python == 'true'
+      shell: bash
+      env:
+        PYTHON_VERSION: ${{ steps.configure.outputs.python-version }}
+        PYTHON_PROFILER_URL: https://github.com/runtimeconditions/python-rc-profiler/releases/download/v0.4.0/runtimeconditions_profiler-0.4.0-py3-none-any.whl
+        PYTHON_PROFILER_SHA256: 6382d2f2a48b79c1b9e90c4084062a30259e74942ec72264264f1a594826ced9
+      run: |
+        set -euo pipefail
+        tools="$RUNNER_TEMP/binding-tools"
+        wheel="$tools/${PYTHON_PROFILER_URL##*/}"
+        python -m venv "$tools/python-venv"
+        venv_python="$tools/python-venv/bin/python"
+        actual="$("$venv_python" -c 'import platform; print(platform.python_version())')"
+        if [[ "$actual" != "$PYTHON_VERSION" ]]; then
+          echo "::error::the catalog pins Python $PYTHON_VERSION but the runner provides $actual"
+          exit 1
+        fi
+        "$venv_python" -m pip install --disable-pip-version-check --no-deps \
+          -r tooling/extension-bindings/ci/python-tooling-requirements.txt
+        curl --fail --silent --show-error --location --retry 3 --max-time 120 \
+          "$PYTHON_PROFILER_URL" -o "$wheel"
+        printf '%s  %s\n' "$PYTHON_PROFILER_SHA256" "$wheel" | sha256sum --check
+        "$venv_python" -m pip install --disable-pip-version-check --no-deps "$wheel"
+        "$venv_python" -m pip check
+        {
+          printf 'RC_BINDINGS_PYTHON=%s\n' "$venv_python"
+          printf 'RC_PYTHON_PROFILER_BIN=%s\n' "$tools/python-venv/bin/runtimeconditions-python-profiler"
+          printf 'RC_PYTHON_PROFILER_ARTIFACT=%s\n' "$wheel"
+        } >> "$GITHUB_ENV"
     - name: Build shared generator
       shell: bash
       run: go -C tooling/extension-bindings/orchestrator build -trimpath -buildvcs=false -o "$RUNNER_TEMP/binding-tools/rc" ./cmd/rc
