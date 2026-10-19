@@ -1,0 +1,12 @@
+apiVersion: runtimeconditions.io/file-manifest/v1alpha1
+kind: RuntimeConditionsFileManifest
+files:
+    MANIFEST.in: d51e89c4c7c5e16c06d543c7aac32df945dd4f536e578b6ad089b68a6f489fca
+    pyproject.toml: decf82633734d56505ab03fdc22899ec36b31e8800683803ca8d9180bfd7ac93
+    src/runtimeconditions_common_integrations/__init__.py: 29615d78c72c6d68252fed6b393dd2cde16f6965f686f60f5842c09430e3fc31
+    src/runtimeconditions_common_integrations/bindings.py: ec6afc5ee5c988cb0c4dc4063435d33aa56a19dcea6b5af7879bce0331c106d2
+    src/runtimeconditions_common_integrations/py.typed: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    src/runtimeconditions_common_integrations/runtimeconditions.binding-model.yaml: adae245fd85662392d31e9225b366258aaaea328cb314c1cb7fbc0dcd1c7b83c
+    src/runtimeconditions_common_integrations/runtimeconditions.binding-release.yaml: ab176018b586b3cbef2de583956f74e6b6e9d68ddf84fb5feed56f7c827c2425
+    src/runtimeconditions_common_integrations/runtimeconditions.bindings.yaml: 03cda65cda17a00bf248aab303e002f3721228b532dd83c1a28ba13c98b4c9c5
+    src/runtimeconditions_common_integrations/runtimeconditions.extension.yaml: ef0d9e71d0d5d481c367002cecd2d3eef15475a40493f231521d778492a216ed

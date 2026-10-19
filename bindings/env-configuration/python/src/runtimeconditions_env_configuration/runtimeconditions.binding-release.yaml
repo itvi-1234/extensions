@@ -1,0 +1,57 @@
+apiVersion: runtimeconditions.io/binding-release/v1alpha1
+dependencyLock:
+    extensions:
+        - id: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+          version: v1alpha1
+          sourceSha256: ef0d9e71d0d5d481c367002cecd2d3eef15475a40493f231521d778492a216ed
+          semanticSha256: 0952ff5e52486a87e64808a09e8aa28d124a00efdeb9e174c4153d644879d54c
+          sourceBackend: catalog
+          sourceLocator: catalog:rc/common-integrations/common-integrations-v1alpha1.yaml
+        - id: https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+          version: v1alpha1
+          sourceSha256: 645e5de82fcfc22c1e3b3bf06534c0cf13baed12b4994548a1f9a9be53a9e7f4
+          semanticSha256: c6bd5fec1cc31b2b828cb97da2f56773862a70ef04e94dac7652f87a0af7435b
+          sourceBackend: catalog
+          sourceLocator: catalog:rc/env-configuration/env-configuration-v1alpha1.yaml
+          dependencies:
+            - https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+kind: RuntimeConditionsBindingRelease
+model:
+    apiVersion: runtimeconditions.io/binding-model/v1alpha1
+    semanticSha256: 8ea51cb5fb6a1234917bbcb7ba915aba59c73b6decc7656b62023937293e7231
+package:
+    coordinate: runtimeconditions-env-configuration
+    language: python
+    minimumPythonVersion: "3.12"
+    name: runtimeconditions_env_configuration
+    packageKey: env-configuration
+    publicationMode: registry
+    registryId: pypi
+    version: 0.1.0
+packageDependencies:
+    - artifact:
+        kind: python-wheel
+        sha256: 57c8987fc37a57ac401afb44fc94b05ea4df50e394140dc7955881ca8d6b3cbc
+      compatibleVersionRange:
+        minimumInclusive: 0.1.0
+        nextBreakingExclusive: 0.2.0
+      coordinate: runtimeconditions-common-integrations
+      extension: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+      name: runtimeconditions_common_integrations
+      testedVersion: 0.1.0
+provenance:
+    mode: production
+    orchestrator:
+        name: rc
+        version: 0.1.0
+        sha256: 51d6ecf0814a42d3ba4dd2c642766ac4738a12d27fae365266f6a8cde6bff656
+    profiler:
+        name: python-rc-profiler
+        version: 0.4.0
+        sha256: 6382d2f2a48b79c1b9e90c4084062a30259e74942ec72264264f1a594826ced9
+    sourceDirectory: bindings/env-configuration/python
+    targetReleaseTag: bindings/env-configuration/python/v0.1.0
+rootExtension:
+    id: https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+    version: v1alpha1
+    semanticSha256: c6bd5fec1cc31b2b828cb97da2f56773862a70ef04e94dac7652f87a0af7435b

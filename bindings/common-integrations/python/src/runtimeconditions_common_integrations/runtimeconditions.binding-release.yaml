@@ -1,0 +1,39 @@
+apiVersion: runtimeconditions.io/binding-release/v1alpha1
+dependencyLock:
+    extensions:
+        - id: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+          version: v1alpha1
+          sourceSha256: ef0d9e71d0d5d481c367002cecd2d3eef15475a40493f231521d778492a216ed
+          semanticSha256: 0952ff5e52486a87e64808a09e8aa28d124a00efdeb9e174c4153d644879d54c
+          sourceBackend: catalog
+          sourceLocator: catalog:rc/common-integrations/common-integrations-v1alpha1.yaml
+kind: RuntimeConditionsBindingRelease
+model:
+    apiVersion: runtimeconditions.io/binding-model/v1alpha1
+    semanticSha256: a12e2b48fa7d88471af4d1e30da55ff290f0868294f9de6f9ffad5d7d3c738e6
+package:
+    coordinate: runtimeconditions-common-integrations
+    language: python
+    minimumPythonVersion: "3.12"
+    name: runtimeconditions_common_integrations
+    packageKey: common-integrations
+    publicationMode: registry
+    registryId: pypi
+    version: 0.1.0
+packageDependencies: []
+provenance:
+    mode: production
+    orchestrator:
+        name: rc
+        version: 0.1.0
+        sha256: 51d6ecf0814a42d3ba4dd2c642766ac4738a12d27fae365266f6a8cde6bff656
+    profiler:
+        name: python-rc-profiler
+        version: 0.4.0
+        sha256: 6382d2f2a48b79c1b9e90c4084062a30259e74942ec72264264f1a594826ced9
+    sourceDirectory: bindings/common-integrations/python
+    targetReleaseTag: bindings/common-integrations/python/v0.1.0
+rootExtension:
+    id: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+    version: v1alpha1
+    semanticSha256: 0952ff5e52486a87e64808a09e8aa28d124a00efdeb9e174c4153d644879d54c
