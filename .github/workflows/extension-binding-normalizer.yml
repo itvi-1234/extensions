@@ -8,6 +8,7 @@ on:
       - "tooling/extension-bindings/IMPLEMENTATION.md"
       - "tooling/extension-bindings/README.md"
       - "tooling/extension-bindings/emitters/go/**"
+      - "tooling/extension-bindings/emitters/typescript/**"
       - "tooling/extension-bindings/model/**"
       - "tooling/extension-bindings/normalizer/**"
   push:
@@ -18,6 +19,7 @@ on:
       - "tooling/extension-bindings/IMPLEMENTATION.md"
       - "tooling/extension-bindings/README.md"
       - "tooling/extension-bindings/emitters/go/**"
+      - "tooling/extension-bindings/emitters/typescript/**"
       - "tooling/extension-bindings/model/**"
       - "tooling/extension-bindings/normalizer/**"
   workflow_dispatch:
@@ -81,3 +83,31 @@ jobs:
 
       - name: Vet Go emitter
         run: go vet ./...
+
+  verify-typescript-emitter:
+    name: Verify TypeScript emitter
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: tooling/extension-bindings/emitters/typescript
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 20.19.6
+          cache: npm
+          cache-dependency-path: tooling/extension-bindings/emitters/typescript/package-lock.json
+
+      - name: Install the pinned emitter dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Test the TypeScript emitter and generated conformance packages
+        run: npm test

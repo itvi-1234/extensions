@@ -2,7 +2,8 @@
 
 `IMPLEMENTATION.md` is historical design guidance; the repository owner's
 standing overrides govern generation and publication.
-The shared Go resolver and normalizer feed native Go and Python emitters.
+The shared Go resolver and normalizer feed native Go and Python emitters. A native TypeScript
+emitter lives under `emitters/typescript/`; its contract is in `CONTRACT.md`.
 The Go orchestrator exposes eight commands through Go's standard `flag` package.
 GitHub Actions generates and commits Go and Python bindings to `main`, then a
 separate manual workflow publishes verified Go module tags and release assets.
@@ -142,6 +143,7 @@ For local checks:
 ```sh
 python3 -m unittest discover -s tooling/common -p 'test_*.py'
 python3 -m unittest discover -s tooling/extension-bindings/ci -p 'test_*.py'
+(cd tooling/extension-bindings/emitters/typescript && npm ci --ignore-scripts && npm test)
 python3 tooling/common/build_extensions_site.py --output /tmp/extension-site
 python3 tooling/extension-bindings/ci/publish.py configure --targets env-configuration:go
 ```
