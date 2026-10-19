@@ -1,1109 +1,709 @@
 # Extension Binding Generation Implementation Standard
 
-## 1. Authority and purpose
+## 1. Purpose and scope
 
-This document is the implementation authority for generated Runtime Conditions
-extension bindings. Implementations MUST conform to this document. A change to
-the architecture, artifact contracts, derivation rules, validation behavior,
-versioning policy, or promotion lifecycle MUST update this document before the
-implementation change is merged.
+This document defines the architecture, artifact contracts, verification, and
+delivery process for generated Runtime Conditions extension bindings.
 
-The system converts immutable extension definitions into deterministic,
-language-native declarative binding packages. It consists of one shared semantic
-front end and one emitter per output language. The shared front end owns all
-interpretation of extension vocabulary and JSON Schema. Emitters own only
-language syntax, language naming, package layout, and language-native tooling.
+The system converts extension definitions and their complete dependency closure
+into deterministic, language-native declaration packages. A shared Go resolver
+and normalizer interpret extension semantics. Native Go and Python emitters
+produce source and structural binding manifests. A Go orchestrator coordinates
+resolution, generation, verification, repository updates, and release planning.
 
-The implementation MUST satisfy the following top-level invariants:
+Automated delivery generates and commits selected Go packages to `main`, then
+publishes them as public Go modules through a separate manual workflow. Public
+imports use `runtimeconditions.io/x/<provider>/<extension>`. Python emission and
+local packaging are supported; automated Python delivery and registry
+publication are outside the enabled Go workflows.
 
-1. Implementation behavior, including branches, symbol rules, schema rules,
-   fixtures, and workflows, MUST NOT be selected by a particular extension
-   identifier, package name, extension-defined kind, interface type, field name,
-   field value, or repository path.
-2. Extension YAML is an immutable input. Binding generation MUST NOT modify an
-   extension definition or require an extension definition to be changed to fit
-   a generator limitation.
-3. Unsupported input MUST stop generation with a deterministic diagnostic. It
-   MUST NOT be widened to `any`, silently omitted, or replaced by a guessed API.
-4. The same input closure, configuration, and toolchain versions MUST produce
-   byte-identical persisted outputs on every supported host.
-5. Persisted Runtime Conditions interchange artifacts, checkpoints, manifests,
-   indexes, and evidence MUST be YAML. Language-native source and package-manager
-   metadata retain their required native formats. JSON serialization is
-   permitted only as an internal canonicalization step for equality and SHA-256
-   digests; it MUST NOT become a parallel Runtime Conditions artifact contract.
-6. Generated declarations enforce the structural type model but do not enforce
-   every cross-field schema constraint. Every generated profile MUST undergo
-   complete semantic validation before it is accepted or published.
-7. Package generation, verification, GitHub promotion, and later registry
-   publication MUST use the same locally executable commands.
-8. Registry publication MUST promote previously verified GitHub Release bytes.
-   It MUST NOT rebuild packages.
-9. The normalized binding model MUST contain semantic identity only. Exact
-   source-byte identity and resolution transport evidence MUST be confined to
-   the dependency lock and release provenance and MUST NOT affect normalized
-   model bytes or the model digest.
+The binding implementation remains in `extensions`. The downstream common `rc`
+executable belongs to `rc-cli` and will expose this implementation through a
+thin adapter. Language-specific profilers remain independently implemented and
+released programs.
 
-Normative requirements from the Runtime Conditions specification, especially
-extension identity, dependency resolution, vocabulary ownership, conflict
-validation, YAML serialization, and JSON Schema validation, remain authoritative
-over this implementation document.
+The following requirements apply throughout the pipeline:
 
-The resolver and normalizer MUST index declarations by the complete semantic
-coordinate of owner identifier, kind, interface type, and property path. This is
-data-driven scoping, not behavior dispatch: every coordinate MUST pass through
-the same algorithms in Sections 6 through 10.
+1. Extension vocabulary and JSON Schema drive behavior. Production code MUST
+   NOT select an algorithm by a particular extension ID, kind, interface type,
+   field, value, package key, or repository path.
+2. Extension definitions are immutable generation inputs. Generation MUST NOT
+   rewrite them to accommodate an emitter limitation.
+3. Unsupported structure MUST fail with a deterministic diagnostic. It MUST NOT
+   be omitted, guessed, or widened to an unconstrained native type.
+4. Identical semantic inputs, delivery configuration, and tool artifacts MUST
+   produce identical persisted package bytes.
+5. Runtime Conditions models, manifests, locks, plans, and reports use YAML.
+   Native source, HTML discovery pages, package-manager metadata, and archives
+   retain their required formats. Canonical JSON is an internal hashing and
+   comparison representation.
+6. Generated types enforce structure. Complete core and extension semantic
+   validation belongs to profile generation.
+7. Local commands and GitHub Actions use the same generation, verification,
+   packaging, and compatibility implementations.
+8. Publication promotes verified artifacts without rebuilding them.
+9. Semantic identity and source-resolution evidence remain separate. Transport
+   details and source-byte digests MUST NOT affect the normalized model digest.
 
-## 2. Repository ownership and tool versioning
+## 2. Ownership and source layout
 
-All source for the shared model, normalizer, resolver, orchestrator, conformance
-suite, and first-party emitters MUST live under:
+The source layout is:
 
 ```text
-tooling/extension-bindings/
+extensions/
+  catalog/
+  bindings/
+    <package-key>/
+      go/
+      python/
+  tooling/
+    extension-bindings/
+      IMPLEMENTATION.md
+      README.md
+      packages.yaml
+      toolchain.lock.yaml
+      model/
+        runtimeconditions.extension-semantic.schema.yaml
+        runtimeconditions.binding-model.schema.yaml
+        runtimeconditions.binding-manifest.schema.yaml
+        runtimeconditions.binding-release.schema.yaml
+        runtimeconditions.package-catalog.schema.yaml
+        runtimeconditions.toolchain-lock.schema.yaml
+        runtimeconditions.file-manifest.schema.yaml
+        conformance/cases/
+        conformance/expected/
+      normalizer/
+        cmd/rc-binding-model/
+      emitters/
+        go/
+          cmd/rc-go-bindings/
+        python/
+          src/runtimeconditions_binding_emitter/
+      orchestrator/
+        cmd/rc/
+      ci/
+        generate.py
+        publish.py
+        test_generate.py
+        test_publish.py
+    common/
+      go_bindings.py
+      build_extensions_site.py
+      serialization.py
+  .github/
+    actions/binding-tools/action.yml
+    workflows/
+      extension-binding-normalizer.yml
+      binding-generate.yml
+      binding-promote.yml
+      check-extensions-site-builds.yml
+      notify-docs-site.yml
 ```
 
-in this repository. The tooling MUST be versioned independently with Git tags of
-the form:
+The normalizer, Go emitter, and orchestrator are separate Go modules. The Python
+emitter is a Python package. Shared site and publication coordinate validation
+lives in `tooling/common/go_bindings.py`.
 
-```text
-tooling/extension-bindings/v<major>.<minor>.<patch>
-```
+Repository responsibilities are:
 
-Each tooling release MUST publish checksummed command-line artifacts on GitHub.
-Production binding promotion MUST use a released toolchain pinned by version and
-SHA-256 in:
+| Repository | Responsibility |
+| --- | --- |
+| `extensions` | Extension catalog, binding schemas, resolver, normalizer, emitters, orchestrator, shared conformance tests, committed generated packages, and binding delivery workflows. |
+| `rc-cli` | Common `rc` executable, Cobra command tree, binding adapter, profiler dispatch, shared diagnostics, and system-package distribution. |
+| `go-rc-profiler` | Go source analysis, installed Go binding inspection, semantic profile validation, and profiler releases. |
+| `python-rc-profiler` | Python source analysis, installed Python binding inspection, semantic profile validation, and profiler releases. |
+| `runtimeconditions.github.io` | Deployment of the documentation site and the static output produced by the extensions site builder. |
 
-```text
-tooling/extension-bindings/toolchain.lock.yaml
-```
+Generated binding packages are workload dependencies installed by the native
+language package manager. The common CLI, generators, and profilers are developer
+tools with their own release identities.
 
-Development and pull-request tests of tooling changes MUST use workspace source.
-A binding release MUST NOT use unreleased workspace tooling. A tooling change
-therefore follows this order:
-
-1. Pass the complete tooling conformance suite.
-2. Publish a tooling release.
-3. Update `toolchain.lock.yaml` to the released versions and digests.
-4. Regenerate affected binding packages with the locked release.
-
-Every normalized checkpoint MUST record the binding-model API version and
-normalizer version and digest. Every generated binding manifest MUST record the
-applicable emitter version and digest. Every production binding release manifest
-MUST additionally record the orchestrator and applicable profiler versions and
-digests used for verification. Phase 4 test-only binding release manifests MUST
-identify the actual fixture assembler and verification tools by version and
-digest; they MUST NOT claim production orchestration or promotion provenance.
-
-The Go and Python language-specific profilers are maintained, upgraded,
-standardized, and prepared for production use in the separate
-`go-rc-profiler` and `python-rc-profiler` repositories, respectively. Those
-repositories own their profiler source, tests, packaging, and CLI releases.
-Production binding verification MUST use separately released, installed
-profiler CLIs pinned by version and SHA-256 in `toolchain.lock.yaml`. Profiler
-source MUST NOT be embedded in `tooling/extension-bindings/` or distributed as
-part of its tooling release.
-
-## 3. Fixed system architecture
+## 3. Pipeline and execution boundaries
 
 The pipeline is:
 
 ```text
-root extension YAML
-    + exact transitive extension dependency closure
-    + core profile schema
-    + package catalog
-    + locked toolchain
-        |
-        v
-shared Go resolver and validator
-        |
-        +--------------------------+
-        |                          |
-        v                          v
-exact dependency lock       validated semantic closure
-                                   |
-                                   v
-                          shared Go normalizer
-                                   |
-                                   v
-runtimeconditions.binding-model.yaml
-        |
-        +--------------------------+
-        |                          |
-        v                          v
-target-language emitter      target-language emitter
-        |                          |
-        v                          v
-language source package      language source package
-        |                          |
-        +-------------+------------+
-                      |
-                      v
-format, compile, profile generation through installed language-specific
-profiler CLIs, semantic validation, package inspection
-                      |
-                      v
-verified package artifacts -> package-manager tags
-                           -> one source-commit GitHub Release
-                           -> configured external registries
+extension root + dependency definitions + core schema + package catalog
+                              |
+                              v
+                    shared Go resolver
+                       /             \
+                      v               v
+             dependency lock     semantic closure
+                                       |
+                                       v
+                              shared Go normalizer
+                                       |
+                                       v
+                       runtimeconditions.binding-model.yaml
+                                       |
+                         +-------------+-------------+
+                         |                           |
+                         v                           v
+                    Go emitter                 Python emitter
+                         |                           |
+                         +-------------+-------------+
+                                       |
+                                       v
+                         assembled package resources
+                                       |
+                                       v
+                  native installation and package verification
+                                       |
+                                       v
+                         committed generated source
+                                       |
+                                       v
+                    package and compatibility verification
+                                       |
+                                       v
+                   immutable module tags and release assets
 ```
 
-The dependency lock is resolution and supply-chain evidence. The normalized
-binding model is the semantic checkpoint consumed by emitters. The orchestrator
-MUST verify that the lock and model describe the same identifiers, versions,
-direct dependency edges, and semantic SHA-256 values before emission. Emitters
-MUST NOT receive source-byte SHA-256 values, source backends, or source locators.
+The resolver owns dependency resolution, exact definition identity, semantic
+validation, vocabulary ownership, and conflict detection. The normalizer owns
+language-neutral schema interpretation and structural projection.
 
-The shared resolver, validator, normalizer, and orchestrator MUST be written in
-Go. Every language emitter MUST be written in the language it emits. The Go
-emitter MUST be written in Go. The Python emitter MUST be written in Python.
-Every future emitter MUST follow the same rule. The Go profiler in
-`go-rc-profiler` MUST be written in Go, and the Python profiler in
-`python-rc-profiler` MUST be written in Python, so each uses its language's
-native parser and package metadata APIs. Future language-specific profilers
-MUST likewise be maintained outside `tooling/extension-bindings/` and written
-in the language they parse.
+Each emitter consumes only a validated normalized model and a native package
+target configuration. Emitters MUST NOT resolve extension definitions, read the
+catalog for semantic rules, or reinterpret JSON Schema independently.
 
-An emitter MUST consume only the normalized binding model and its target package
-configuration. It MUST NOT read an extension YAML file, resolve dependencies,
-reinterpret JSON Schema, add semantic distinctions, or remove semantic
-distinctions.
+The orchestrator assembles package resources, verifies their relationships,
+invokes native tooling, compares generated and committed trees, and prepares
+release artifacts. CI helpers select targets, manage Git operations, check public
+discovery, and publish the resulting artifacts.
 
-## 4. Planned source and artifact layout
+## 4. Package catalog and tool identities
 
-The implementation MUST use this layout:
+### 4.1 Delivery configuration
 
-```text
-tooling/extension-bindings/
-  IMPLEMENTATION.md
-  README.md
-  packages.yaml
-  toolchain.lock.yaml
+`tooling/extension-bindings/packages.yaml` has the envelope:
 
-  model/
-    runtimeconditions.extension-semantic.schema.yaml
-    runtimeconditions.binding-model.schema.yaml
-    runtimeconditions.binding-manifest.schema.yaml
-    runtimeconditions.binding-release.schema.yaml
-    runtimeconditions.package-catalog.schema.yaml
-    runtimeconditions.toolchain-lock.schema.yaml
-    runtimeconditions.file-manifest.schema.yaml
-    conformance/
-      cases/
-      expected/
-
-  normalizer/
-    go.mod
-    go.sum
-    model.go
-    normalize.go
-    resolve.go
-    validate.go
-    canonical.go
-    normalize_test.go
-    resolve_test.go
-    conformance_test.go
-    cmd/rc-binding-model/main.go
-
-  orchestrator/
-    go.mod
-    go.sum
-    catalog.go
-    plan.go
-    release.go
-    verify.go
-    plan_test.go
-    release_test.go
-
-  emitters/
-    go/
-      go.mod
-      go.sum
-      emitter.go
-      naming.go
-      package.go
-      emitter_test.go
-      conformance_test.go
-      cmd/rc-go-bindings/main.go
-
-    python/
-      pyproject.toml
-      src/runtimeconditions_binding_emitter/__init__.py
-      src/runtimeconditions_binding_emitter/emitter.py
-      src/runtimeconditions_binding_emitter/naming.py
-      src/runtimeconditions_binding_emitter/package.py
-      src/runtimeconditions_binding_emitter/__main__.py
-      tests/test_emitter.py
-      tests/test_conformance.py
-
-bindings/
-  <package-key>/
-    go/
-    python/
-
-.github/workflows/
-  _binding-build.yml
-  binding-checks.yml
-  binding-promote.yml
+```yaml
+apiVersion: runtimeconditions.io/package-catalog/v1alpha1
+kind: RuntimeConditionsPackageCatalog
+repositoryUrl: https://github.com/runtimeconditions/extensions
+packages:
+  common-integrations:
+    rootExtension: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+    coreProfileSchemaVersion: 0.2.0
+    languages:
+      go:
+        coordinate: runtimeconditions.io/x/rc/common
+        name: common
+        version: 0.1.0
+        sourceDirectory: bindings/common-integrations/go
+        languageVersion: 1.25.0
+        publicationMode: github-tag
 ```
 
-The Go and Python profiler codebases are separate repositories named
-`go-rc-profiler` and `python-rc-profiler`. Their installed CLIs consume generated
-binding packages; neither profiler source tree is part of this repository
-layout or required on an end user's computer or CI server.
+A package set declares one extension root and one core schema version. Each
+language target declares its native coordinate, import/package name, independent
+package version, generated source directory, exact compiler or interpreter
+version, and publication mode. A `registry` target also declares `registryId`.
 
-`bindings/<package-key>/<language>/` contains the committed, human-readable
-generated package tree for one target. Every configured target uses this
-reviewable repository location regardless of whether it is distributed from a
-Git tag or through an external registry. Generated files are non-editable and
-MUST be changed only by regeneration. Compiled, transpiled, minified, and
-archived package outputs MUST NOT be committed. `package-key` is declared in
-`packages.yaml`; it is not inferred from extension semantics.
+The target key is `<package-key>:<language>`. Package keys match
+`^[a-z0-9]+(?:-[a-z0-9]+)*$`; language keys match `^[a-z][a-z0-9-]*$`.
+The generated source directory is `bindings/<package-key>/<language>`.
 
-Implementation MUST be divided into reviewed phases. Before any phase that adds,
-edits, or deletes more than five files, the exact file list, including tests,
-fixtures, packaging files, generated files, and workflow files, MUST be approved.
+The catalog contains delivery data. Kinds, fields, value domains, schemas,
+dependencies, and requiredness come from the extension definitions.
 
-## 5. Inputs
+### 4.2 Workspace and released tools
 
-One package set represents one root extension. One build target is exactly one
-language within one package set and consists of exactly these inputs:
+The pipeline supports workspace tooling and a released toolchain lock.
+Automated Go generation and publication build the orchestrator, normalizer, and
+Go emitter from the checked-out workspace. Publication does not require a
+separate tooling release before a generated package can be published.
 
-1. One globally resolvable root extension identifier.
-2. The exact core profile schema version selected by the package catalog.
-3. One package-set entry and one nested language-target entry from the package
-   catalog.
-4. One locked normalizer release.
-5. One locked emitter release for each configured target language.
+Generated artifacts record actual tool identities:
 
-`packages.yaml` owns publication data only. Each package-set entry MUST contain:
+- The model records the normalizer name, version, and artifact SHA-256.
+- The structural manifest records emitter identity as
+  `<name>@sha256:<digest>` and an emitter version.
+- The release manifest records orchestrator and profiler identities.
+- Python emitter identity uses its installed artifact or the actual workspace
+  source snapshot, as appropriate to the selected execution mode.
 
-- a stable package key;
-- the globally resolvable root extension identifier;
-- the core profile schema version;
-- one `languages` mapping keyed by language identifier.
+A lock with `status: released` requires the configured installed tools and
+checks their versions and digests. Workspace mode builds or locates development
+tools and records what actually ran. Neither mode may substitute an invented
+release identity.
 
-Every nested language-target entry MUST contain:
+The language target controls the exact compiler or interpreter used for package
+verification. The Go delivery catalog uses Go `1.25.0`; its Python targets
+specify Python `3.12.10`. Helper scripts have a separate Python runtime and do
+not enable Python binding delivery by themselves.
 
-- the package-manager coordinate;
-- the package version;
-- the generated source output directory, which MUST equal
-  `bindings/<package-key>/<language>`;
-- the exact language version used for language-based compilation. This is the
-  only language version the generated package claims to support;
-- the publication mode, exactly `github-tag` for ecosystems distributed from
-  repository tags or `registry` for pushed artifacts;
-- the external registry identifier when publication mode is `registry`, even
-  while external publication is disabled.
+### 4.3 Shared Actions prerequisites
 
-Publication mode controls how a verified package is delivered. It MUST NOT
-control whether the target's generated package tree is committed or available
-for source review.
+`.github/actions/binding-tools/action.yml` is shared by Go generation and
+publication. It:
 
-The immutable build-target key is `<package-key>:<language>`. Package keys and
-language keys MUST each be unique within their containing mapping.
-Package keys MUST match `^[a-z0-9]+(?:-[a-z0-9]+)*$`; language keys MUST match
-`^[a-z][a-z0-9-]*$`. These restrictions forbid commas and colons inside either
-key, so comma-separated workflow-input lists of colon-separated target keys are
-unambiguous.
+1. Validates the requested Go targets and selects their exact Go compiler.
+2. Installs Python `3.12.10` and PyYAML `6.0.3` for CI helpers.
+3. Installs the selected Go compiler with automatic toolchain switching disabled.
+4. Downloads and verifies the pinned Go profiler archive and core schema.
+5. Builds workspace `rc` from `orchestrator/cmd/rc`.
+6. Exposes the selected targets, source commit, compiler version, generator path,
+   and core-schema path to the calling workflow.
 
-`packages.yaml` MUST NOT restate kinds, interface types, fields, field values,
-schemas, dependencies, requiredness, or any other extension semantics.
+The action owns the prerequisite URLs and source checksums. Its core schema
+snapshot supplies the catalog's `0.2.0` input. All downloads are verified before
+use. Temporary tools, bytecode, and build intermediates remain outside the
+checkout.
 
-## 6. Extension definition resolution
+## 5. Extension identity and resolution
 
-Extension definitions MUST contain `metadata.uri` and `metadata.version`.
-`metadata.id` is not part of the extension definition contract. Profiles,
-models, binding manifests, and dependency locks carry the exact identifier
-`<metadata.uri>:<metadata.version>`; the final colon separates URI and version.
+### 5.1 Definition identity
 
-The URI MUST use HTTPS and have a path of `/<provider>/<service>` or
-`/<service>`. A providerless URI resolves under provider `rc` without changing
-its declared identity. The retrieval URL is
-`https://<domain>/extensions/<provider>/<service>/<version>/runtimeconditions.extension.yaml`.
-The `/extensions` prefix belongs to retrieval, not semantic identity. URI
-authority (including an explicit port), provider, service, and version MUST be
-preserved exactly. Credentials, queries, fragments, empty or traversal path
-segments, and escaped path aliases MUST be rejected. Versions need not be
-SemVer but MUST be non-empty safe path segments.
+An extension definition uses `metadata.id` as its exact, absolute URI identity.
+`metadata.version` is an optional annotation. Dependency lists contain exact
+extension ID strings. A version annotation is not appended to an ID to form a
+new resolver key.
 
-An unavailable definition at the derived URL MUST fail as not found. Resolvers
-MUST NOT try an unprefixed URL, another provider, a direct-file identifier, or
-another version. Definitions MUST identify exactly the requested URI/version.
-Every transitive dependency MUST follow this same contract.
+For example:
 
-### 6.1 Resolver inputs and backends
-
-Extension identifiers are exact, case-sensitive absolute URIs. The resolver MUST
-support these backends:
-
-1. Explicit identifier-to-file overrides supplied by the command line.
-2. Repository-local catalog roots supplied by the command line.
-3. Package-local vendored extension definitions discovered through a resolved
-   binding package.
-4. A content-addressed local extension cache.
-5. Locked `https:` retrieval using the catalog convention below.
-
-`file:` and `oci:` retrieval are deferred and MUST be rejected in this implementation.
-Local overrides, catalog roots, package resources, and verified caches remain
-explicit tooling inputs; they do not make non-HTTPS extension identities valid.
-
-Plain `http:` resolution MUST be rejected. An unknown URI scheme MUST be
-rejected. Supported network-backed schemes MUST resolve using network access
-when encountered. CI promotion MUST use a committed dependency lock and MUST
-reject content whose digest or immutable locator does not match that lock.
-
-Repository-local discovery MUST parse candidate extension files and index them
-by `<metadata.uri>:<metadata.version>`. It MUST NOT infer an identifier from a file path. Finding two
-different byte contents for one identifier MUST fail, even when both definitions
-normalize to the same vocabulary.
-
-### 6.2 Closure algorithm
-
-The source-byte SHA-256 MUST be computed over the exact fetched bytes before
-parsing. The semantic SHA-256 MUST be computed in memory as follows:
-
-`model/runtimeconditions.extension-semantic.schema.yaml` is the versioned
-first-party JSON Schema for `RuntimeConditionsExtensionDefinition` documents.
-It is required to reject malformed or unknown extension data before the
-resolver interprets the document or computes its semantic digest. It defines
-the extension input contract; it is not an extension definition and is not
-resolved from an extension URI.
-
-1. Parse and validate the extension against
-   `model/runtimeconditions.extension-semantic.schema.yaml`.
-2. Retain every validated data field and remove YAML presentation details only.
-3. Sort mapping keys by UTF-8 byte sequence.
-4. Apply the global sequence-ordering rules defined below: sort set-valued
-   sequences by each item's canonical bytes and preserve source-ordered
-   sequences exactly.
-5. Serialize the result with the JSON Canonicalization Scheme defined by RFC
-   8785 and hash those UTF-8 bytes with SHA-256.
-
-The global sequence-ordering rules are fixed by semantic meaning and MUST NOT be
-overridden by an extension. Extension dependency, vocabulary, scope, member,
-and declaration lists are set-valued and MUST be sorted. JSON Schema `enum`,
-`required`, `allOf`, `anyOf`, and `oneOf` sequences are also set-valued and MUST
-be sorted. JSON arrays used as data values, JSON Schema `prefixItems`, and JSON
-Schema `examples` are source-ordered and MUST preserve their source order. The
-canonical JSON bytes are internal only and MUST NOT be persisted.
-
-The resolver MUST perform these steps in order:
-
-1. Resolve the root identifier to one definition.
-2. Verify `kind` is `RuntimeConditionsExtensionDefinition`.
-3. Verify `<metadata.uri>:<metadata.version>` exactly equals the requested identifier.
-4. Compute the source-byte SHA-256 and semantic SHA-256.
-5. Sort direct dependency identifiers by their exact UTF-8 byte sequence.
-6. Resolve every direct dependency recursively.
-7. Detect a cycle using the active traversal stack and report the complete cycle.
-8. Reject any identifier that resolves to more than one source-byte SHA-256.
-9. Produce one topological order with dependencies before dependents; ties are
-   ordered by exact extension identifier.
-10. Build the resolved vocabulary ownership index.
-11. Reject every vocabulary conflict defined by the core specification.
-12. Write the exact identifier, exact non-empty extension version, semantic SHA-256,
-    and dependency identifiers into the semantic closure supplied to the
-    normalizer.
-13. Write the exact identifier, exact non-empty extension version, source-byte
-    SHA-256, semantic SHA-256, source backend, immutable source locator, and
-    dependency identifiers into the dependency lock.
-
-Resolution MUST produce the same topological order regardless of declaration
-order, catalog directory traversal order, host filesystem ordering, cache state,
-or network response ordering.
-
-### 6.3 Dependency lock
-
-Every promoted binding release MUST contain a generated dependency lock in its
-release manifest. For every extension in the closure, the lock MUST record:
-
-- exact identifier;
-- source-byte SHA-256;
-- semantic SHA-256;
-- exact direct dependency identifiers;
-- source backend;
-- resolved immutable source locator.
-
-A repeated build MUST reject content whose digest differs from the lock. Every
-HTTPS redirect MUST fail. `file:` and `oci:` source locators are unsupported and MUST fail. HTTPS
-locators MUST equal the URL derived from the requested identifier.
-
-The dependency lock and normalized model MUST remain separate data structures
-and separate canonicalization domains. The normalized model MUST record, for
-each extension, only the exact identifier, exact non-empty extension version,
-semantic SHA-256, and exact direct dependency identifiers. It MUST NOT contain a
-source-byte SHA-256, source backend, source locator, dependency-lock digest, or
-other resolution-transport field.
-
-Before normalization output is accepted, the normalizer boundary MUST verify a
-one-to-one match between lock entries and semantic closure records by exact
-identifier. The semantic version, semantic SHA-256, and sorted direct dependency
-identifiers MUST match exactly. A missing entry, extra entry, or mismatch MUST
-stop the build. The orchestrator MUST invoke this verification before emission.
-Source-byte and transport fields are verified against fetched content and remain
-release provenance; they are not inputs to model canonicalization.
-
-### 6.4 Resolution acceptance checks
-
-The resolver is complete only when all checks below pass:
-
-1. One direct-dependency fixture resolves in exactly one order in 10 repeated
-   runs.
-2. One three-level transitive fixture resolves dependencies before dependents in
-   10 repeated runs.
-3. One two-node cycle and one three-node cycle both fail before normalization.
-4. One missing direct dependency and one missing transitive dependency both
-   fail before normalization.
-5. One duplicate identifier with different bytes fails.
-6. One duplicate vocabulary definition in the same scope fails even when both
-   definitions are textually identical.
-7. One local override, one catalog resolution, one package resolution, one
-   verified cache resolution, and one locked `https:` resolution produce the same
-   semantic closure record and normalized model bytes for byte-identical
-   content; their lock entries retain their actual backend and immutable
-   locator.
-8. Network-disabled execution performs zero outbound requests.
-9. Every `RuntimeConditionsExtensionDefinition` under configured repository
-   catalog roots resolves and validates without relying on path-derived identity.
-10. Mapping-key reorder, YAML scalar-style changes, and reordering a
-    schema-marked `set` sequence change the source-byte digest in the dependency
-    lock but leave the semantic digest, normalized model bytes, and model digest
-    unchanged.
-11. Reordering a schema-marked `source` sequence changes the source-byte digest,
-    semantic digest, normalized model bytes, and model digest.
-12. A missing, extra, or semantically mismatched dependency-lock entry fails
-    before emission.
-
-## 7. Language package dependency resolution
-
-Extension dependency resolution and language package dependency resolution are
-separate mandatory operations.
-
-For each direct extension dependency, `packages.yaml` MUST contain a binding
-package target for every requested language. Generation MUST fail when a direct
-dependency lacks a binding package in that language. The package build graph is
-the extension dependency graph projected onto one language.
-
-Generated package metadata MUST declare direct language-package dependencies.
-It MUST NOT copy dependency-owned declarations into the dependent package. An
-additive package MUST import the dependency package contracts and implement the
-applicable marker interfaces or protocols generated by the owning package.
-
-Candidate builds MUST use exact dependency package versions from the build plan.
-Published dependency metadata and profiler checks MUST use these exact rules:
-
-- Go `go.mod` records the exact tested version as its minimum version. Because
-  Minimal Version Selection can choose a higher version, the binding release
-  manifest also records the compatible interval and the profiler rejects a
-  selected version outside it.
-- Python uses `>=<tested>,<next-breaking>`.
-- Maven uses `[<tested>,<next-breaking>)`.
-- npm uses `>=<tested> <next-breaking>`.
-
-For a `0.y.z` dependency, `next-breaking` is `0.(y+1).0`; for a dependency at or
-above `1.0.0`, it is `(major+1).0.0`. The exact tested version and artifact
-SHA-256 MUST remain in `runtimeconditions.binding-release.yaml`.
-
-Package resolution MUST use the designated native package manager rather than
-recursively scanning package caches. Package-manager and helper-tool versions
-MUST be pinned in `toolchain.lock.yaml`.
-
-- Go: use `go mod download`, `go mod verify`, and `go list -deps -json`. Local
-  targets use a generated `go.work`; packaged-target tests use temporary exact
-  `replace` directives. Release metadata contains no `replace` directive.
-- Python: create an isolated virtual environment, install with
-  `python -m pip`, inspect distributions with `importlib.metadata`, and build
-  with `python -m build`. Internal candidate wheels are installed from a local
-  wheelhouse with `--no-index --find-links`; released external dependencies are
-  installed from the configured index using a generated fully hashed
-  requirements lock.
-- Java: use Maven, resolve with `dependency:go-offline`, verify with
-  `dependency:tree`, and inspect only resolved classpath artifacts. Internal
-  candidate artifacts are installed into an isolated temporary Maven repository.
-- JavaScript and TypeScript: use npm, install with `npm ci`, inspect with
-  `npm ls --json`, and test internal candidates from exact local package
-  tarballs referenced by the generated lock file.
-
-Package caches are permitted only as accelerators and MUST NOT determine
-identity.
-Resolved package coordinates, versions, and artifact SHA-256 values MUST be
-recorded in the build plan. The workspace, wheelhouse, temporary Maven
-repository, and local tarball mechanisms above are the only local overrides. CI
-builds MUST test packaged artifacts, not only source directories.
-
-The package dependency implementation is complete only when:
-
-1. A dependent package builds against a repository-local dependency package.
-2. The same dependent package builds against the packaged dependency artifact.
-3. The exported API derived from generated source is byte-identical in both builds.
-4. A missing language binding dependency fails before source emission.
-5. A dependency with the correct coordinate but wrong extension identifier
-   fails.
-6. A dependency with the correct identifier but wrong artifact digest fails.
-7. Transitive package dependencies are installed by the native package manager
-   and are not duplicated in generated direct dependency metadata.
-
-## 8. Normalized binding model
-
-### 8.1 Artifact identity
-
-The checkpoint filename is:
-
-```text
-runtimeconditions.binding-model.yaml
+```yaml
+apiVersion: runtimeconditions.io/v1alpha1
+kind: RuntimeConditionsExtensionDefinition
+metadata:
+  id: https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+  version: v1alpha1
+spec:
+  dependencies:
+    - https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
 ```
 
-Its envelope is:
+The extension ID and public Go module coordinate serve different purposes. The
+extension ID identifies semantic input; `runtimeconditions.io/x/rc/env`
+identifies its Go package.
+
+The resolver preserves the exact ID spelling. It MUST NOT infer identity from a
+repository path, split an ID into provider/service/version components, or impose
+a particular URI path layout. For HTTPS retrieval, the ID is the retrieval URL.
+The returned document's `metadata.id` MUST equal the requested ID.
+
+### 5.2 Resolution sources
+
+Resolution supports explicitly supplied file overrides, configured catalog
+roots, package-local extension resources, a verified content-addressed cache,
+and HTTPS retrieval. Local candidates are indexed by parsed `metadata.id`.
+
+An absolute URI may be supplied through an explicit local source without an
+automatic transport for its scheme. Automatic network retrieval is provided for
+HTTPS. An unsupported automatic transport fails with a diagnostic requiring an
+explicit source. Plain HTTP is not an automatic retrieval backend.
+
+Resolution MUST reject:
+
+- An invalid or empty absolute URI, whitespace, or control characters in an ID.
+- Different source bytes registered for the same ID.
+- A requested ID that differs from the resolved definition's ID.
+- Missing dependencies and dependency cycles.
+- Duplicate or conflicting vocabulary ownership in the same semantic scope.
+- A cache entry whose bytes differ from its content-addressed filename.
+
+Local overrides are explicit development inputs and are forbidden with a
+released toolchain lock. A package cache accelerates retrieval; it does not
+establish identity.
+
+### 5.3 HTTPS and lock behavior
+
+HTTPS resolution validates certificates, rejects redirects, and requires a host
+without embedded credentials. Downloads have bounded size and timeouts.
+
+Development resolution may fetch an unlocked definition and record the exact
+result. Released resolution requires a source digest and locator lock before
+fetching. A locked locator MUST equal the requested HTTPS ID, and fetched bytes
+MUST match the locked source digest. A supplied semantic digest is also checked.
+Network-disabled resolution MUST perform no outbound request.
+
+The extension cache stores files named `<sha256>`, `<sha256>.yaml`, or
+`<sha256>.yml`. Each entry is hashed before it can participate in resolution.
+
+### 5.4 Closure and dependency lock
+
+Resolve the root and every transitive dependency, detect cycles through the
+active traversal stack, then produce a stable topological order with providers
+before dependents. Independent ties are ordered by exact ID.
+
+Each dependency-lock entry contains:
+
+- Extension ID and any declared version annotation.
+- Exact source-byte SHA-256 and semantic SHA-256.
+- Exact direct dependency ID strings.
+- Source backend and locator.
+
+The semantic closure contains the ID, optional version, semantic digest, and
+direct dependency IDs. It excludes source-byte digests and transport evidence.
+
+The lock MUST cover the closure exactly once per ID. Missing, extra, duplicate,
+or mismatched entries stop generation. Source records are checked against the
+resolved bytes; semantic records are checked against the normalized inputs.
+The lock is embedded in `runtimeconditions.binding-release.yaml`.
+
+## 6. Canonical data and normalized model
+
+### 6.1 Canonicalization
+
+Validate definitions against
+`model/runtimeconditions.extension-semantic.schema.yaml` before interpreting
+or hashing their semantics. Parsing is data-only and rejects duplicate mapping
+keys and unsupported YAML constructs.
+
+Source-byte SHA-256 hashes the exact input bytes. Semantic SHA-256 hashes the
+canonical JSON representation of validated data after schema-defined sequence
+normalization. Mapping keys use canonical ordering. Set-valued sequences are
+sorted; source-ordered sequences retain their order.
+
+Dependency and vocabulary lists are sets. JSON Schema `enum`, `required`,
+`allOf`, `anyOf`, and `oneOf` lists are normalized as sets. Arrays used as data,
+`prefixItems`, and `examples` preserve source order. Schema annotations identify
+the applicable ordering rule.
+
+Generated YAML uses UTF-8, LF line endings, one trailing newline, string mapping
+keys, deterministic field order, quoted ambiguous strings, and omitted unused
+optional fields. Persisted model YAML contains no comments, anchors, aliases,
+merge keys, or custom tags.
+
+### 6.2 Model envelope and contents
+
+The checkpoint is `runtimeconditions.binding-model.yaml`:
 
 ```yaml
 apiVersion: runtimeconditions.io/binding-model/v1alpha1
 kind: RuntimeConditionsBindingModel
 ```
 
-The complete format MUST be defined by
-`model/runtimeconditions.binding-model.schema.yaml`. The schema and Go model
-types MUST describe identical required fields and cardinalities. A generated
-checkpoint that fails this schema MUST never reach an emitter.
+Its schema is `model/runtimeconditions.binding-model.schema.yaml`. The model
+contains:
 
-### 8.2 Required contents
+- Model API version and normalizer identity.
+- Core schema ID, version, and semantic digest.
+- Root extension ID, optional version annotation, and semantic digest.
+- Complete extension closure and direct dependency edges, using exact ID
+  strings for references.
+- Vocabulary ownership, owned declarations, and imported declaration contracts.
+- Kind and interface scopes, condition fields, and interface fields.
+- Explicit field-path segments, including array traversal.
+- Scoped value domains with exact serialized values.
+- Complete applicable JSON Schemas and structural projections.
+- Validation constraints and semantic provenance.
+- A semantic SHA-256 for the model with its own digest field excluded.
 
-The model MUST contain:
+Owned and imported declarations form a complete, non-overlapping partition of
+kind declarations in the closure. Imported declarations remain owned by their
+provider package.
 
-- root extension identity, exact non-empty extension version, and semantic digest;
-- normalizer identity and digest;
-- core profile schema identity, version, and semantic digest;
-- complete topologically ordered extension closure containing each extension's
-  exact identifier, exact non-empty extension version, semantic SHA-256, and exact
-  direct dependency identifiers;
-- dependency edges;
-- vocabulary owners;
-- root-extension-owned kind declarations under `ownedDeclarations`;
-- dependency-owned kind declaration contracts under `importedDeclarations`;
-- kind-scoped interface types;
-- condition fields expanded to exact scopes;
-- interface fields expanded to exact scopes;
-- parsed field-path segments with array traversal explicit;
-- scoped string value domains containing each member's exact value;
-- exact JSON Schema documents represented as YAML data;
-- language-neutral structural projections;
-- validation constraints not expressible by structural projections;
-- semantic provenance for every normalized declaration, field, value domain,
-  structural node, and constraint;
-- deterministic diagnostics for unsupported constructs;
-- canonical semantic SHA-256 for the complete model excluding the digest field
-  itself.
+The model MUST NOT contain source-byte hashes, source backends, source locators,
+dependency-lock digests, native symbol names, package coordinates, or
+language-specific types. Presentation-only definition changes and changes to
+resolution transport MUST leave model bytes and the model digest unchanged.
 
-`ownedDeclarations` and `importedDeclarations` MUST have the same entry shape:
-semantic coordinate, owner identifier, exact kind name, and provenance. Together
-they MUST form a complete, non-overlapping partition of
-the kind declarations in the extension closure.
+Provenance identifies an owning extension and semantic digest, a vocabulary or
+schema coordinate, and a JSON Pointer where a node comes from JSON Schema.
+Set reordering MUST NOT change semantic coordinates.
 
-The model MUST contain no source-byte SHA-256 values, source backends, source
-locators, dependency-lock digests, language symbol names, package-manager
-coordinates, source filenames for generated packages, or language-specific
-types.
+## 7. Structural normalization
 
-### 8.3 Restricted YAML profile
+Schemas use JSON Schema Draft 2020-12. An omitted dialect selects Draft 2020-12;
+a different explicit dialect fails. Exact schemas are retained for semantic
+validation even when native type systems cannot express every constraint.
 
-Generated model YAML MUST obey all of these rules:
+All extensions use these normalization rules:
 
-1. UTF-8 without a byte-order mark.
-2. LF line endings.
-3. Exactly one trailing newline.
-4. String mapping keys only.
-5. No duplicate mapping keys.
-6. No custom tags.
-7. No anchors, aliases, or merge keys.
-8. No comments.
-9. Optional fields omitted when unused.
-10. Ambiguous strings quoted.
-11. Schema-defined mapping field order.
-12. Set-like sequences sorted by their documented canonical keys.
-13. Semantically ordered sequences retain their source order.
+1. An owned kind becomes a declaration. Dependency-owned kinds become imported
+   declaration contracts.
+2. An interface type becomes an object shape in its exact kind/interface scope.
+   Fixed `kind` and `interface.type` values are generated metadata.
+3. Condition and interface fields retain their exact serialized property names
+   and placement. Scope expansion uses the complete resolved vocabulary.
+4. Objects become object shapes; scalars retain their structural scalar type.
+5. Arrays become collection shapes, with explicit array traversal in paths.
+   Object-valued items receive shapes derived from their full property paths.
+6. Schema-valued `additionalProperties` becomes a map-value shape.
+7. String enums, string constants, and scoped string `fieldValues` become named
+   value domains. Non-string values remain validation constraints.
+8. Object-only `oneOf` and `anyOf` branches project to a merged property set.
+   A property is structurally required only when every alternative requires it.
+   Branch-specific requirements remain semantic constraints.
+9. Heterogeneous alternatives remain explicit union shapes.
+10. `allOf` combines constraints and object requirements conjunctively.
+    Incompatible structural types fail normalization.
+11. Local JSON Pointer `$ref` values resolve within the containing schema.
+    Referenced definitions become named shapes; recursive references remain
+    references instead of being expanded indefinitely.
+12. External references, anchor references, and unsupported structure-changing
+    keywords fail with the extension ID, schema coordinate, JSON Pointer, and
+    relevant keyword.
+13. Cardinality, uniqueness, ranges, lengths, patterns, formats, conditionals,
+    and relationships between branches remain exact validation constraints.
+14. Applicable schemas combine additively. Structural conflicts and empty value
+    intersections fail normalization.
+15. Each scoped value domain must name an existing field path, and every member
+    must be accepted by all applicable schemas.
 
-The model digest MUST be computed by converting this YAML data model to
-JSON-compatible values, serializing them with RFC 8785, and applying SHA-256 to
-the resulting UTF-8 bytes. The canonical JSON bytes MUST not be persisted as an
-artifact. Because resolution evidence is excluded from the model, changing only
-YAML presentation, a schema-marked `set` sequence order, source backend, source
-locator, or source-byte digest MUST NOT change model bytes or the model digest.
+Descriptions, examples, repository paths, and operation-specific conventions
+MUST NOT determine the generated API.
 
-### 8.4 Provenance
+## 8. Native package dependencies
 
-Every normalized semantic element MUST point to:
+The extension dependency graph is projected onto each requested language.
+Every direct extension dependency requires a corresponding native package
+provider in that language. A missing provider fails before source emission.
 
-- the owning extension identifier;
-- the extension semantic SHA-256;
-- the extension vocabulary coordinate or schema identifier;
-- the JSON Pointer within the schema when the element originates in JSON Schema.
+Dependent packages import provider contracts. They MUST NOT copy provider-owned
+declarations into their own package or claim ownership of imported vocabulary.
+Marker interfaces and protocols support additive fields across packages.
 
-Provenance MUST use semantic coordinates, not YAML sequence indexes. Reordering
-set-like source declarations MUST therefore leave provenance and model bytes
-unchanged.
+Candidate builds use exact tested provider versions. Package release metadata
+also records the compatible interval and exact provider archive SHA-256.
 
-## 9. Universal structural normalization rules
+- Go `go.mod` declares the tested version as its minimum requirement.
+- Python metadata declares `>=<tested>,<next-breaking>`.
+- For a `0.y.z` dependency, the next breaking boundary is `0.(y+1).0`.
+- For a dependency at or above `1.0.0`, it is `(major+1).0.0`.
 
-Every `schemas[].schema` document MUST be processed as JSON Schema Draft
-2020-12. An omitted `$schema` uses that dialect; a present `$schema` MUST name
-the Draft 2020-12 dialect. Validation MUST use a complete Draft 2020-12
-implementation even when structural projection cannot express a keyword.
+Native package resolution determines the actual installed packages. Go uses
+module download, verification, and listing commands. Isolated candidate
+verification uses a local module proxy and module cache. Python uses isolated
+virtual environments, wheel installation, and installed distribution metadata.
 
-These rules apply to every extension without identifier-specific handling:
+Workspace wiring and temporary native consumers are build inputs. Published Go
+packages and end-user installation MUST NOT depend on local `replace`
+directives, sibling source checkouts, or recursively scanning package caches.
 
-1. An owned kind becomes a declaration coordinate.
-2. A dependency-owned kind becomes an `importedDeclarations` contract and MUST
-   NOT become a declaration owned by the root package.
-3. An interface type becomes an object shape in its exact kind and interface
-   scope. Fixed `kind` and `interface.type` values are metadata and are not
-   caller-supplied fields.
-4. A condition field becomes a root Condition property in each declared scope.
-5. An interface field becomes an `interface` property in its exact scope.
-6. An object schema becomes an object shape. Property names are preserved
-   exactly in the model.
-7. A scalar schema becomes the corresponding language-neutral string, boolean,
-   integer, number, or null shape. It MUST NOT become a schema-named wrapper
-   shape unless a string `enum`, string `const`, string `fieldValues`, or a union
-   requires a named domain.
-8. An array schema becomes a collection shape. Array traversal is represented by
-   an explicit path-segment flag, never by singularizing a property name.
-9. An object-valued array item becomes an item object associated with the full
-   property path.
-10. `additionalProperties` with a schema becomes a map-value shape.
-11. String scalar `enum` and string scoped `fieldValues` become value domains.
-   Every member retains its exact string value. Non-string `enum` and scoped
-   `fieldValues` remain semantic
-    validation constraints on their structural scalar type and do not create
-    named binding members.
-12. A string scalar `const` becomes a one-value domain. String const values
-    occupying the same scoped path in alternative branches are unioned into that
-    path's value domain. A non-string `const` remains a semantic validation
-    constraint on its structural scalar type and does not create a named binding
-    member.
-13. A property is structurally required across `oneOf` or `anyOf` only when it is
-    required in every branch. Branch-specific requiredness remains an exact
-    validation constraint.
-14. Object branches under `oneOf` or `anyOf` are projected to one object whose
-    property set is the union of branch properties. The original alternatives
-    remain in the exact schema and validation constraints.
-15. Heterogeneous `oneOf` or `anyOf` branches remain an explicit union shape.
-16. `allOf` is a conjunction. Object properties and required properties are
-    unioned; incompatible structural types stop normalization.
-17. Every referenced `$defs` entry becomes a named shape derived mechanically
-    from its definition key. Unreferenced `$defs` entries remain validation data
-    and do not create exported binding types.
-18. A `$ref` MUST be either `#` or a fragment beginning with `#/` that contains
-    a syntactically valid JSON Pointer. It resolves only within the containing
-    schema document. `$anchor`, `$dynamicAnchor`, `$recursiveAnchor`, and anchor
-    references are forbidden. Recursive JSON Pointer references remain named
-    recursive references and MUST NOT be infinitely expanded.
-19. Binding-model API `v1alpha1` does not support references outside the
-    containing schema document; encountering one stops normalization.
-20. Validation-only keywords, including cardinality, uniqueness, range, length,
-    pattern, format, and conditional branch relationships, are preserved as
-    constraints even when native types cannot enforce them.
-21. A structure-changing JSON Schema keyword not defined by the binding-model
-    schema stops normalization with the extension identifier, schema identifier,
-    JSON Pointer, and keyword.
-22. Applicable schemas combine additively. A required property from any
-    conjunctive applicable schema is required. Conflicting structural types stop
-    normalization. Validation domains are intersected; an empty intersection
-    stops normalization.
-23. A scoped `fieldValues` domain MUST resolve to a defined field path in the
-    complete closure. Every declared value MUST be accepted by all applicable
-    schemas. Failure of either check stops normalization.
-24. A normalized symbol or shape MUST NOT depend on descriptions, repository
-    paths, filenames, example documents, or operation-specific conventions.
-## 10. Language emitter contract
+## 9. Emitter and package contracts
 
-Every emitter MUST implement this command contract:
+### 9.1 Emitter interface
+
+Each emitter accepts:
 
 ```text
-<emitter> \
-  --model runtimeconditions.binding-model.yaml \
-  --package-config <one target from packages.yaml> \
-  --output <new empty directory>
+<emitter> --model runtimeconditions.binding-model.yaml \
+  --package-config <native-target.yaml> --output <new-empty-directory>
 ```
 
-The emitter MUST reject a missing model field, unsupported model API version,
-unknown structural node, non-empty output directory, mismatched package target,
-or unsupported language version.
+The Go executable is `rc-go-bindings`. The Python emitter exposes its native
+package command and an `emit` operation. The orchestrator supplies its assembly
+mode when preparing deliverable Python source.
 
-Every emitter MUST generate:
+An emitter rejects an unsupported model API, invalid target, unsupported shape,
+or non-empty output directory. It writes formatted production source, native
+package metadata, and `runtimeconditions.bindings.yaml`.
 
-1. Human-readable, formatter-compliant language-native source.
-2. Native package-manager metadata.
-3. `runtimeconditions.bindings.yaml`.
-4. Conformance source exercising every declaration, object type, field, enum
-   value, collection shape, map shape, and union shape at least once.
+Native names derive from exact source names and the target language's naming
+rules. The model remains free of native naming decisions. The manifest retains
+exact serialized names and model coordinates.
 
-The generated package tree is the source-review surface for the target. An
-emitter MUST NOT minify, obfuscate, or remove formatting from generated source.
-For an ecosystem that compiles or transpiles source, the committed tree MUST
-contain the readable source supplied to that process, not its bytecode,
-transpiled, bundled, or minified output. Readable JavaScript emitted for a
-JavaScript target is source; JavaScript compiled from a TypeScript target is a
-package-build output.
+Shared API rules are:
 
-After an emitter succeeds, the Phase 5 production orchestrator MUST assemble the
-final generated package tree by adding:
+- Declaration functions are inert source anchors returning `Declaration`.
+- Object, collection, and map shapes use native construction syntax.
+- Root fields remain declaration arguments or root properties.
+- Array-item names use the property path and `Item`, without singularization.
+- Names are allocated for the complete package before source is written.
+- Eligible collisions use parent path and scope components deterministically.
+  Unresolvable collisions fail instead of gaining arbitrary suffixes.
+- Alternative branches do not create operation-specific constructors.
+- Cross-field semantic constraints are enforced by profile validation.
 
-1. `runtimeconditions.extension.yaml` for the root extension from the validated
-   resolver input;
-2. the exact `runtimeconditions.binding-model.yaml` consumed by the emitter;
-3. `runtimeconditions.binding-release.yaml`, including the dependency lock,
-   complete source-resolution provenance, repository-relative generated-source
-   path, and expected Section 14 target release tag; and
-4. a file manifest containing the relative path and SHA-256 of every generated
-   file except the manifest itself.
+### 9.2 Go API
 
-Phase 4 MUST provide a limited, deterministic fixture assembler for Go and
-Python installed-package verification before the production orchestrator exists.
-It MUST add the four Section 11 resources at their final package-local locations
-using the exact emitter model, validated root extension, and real resolver
-provenance and dependency lock. It MUST validate the shared, versioned binding
-release schema and cross-check package identity, model and extension digests,
-and resolved dependency identities and digests. Fixture release manifests MUST
-identify their test-only status and actual assembly provenance; placeholders or
-invented production provenance are forbidden. The assembled packages MUST be
-installable through the native package manager, with all four resources present
-in the installed package. Fixture assembly MUST cover an owned declaration
-package and direct and transitive additive dependency packages for both
-languages. This fixture assembler does not perform production
-build planning, version classification, repository synchronization, promotion,
-or publication.
+An owned kind becomes a declaration function accepting its generated
+`<Kind>Field` marker interface. Applicable interface objects and additive fields
+implement that interface. Cross-package marker methods are exported and derive
+from the owning declaration coordinate.
 
-Neither assembler MUST modify emitter-produced source, package metadata,
-binding metadata, conformance source, or expected profiles during assembly.
-The emitters MUST therefore generate package metadata that includes all four
-resources when Phase 4 assembly adds them.
-Source-byte digests, source backends, and source locators MUST appear only in
-`runtimeconditions.binding-release.yaml`; they MUST NOT appear in emitter-produced
-files or generated source headers.
+Objects become structs, collections become slices, and maps use native map
+types. Required scalar and enum fields use values; optional scalar and enum
+fields use pointers. Optional structured values preserve omission according to
+the generated reference shape. String domains become named scalar types with
+typed constants qualified by their domain type.
 
-Generated source and metadata MUST contain a standard non-editable header. The
-header MUST name the model digest and emitter version, but MUST NOT contain a
-timestamp or host-specific path.
+Go names preserve Unicode letters and use language-specific token boundaries
+and Pascal case for exported names. Invalid leading-digit identifiers and
+collisions with fixed declaration symbols fail with semantic coordinates and
+the conflicting native symbol. Declaration symbols are not renamed to conceal
+a collision.
 
-### 10.1 Shared API rules
+Packages contain `bindings.go` and `go.mod`. Source is `gofmt` formatted and
+passes compilation and `go vet` with the configured compiler. Package-scope
+usage may use `var _ = package.Declaration(...)`; declarations may also appear
+inside functions when the profiler can statically determine their arguments.
 
-1. Root Condition fields are flat declaration arguments or fields; emitters MUST
-   NOT introduce semantic placement wrappers.
-2. Native object construction MUST be used for object shapes.
-3. Native collection construction MUST be used for arrays.
-4. Native maps MUST be used for map shapes.
-5. Public type and field names derive only from canonical vocabulary paths and
-   language naming rules.
-6. Array-item type names derive from the property name followed by `Item`; they
-   MUST NOT use grammatical singularization.
-7. Name collisions are resolved by prepending parent path components from
-   nearest to farthest, followed by kind and interface scope when required.
-8. A collision that remains after the complete canonical path and scope are used
-   stops emission.
-9. Reserved words are escaped by one documented language rule.
-10. Value-domain members are emitted within their owning value domain as
-    language-native enum members or typed constants. A language with native enum
-    member namespaces uses that namespace. A language without one qualifies each
-    member symbol with its value-domain type.
-11. Alternative branches MUST NOT become operation-specific constructors,
-    factories, or differently shaped APIs.
-12. Invalid cross-field combinations are rejected during profile-generation-time
-    semantic validation, not by custom semantic constructors.
-13. Declaration functions retain the language-specific `Declaration` return
-    convention. The return value is an inert source-declaration anchor, not an
-    in-memory Condition representation.
+Public Go package names match the final component of the base public import
+path, so callers do not need explicit aliases.
 
-### 10.2 Emitter-defined symbol derivation
+### 9.3 Python API
 
-Each emitter MUST derive native names from the exact source names in the model
-using only the naming rules of its target language. The normalized model MUST
-NOT contain language-specific name components or native symbols. Emitter-specific
-rules define identifier boundaries, case conversion, reserved-word handling,
-Unicode treatment, and invalid-name diagnostics. The binding manifest MUST
-retain the exact serialized source name for every native symbol.
+Owned kinds become functions returning inert declarations. Kind field
+contracts use structural protocols. Objects become frozen, keyword-only
+dataclasses; optional fields accept `None`; collections and maps use native
+sequence and mapping forms. String value domains use scoped `StrEnum` members.
 
-### 10.3 Go rules
+Classes and aliases use Pascal case; functions and fields use snake case;
+constant members use upper snake case. Reserved words, leading digits, and
+special-method spellings follow explicit Python escaping rules.
 
-1. Every owned kind becomes one exported declaration function named from the
-   kind, with signature `func <Kind>(fields ...<Kind>Field) Declaration`.
-2. `<Kind>Field` is an exported marker interface owned by the package that owns
-   the kind. Every applicable interface object and generated root Condition
-   field type implements that interface.
-3. A root Condition field with a scalar or value-domain shape becomes an
-   exported named scalar type derived from its canonical field path. Its
-   generated type implements every applicable `<Kind>Field` marker interface.
-4. Objects become structs. Object construction uses struct literals; the emitter
-   MUST NOT generate constructors.
-5. Arrays become named slice types when referenced by a public field.
-6. Maps become named map types when referenced by a public field.
-7. Optional scalar and enum fields use pointers. Required scalar and enum fields
-   use values.
-8. Optional arrays, maps, and objects use pointers only when omission and an
-   empty native value have different schema meaning; this decision is derived
-   mechanically from requiredness.
-9. Marker-interface methods required for cross-package additive extensions are
-   exported and derived from the owning declaration coordinate.
-10. The declaration result is a zero-sized `Declaration` value.
-11. Package-scope usage is `var _ = package.Declaration(...)`.
-12. Exported types, fields, functions, and constants derive names directly from
-    their exact source names. Non-letter and non-digit separators and Go case
-    boundaries define name components; Unicode letters are retained. Each
-    component uses ordinary Go Pascal-case conversion. If the derived name
-    begins with a digit, emission MUST fail because Go has no valid identifier
-    form for that source name; the emitter MUST NOT fabricate a prefix or
-    substitute token.
-13. Package identifiers use lower-case concatenated name components. A Go
-    keyword gains the suffix `binding`.
-14. Every enum or typed-constant member name is its allocated value-domain type
-    followed by the Pascal-cased member-value components. Two members of one
-    value domain that produce the same Go name stop emission; a suffix, ordinal,
-    or alternate spelling MUST NOT be introduced.
-15. `Declaration`, every owned-kind declaration function, and every owned-kind
-    marker interface are fixed package-level symbols. The emitter MUST allocate
-    the complete package-level symbol set before writing any file. If another
-    symbol collides with a fixed symbol, emission MUST stop before applying path
-    or scope prefixes. The deterministic diagnostic MUST contain both semantic
-    coordinates, the conflicting Go symbol, and the package coordinate. A
-    prefix, suffix, ordinal, or other renaming MUST NOT be used to avoid the
-    collision.
-16. Package-level collisions that do not involve a fixed symbol use the
-    emitter's deterministic collision handling rules.
-17. Source MUST pass `gofmt`, `go vet`, and `go test` using the declared minimum
-    Go version.
+Python source lives under `src/<import-package>/`, includes typing metadata,
+and is packaged through `pyproject.toml`. Verification uses the configured
+interpreter, Ruff formatting, byte compilation, and strict mypy checking.
 
-### 10.4 Python rules
+### 9.4 Package assembly
 
-1. Every owned kind becomes one function named from the kind, with signature
-   `def <kind>(*fields: <Kind>Field) -> Declaration`.
-2. `<Kind>Field` is a structural `Protocol` owned by the package that owns the
-   kind. Every applicable interface object and additive field object satisfies
-   that protocol through its generated class marker.
-3. Objects become frozen, keyword-only dataclasses. Their standard dataclass
-   initializers provide named-argument construction; the emitter MUST NOT add
-   separate constructor functions.
-4. Arrays become `Sequence[T]` aliases and conformance declarations use tuples.
-5. Maps become `dict[K, V]` aliases.
-6. Optional fields use `T | None` and default to `None`.
-7. String value domains become `StrEnum`; members remain scoped by their enum
-   class.
-8. Declaration functions return an inert `Declaration` object.
-9. Classes and type aliases use Pascal case. Functions, parameters, fields, and
-   modules use lower-case components joined by `_`. Enum members and typed
-   constants use upper-case components joined by `_`.
-10. A leading numeric token is prefixed with `X` for classes and `x_` for every
-   other symbol. A Python keyword gains one trailing underscore. A generated
-   name beginning and ending with two underscores gains the prefix `rc_`.
-11. Source MUST pass `python -m compileall`, `ruff format --check`,
-   `mypy --strict`, and `pytest` using the declared minimum Python version and
-   versions pinned in `toolchain.lock.yaml`.
+The orchestrator adds these fixed resources without rewriting emitter output:
 
-## 11. Binding manifest and profile generation
+| Resource | Purpose |
+| --- | --- |
+| `runtimeconditions.bindings.yaml` | Structural relationships between native symbols and model coordinates; emitted with the source. |
+| `runtimeconditions.binding-model.yaml` | Exact normalized model consumed by the emitter. |
+| `runtimeconditions.extension.yaml` | Exact validated root definition bytes. |
+| `runtimeconditions.binding-release.yaml` | Native package identity, model identity, dependency lock, tested native dependencies, and tool provenance. |
 
-`runtimeconditions.bindings.yaml` MUST map source constructs to normalized
-coordinates. It MUST support:
+Go places all four beside `bindings.go` in the package directory returned by
+`go list`. Python includes them as package data under `src/<import-package>/`.
+Dependency definitions are supplied through their own installed packages.
 
-- declaration calls;
-- native object construction;
-- named object fields;
-- collection elements;
-- map entries;
-- enum and typed-constant values;
-- omitted optional values;
-- imported marker contracts from dependency packages;
-- exact model and extension digests.
+The package-tree root also contains `runtimeconditions.file-manifest.yaml`,
+which hashes every declared package file except itself. Delivered source trees
+contain production source, native metadata, the four resources, and this file
+manifest. Conformance source and expected profiles belong to shared tooling
+fixtures and temporary consumers.
 
-Generated packages MUST place `runtimeconditions.bindings.yaml`,
-`runtimeconditions.extension.yaml`, `runtimeconditions.binding-model.yaml`, and
-`runtimeconditions.binding-release.yaml` together at exactly these locations:
+Generated headers identify non-editable output, model digest, and emitter
+version. They contain no timestamp or host path. Source-byte digests and
+resolution locators remain release provenance.
 
-- Go: the source directory of the package that defines the declaration
-  functions, as returned by `go list -json`.
-- Python: the generated import-package directory included as package data, as
-  located through `importlib.resources` from distribution metadata.
-- Java: `META-INF/runtimeconditions/` in the JAR.
-- JavaScript and TypeScript: `runtimeconditions/` at the resolved npm package
-  root.
+## 10. Structural manifest and profiler integration
 
-The installed `go-rc-profiler` and `python-rc-profiler` CLIs MUST begin from the
-imported package symbol, ask the native package manager for its resolved
-artifact location, and read only the fixed location above. Recursive cache or
-filesystem searches are forbidden. Profiling an application MUST NOT require a
-checkout of this repository or either profiler repository.
+The structural manifest envelope is:
 
-Profilers MUST parse source and static metadata. They MUST NOT execute application
-or package code. They MUST resolve imported packages through the native package
-manager, inspect only resolved package locations, and load binding artifacts from
-the language-standard package locations.
+```yaml
+apiVersion: runtimeconditions.io/bindings/v1alpha2
+kind: RuntimeConditionsBindingManifest
+```
 
-For every conformance declaration, profile generation MUST:
+`model/runtimeconditions.binding-manifest.schema.yaml` defines its declarations,
+imported marker contracts, root bindings, and named types. References identify
+both native structure and exact model coordinates or JSON Pointers.
 
-1. Reconstruct a Condition from source.
-2. List every extension that directly contributed vocabulary.
-3. Resolve the complete transitive extension closure.
-4. Validate core structure.
-5. Validate extension resolution and vocabulary ownership.
-6. Apply every matching JSON Schema from the closure.
-7. Reject every semantic error before writing an accepted profile.
+The manifest records native package identity, model API and digest, root
+extension ID and semantic digest, and emitter identity. Its extension identity
+is independent of the optional definition version annotation.
 
-The phrase "runtime validation" in this project means validation performed by
-the profile-generation workflow against the exact extension closure. It does not
-mean application runtime validation and does not require declaration values to
-remain in application memory.
+The independently installed profiler begins from imported symbols, asks the
+native package manager for their resolved locations, and reads the fixed
+package resources there. An application author needs installed binding modules
+and the profiler, without an extensions or generator source checkout.
 
-## 12. Determinism and conformance suite
+Profilers MUST:
 
-The conformance suite MUST contain at least these 12 language-neutral cases:
+1. Type-check or parse source with the language's native analysis tools without
+   executing the application or declaration functions.
+2. Verify native package identity against installed package metadata.
+3. Validate all packaged resource schemas and recompute model and root
+   definition digests.
+4. Verify dependency-lock coverage, provider identities, package versions,
+   compatible intervals, and dependency archive content.
+5. Check manifest-to-model references and vocabulary ownership.
+6. Reconstruct Conditions only from supported static expressions.
+7. Identify extensions that directly contribute vocabulary and traverse their
+   complete installed dependency closure.
+8. Validate core profile structure and every applicable extension schema.
+9. Write a profile only after all checks succeed.
+
+Current binding profiles list complete extension ID URIs directly. URI
+references in dependency locks and package-dependency records are resolved
+against the verified model closure; optional annotations are not inferred by
+parsing URI segments.
+
+The Go profiler supports the exact approved core `0.2.0` input identity used by
+these bindings while validating generated output with core `0.4.0`. This
+compatibility requires the approved IDs, versions, and semantic digests.
+Other core identities must satisfy the profiler's installed-schema checks.
+
+Go module ZIP verification accepts the recorded publisher archive bytes or
+reconstructs the publisher's deterministic ZIP from the downloaded module
+files. The reconstructed SHA-256 must match the recorded value exactly. Proxy
+ZIP encoding differences therefore do not remove content verification.
+
+Static pointer literals can express optional scalar values, for example:
+
+```go
+common.KeyValue{
+    Engine: &[]common.KeyValueEngine{common.KeyValueEngineRedis}[0],
+}
+```
+
+A variable, function call, or other expression outside the profiler's supported
+static subset fails with a diagnostic rather than producing a partial profile.
+
+## 11. Verification and shared conformance
+
+### 11.1 Shared tooling coverage
+
+The shared suites exercise the generation mechanism using language-neutral
+fixtures and temporary native consumers. The fixture set covers:
 
 1. Owned kind and interface.
-2. Additive field targeting dependency-owned vocabulary.
-3. Three-level transitive dependency closure.
-4. Dependency cycle.
-5. Vocabulary ownership conflict.
-6. Recursive local `$ref`.
-7. Object-only `oneOf` with branch-dependent required fields.
-8. Heterogeneous `oneOf`.
-9. Arrays, object items, scalar items, and schema-valued maps.
-10. Scoped value domains and normalized-name collisions.
-11. Source-name preservation across separators, case transitions, digits, and
-    Unicode; language-specific naming behavior is tested by each emitter.
-12. Unsupported structure-changing schema keyword.
+2. Additive fields targeting provider-owned vocabulary.
+3. Transitive dependency closure.
+4. Dependency cycles.
+5. Vocabulary ownership conflicts.
+6. Recursive local references.
+7. Object alternatives with branch-dependent required fields.
+8. Heterogeneous unions.
+9. Collections and maps.
+10. Scoped domains and native naming collisions.
+11. Source-name preservation.
+12. Unsupported structural keywords.
+13. Dependencies that contribute validation schemas without direct declarations.
 
-A conformance case MUST NOT cause production code to be keyed to the case's
-identifier or vocabulary values.
+Positive fixtures retain expected normalized YAML; negative fixtures retain
+deterministic diagnostics. Native API exercises are generated or materialized
+in temporary consumers, without adding test trees to delivered packages.
 
-Each positive case MUST have one committed expected normalized YAML file. Each
-negative case MUST have one committed diagnostic file containing the exact error
-category, semantic coordinate, and JSON Pointer when applicable.
+Tests cover repeated normalization and emission, set-order permutations,
+source-order preservation, archive inventories, native API extraction, package
+composition, resolver backends, release classification, workflow helpers, and
+repository synchronization. Production algorithms remain independent of
+fixture identifiers.
 
-Determinism is accepted only when:
+Shared tooling tests require no profiler checkout, binary, or wheel.
+Profiler-dependent integration and cross-repository compatibility suites belong
+in a separate integration repository. The presence of profiler identity in
+package provenance is distinct from running a profiler integration suite.
 
-1. Normalizing each positive case 10 times yields one SHA-256 value.
-2. Randomly permuting every set-like source sequence 10 times yields the same
-   normalized bytes.
-3. Each emitter run three times from a new empty directory yields identical file
-   manifests and identical file bytes.
-4. A second full repository generation for every configured target, regardless
-   of publication mode, produces a zero-byte Git diff.
-5. Every extension definition found under configured catalog roots normalizes
-   successfully or fails with a documented unsupported keyword; an extension
-   identifier or vocabulary value special case MUST NOT cause a failure.
+### 11.2 Per-package verification
 
-For this section, normalized bytes means the complete serialized
-`runtimeconditions.binding-model.yaml`. Dependency-lock and release-provenance
-bytes are deliberately outside that comparison.
+`verify`, `check`, `package`, and `update` enforce package structure through:
 
-## 13. Generated package verification
+- Model and resource-schema validation, including recomputed semantic digests.
+- Catalog, native metadata, root definition, manifest, and release identity
+  consistency.
+- Dependency installation and exact provider relationships.
+- Actual tool and profiler artifact identities recorded in provenance.
+- Native formatting, compilation, and static analysis.
+- AST-derived native API equality with the normalized model projection.
+- Re-emission and assembly equality with the candidate package tree.
+- Complete archive inventory and file-byte equality.
+- Complete file-manifest coverage and digests.
 
-Generated-target verification applies cumulatively by implementation phase:
+Reports identify `scope: package-structure`. Gate entries 7 through 11 are
+`not-applicable` for individual delivered packages. Generated API unit exercises,
+conformance profile comparisons, and negative semantic declarations are not
+represented as per-package checks that ran.
 
-- Phase 2 and Phase 3 require gates 1 through 8, 12, 14, and 16.
-- Phase 4 additionally requires gates 9 through 11 and gate 13 for Go and Python
-  installed-package fixtures.
-- Phase 5 and every later phase require all 16 gates.
+A failed applicable check stops update, packaging, or publication. All selected
+candidates are verified before `update` synchronizes repository source.
 
-Profile-generation gates MUST invoke the separately installed, applicable Go
-or Python profiler CLI against binding packages resolved through the language's
-native package manager. A source checkout of this repository MUST NOT be a
-profiler runtime input.
+## 12. Local orchestration
 
-The verification gates are:
+### 12.1 Commands
 
-1. The normalized model validates against its model schema.
-2. The binding manifest validates against its manifest schema.
-3. Package metadata parses with the native package manager.
-4. Every generated source file passes the native formatter.
-5. Every generated source file compiles with the minimum supported language
-   version.
-6. The native static analyzer/type checker reports zero errors.
-7. The native unit test suite reports zero failures.
-8. Every public declaration, type, field, value-domain member, collection shape,
-   map shape, and union shape appears in conformance source at least once.
-9. Every conformance declaration generates the exact expected profile.
-10. Every expected profile passes core, extension-resolution, vocabulary, and
-    JSON Schema validation.
-11. At least one generated negative fixture for each branch-dependent constraint
-    fails semantic validation.
-12. Rebuilding produces byte-identical generated source.
-13. The package archive contains every required Runtime Conditions resource.
-14. The package archive contains no undeclared file.
-15. The generated file-manifest digests match every file.
-16. The exported API surface derived from generated source by the native AST
-    parser matches the API surface mechanically derived from the normalized
-    binding model.
-
-Any failed gate applicable to the current phase stops that phase. From Phase 5
-onward, any failed gate stops packaging and promotion.
-
-## 14. Semantic versioning
-
-Each language package has an independent SemVer version. Every package remains
-pinned to one exact root extension identifier, exact extension closure, and exact
-model digest. Extension and package versions are not permanently lockstep.
-
-For a package with no prior release, a valid extension SemVer is the suggested
-initial package version. When the extension does not provide a SemVer release,
-the package starts at the explicit version in `packages.yaml`. When a prior
-release exists, release planning MUST resolve the previous published target
-release automatically; that release is not a build input.
-
-For packages at or above 1.0.0:
-
-- major: any source-breaking or behavior-breaking change;
-- minor: any backward-compatible public declaration, field, type, or value-domain
-  addition, or any validation relaxation;
-- patch: implementation, packaging, manifest, or metadata correction that does
-  not change accepted declarations or exported API;
-- no release: byte-only regeneration with no package-content change.
-
-For packages below 1.0.0:
-
-- breaking change increments the minor component and resets patch to zero;
-- backward-compatible addition increments patch;
-- compatible correction increments patch;
-- no semantic or package-content change produces no release.
-
-The compatibility classifier MUST derive and compare exported API surfaces from
-the generated source using the language's native AST parser, and MUST compare:
-
-1. Old and new normalized extension closures.
-2. Old and new AST-derived language API surfaces.
-3. Old and new `runtimeconditions.bindings.yaml` behavior manifests.
-4. Old and new direct package dependencies.
-5. Old and new minimum language versions.
-
-Removal, rename, type change, optional-to-required change, value removal,
-validation tightening, package-coordinate change, or an exposed dependency
-breaking change is breaking. A schema change whose compatibility cannot be
-proved mechanically is breaking. The declared package version is accepted when
-it is equal to or greater than the mechanically required bump and is rejected
-when it is smaller.
-
-Every target release tag in the source repository MUST have this exact form:
-
-```text
-bindings/<package-key>/<language>/v<major>.<minor>.<patch>
-```
-
-This is a Git tag, not a filesystem path. The tag prefix exactly matches the
-target's generated repository directory.
-
-Because every target's generated package tree is committed, this tag MUST
-provide an immutable, file-by-file GitHub view of the exact generated source for
-that package version. Where a package manager supports source-repository
-metadata, the generated native package metadata MUST identify the source
-repository and `bindings/<package-key>/<language>` directory. The generated
-binding release metadata and promotion summary MUST identify the exact target
-release tag.
-
-Reaching a breaking major version in any supported package manager MUST update
-that package manager's required package coordinate and MUST regenerate every
-dependent binding target that imports or otherwise depends on it.
-
-## 15. Local orchestration
-
-The single local entry point is the global `rc` CLI. Binding orchestration MUST
-be exposed under the `rc bindings` command group, which MUST expose:
+The local entry point is:
 
 ```text
 rc bindings resolve
@@ -1116,458 +716,498 @@ rc bindings check
 rc bindings update
 ```
 
-All binding commands accept `--packages`, `--toolchain-lock`, `--cache`, and
-`--work-dir`. The command determines the project root from the user's current
-working directory, walking toward the filesystem root. When neither project
-path is supplied, the project root is the nearest ancestor containing both
-`packages.yaml` and `toolchain.lock.yaml`; if no such ancestor exists, the
-command fails and requires the paths to be supplied explicitly. When one of
-those paths is supplied, its containing directory is the project root for any
-other omitted project path. Relative paths supplied by the user are resolved
-against the current working directory. When omitted, these flags behave as
-follows:
+The executable is built from `orchestrator/cmd/rc`. The reusable command
+boundary is `orchestrator.Run(context.Context, []string, io.Writer, io.Writer)`;
+it accepts the `bindings` command group and returns errors to its caller.
+The executable supplies process arguments and streams and chooses the exit code.
 
-- `--packages` defaults to `<project-root>/packages.yaml`; the command fails if
-  that file does not exist.
-- `--toolchain-lock` defaults to `<project-root>/toolchain.lock.yaml`; the
-  command fails if that file does not exist.
-- When `--cache` is omitted, the command creates no persistent cache and reuses
-  no unlocked filesystem state. Supplying `--cache <directory>` explicitly
-  enables a persistent content-addressed cache at that location; every reused
-  object MUST be validated against its expected digest.
-- When `--work-dir` is omitted, the command creates no persistent working
-  directory. Intermediate values remain in memory whenever possible. When a
-  subprocess or packaging tool requires files, the command uses one
-  OS-managed temporary directory and removes it before returning, including
-  after a handled failure. Supplying `--work-dir <directory>` explicitly asks
-  the command to materialize and retain only the intermediate files actually
-  required by that invocation at that location.
+| Command | Behavior and output |
+| --- | --- |
+| `resolve` | Prints semantic closure and dependency lock as YAML; writes only explicitly requested closure/lock files. |
+| `normalize` | Resolves and validates inputs, then prints the normalized model; optional model and lock output files. |
+| `generate` | Writes selected generated package trees beneath a required new or empty output directory. |
+| `verify` | Verifies supplied package trees or selected committed trees; prints YAML and optionally writes a report. |
+| `package` | Regenerates for comparison, requires equality with committed source, verifies it, and archives the committed trees. |
+| `plan-release` | Compares committed targets with published target artifacts and reports compatibility and version requirements. |
+| `check` | Regenerates and verifies, then compares selected committed trees without modifying them. |
+| `update` | Generates and verifies all candidates, then synchronizes selected committed trees and removes stale generated files. |
 
-An explicitly supplied `--packages` or `--toolchain-lock` path replaces its
-project-root default. Explicit `--cache` and `--work-dir` paths enable the
-persistent behaviors described above. Target-aware commands accept repeatable
-`--target <package-key>:<language>`; when omitted, all targets in
-`packages.yaml` are selected. Resolution commands accept
-repeatable `--extension-root <id>` and
-`--extension-override <id>=<path>`; when omitted, roots come from the selected
-package targets and no local overrides are applied. Supplied roots replace the
-configured root set. An override replaces resolution for exactly its matching
-identifier during local development and is forbidden for release promotion.
-Supported network-backed schemes resolve normally using network access.
+All commands share target selection, configuration discovery, resolution,
+normalization, and native tooling behavior. `update` is the sole binding command
+that synchronizes committed generated source.
 
-The command behaviors and persistent filesystem effects are fixed:
+### 12.2 Inputs and filesystem behavior
 
-- `resolve` prints the validated semantic closure and dependency lock as one
-  YAML multi-document stream. It writes them only when
-  `--closure-output <path>` and/or `--dependency-lock-output <path>` is
-  supplied, and writes only the requested file or files.
-- `normalize` performs resolution, verifies the semantic closure against the
-  dependency lock, and prints the normalized model. It writes the model only
-  when `--output <path>` is supplied. It writes the dependency lock only when
-  `--dependency-lock-output <path>` is supplied.
-- `generate` performs normalization and emission. It requires
-  `--output <new-empty-directory>` and writes only the selected generated target
-  trees beneath that directory.
-- `verify` verifies the tree supplied by `--input <generated-tree>`. When
-  `--input` is omitted, it verifies the selected committed
-  `bindings/<package-key>/<language>` directories. It writes no report file
-  unless `--report <path>` is supplied.
-- `package` performs clean generation, requires the result to match the selected
-  committed target directories byte-for-byte, verifies the committed trees,
-  and packages those committed trees. It requires `--output <directory>` and
-  writes only final package archives, release archives, and their required
-  manifests to that directory.
-- `plan-release` compares committed targets with their previous GitHub release
-  manifests and prints the build plan and required SemVer impact. It writes a
-  plan file only when `--output <path>` is supplied.
-- `check` performs a clean full generation and verification, then compares it
-  byte-for-byte with committed target directories without modifying them. It
-  writes no report file unless `--report <path>` is supplied.
-- `update` performs the same clean full generation and verification, then
-  atomically synchronizes only the selected `bindings/<package-key>/<language>`
-  directories, including removal of stale generated files. It leaves no other
-  persistent files. It updates selected targets regardless of publication mode.
+Common configuration flags include `--packages`, `--toolchain-lock`,
+`--tooling-dir`, `--cache`, and `--work-dir`. Target selection uses repeatable
+`--target <package-key>:<language>` flags; omission selects all configured targets.
 
-The orchestrator MUST NOT create a fixed intermediate directory tree. It MUST
-create an intermediate file only when an invoked tool requires a filesystem
-path or when the user explicitly requests that file. A default invocation MUST
-leave behind only the command's documented final outputs. Any automatically
-created temporary directory MUST be unique to one invocation, MUST be outside
-the generated target tree, and MUST be removed before the command returns.
-Temporary paths and timestamps MUST NOT enter generated files. `update` is the
-only command permitted to mutate committed generated targets; no command is
-permitted to mutate extension YAML.
+Configuration discovery walks ancestors for the nearest directory containing
+both catalog and toolchain configuration. An explicit configuration path sets
+the sibling default for the other configuration file. Supplied relative paths
+resolve against the caller's working directory.
 
-The local full verification command MUST complete all gates in Section 13 and
-return zero only when the working tree's generated binding source is current.
-The command MUST print one machine-readable YAML summary and one concise human
-summary. It MUST never modify extension YAML.
+Resolution commands accept explicit extension roots, local overrides, catalog
+roots, a dependency lock, and a core-schema file where applicable. Output,
+input, and report flags belong to the commands that consume them.
 
-## 16. GitHub Actions orchestration
+Default invocations create no persistent cache or fixed work tree. Required
+subprocess files use an invocation-specific temporary workspace removed on
+return. Explicit `--work-dir` retains required intermediates; explicit `--cache`
+enables verified content-addressed reuse.
 
-### 16.1 Reusable build workflow
+Explicit file outputs must be new files, and directory outputs must be new or
+empty directories. Explicit outputs cannot be placed inside committed
+`bindings/`; callers use `update` for that operation. Symlink and path-escape
+checks protect source and output boundaries.
 
-`.github/workflows/_binding-build.yml` is the only workflow that builds binding
-artifacts. It is a reusable workflow definition, not a generated artifact. It
-exists so pull-request checks and promotion execute the same build and
-verification steps instead of maintaining two implementations that can drift.
-It MUST be callable with `workflow_call` and receive one input: `targets`, a
-comma-separated list of `<package-key>:<language>` build target keys. GitHub
-Actions jobs use normal network access for extension resolution, dependency
-installation, and package-manager operations. The workflow MUST perform:
+Stdout remains machine-readable where the command promises YAML. Human progress
+and error diagnostics use stderr. Errors produce a nonzero process result.
+
+## 13. Integration with the common `rc` CLI
+
+### 13.1 Command ownership
+
+`rc-cli` will supply the user-facing Go executable and Cobra command tree. It
+will expose the eight `rc bindings` operations through a thin adapter to the
+binding tooling maintained in this repository.
+
+The adapter MUST preserve target and configuration defaults, argument meaning,
+working-directory behavior, output formats, filesystem effects, cancellation,
+and nonzero failure behavior. Binding flags stay scoped to `rc bindings` and
+its subcommands. Cobra commands delegate semantic interpretation and generation
+to the tooling in `extensions`.
+
+The binding tooling owns:
+
+- Definition resolution and dependency locks.
+- Semantic normalization and model schemas.
+- Native emission and package resource assembly.
+- Verification, deterministic regeneration, and repository synchronization.
+- Compatibility classification and release planning.
+
+The common CLI owns command discovery, help, shared configuration and
+diagnostics, version reporting, tool discovery, and process dispatch. It MUST
+NOT maintain a second binding generator or duplicate compatibility rules.
+
+### 13.2 Binding adapter and distribution
+
+The reusable Go `orchestrator.Run` boundary and standalone command interface
+provide integration boundaries. An adapter may invoke a versioned Go API or an
+explicitly selected standalone tooling artifact, while preserving the command
+contract defined here.
+
+For an in-process adapter, the orchestrator, normalizer, and Go emitter modules
+must be available as a resolvable, versioned dependency set. Relative `replace`
+directives used for development inside `extensions` do not supply dependencies
+to a downstream module. The schema bundle and required emitter resources must
+also be located through an explicit installed tooling path.
+
+For a subprocess adapter, invoke the selected binding tool with an argument
+vector, preserve the caller's directory and streams, and propagate cancellation
+and failure. Select its executable by an explicit managed path; dispatch MUST
+NOT recursively resolve the common `rc` command as its own backend.
+
+The CLI integration must retain actual executing-tool provenance and all lock
+checks. A separately installed CLI version is not a substitute for an emitter,
+normalizer, orchestrator, or profiler artifact identity. Workspace operation
+remains explicit; released operation verifies selected artifacts and digests.
+
+The common CLI and binding tooling are independently versioned. Their supported
+interface and artifact selection must be declared as part of CLI packaging.
+System packages distribute the CLI and developer tools; applications continue
+to install generated bindings through Go modules or their language equivalent.
+
+### 13.3 Profiler routing
+
+Profiling is a separate command family:
 
 ```text
-plan -> resolve -> normalize -> emit -> compare committed source
-     -> verify committed source -> package committed source
+rc profile generate <Go-profiler arguments>
+rc profile go generate <Go-profiler arguments>
+rc profile python <Python-profiler arguments>
 ```
 
-Before verification or packaging, each emitted target tree MUST match its
-committed `bindings/<package-key>/<language>` tree byte-for-byte. A difference
-fails the workflow. Verification and packaging MUST then consume the committed
-tree, so a package is built from the source reviewed in the pull request and
-retained at the target release tag. Compiler, transpiler, and package-manager
-outputs may be produced from that committed source, but the workflow MUST NOT
-replace it with separately generated source.
+The common CLI's default installation includes the independently packaged Go
+profiler. Other languages are optional profiler add-ons. Each profiler owns its
+source parser, language runtime requirements, flags, and semantic validation.
 
-The `plan` job MUST compute the selected targets, language-package dependency
-edges, and build groups in memory and expose only the matrix data required by
-later jobs through GitHub Actions job outputs. It MUST NOT write or upload a
-build-plan file.
+After selecting the profiler, the CLI forwards its argument vector without
+translating language-specific options. Backend help and output remain owned by
+the profiler. Launcher diagnostics must not contaminate profile data on stdout.
 
-Build groups are connected dependency components within one language. Every
-independent build group MUST be a separate matrix entry, allowing the Actions
-scheduler to run independent groups concurrently. Packages inside one group
-MUST build in topological order. A matrix entry MUST represent one complete build
-group so that dynamic dependency ordering is handled by the orchestrator, not by
-guessed GitHub `needs` relationships.
+Interactive discovery may use managed installations, explicit configuration,
+and `PATH`, subject to protocol compatibility checks. Binding verification and
+release operations must continue to honor explicitly selected or locked tools;
+interactive discovery must not replace them silently.
 
-The reusable workflow MUST have `contents: read`, no registry credentials, and
-no release permissions. It MUST upload one workflow artifact for each built
-target, named `<package-key>-<language>`, containing that target's verified
-package outputs. Workflow artifacts are already scoped to one Actions run, so
-their names MUST NOT repeat the run ID, commit, version, or digest. The source
-commit is recorded by the Actions run, the promotion release tag points to that
-commit, and asset checksums establish byte identity.
+### 13.4 CI integration
 
-### 16.2 Pull-request checks
+The GitHub workflows call the same binding interface used locally. Adoption of
+the common CLI must retain the shared prerequisite setup, exact native compiler,
+resource discovery, package verification, source equality checks, and actual
+tool identities.
 
-`.github/workflows/binding-checks.yml` MUST run for changes to extension
-definitions, package configuration, the binding-model schema, normalizer,
-resolver, orchestrator, emitters, binding-manifest contracts consumed by the
-external profilers, or generated bindings.
+The common CLI does not replace `generate.py`'s controlled bot commit behavior
+or `publish.py`'s GitHub and discovery preflight. It supplies the binding command
+backend used by those helpers. Generation and publication remain separate
+operations with the permissions and artifact boundaries specified below.
 
-It MUST call `_binding-build.yml`, compare regenerated source to committed
-source, and publish the API and version-classification summary to the workflow
-summary. Calling the reusable workflow ensures this check uses the exact build
-and verification implementation used by promotion. It MUST use no write
-permission and perform no tagging or publication.
+## 14. Package versions and compatibility
 
-A pull request that changes an extension definition, generation rule, package
-configuration, or locked toolchain MUST include every affected generated target
-tree in the same pull request. Those generated changes MUST be visible as
-ordinary GitHub source diffs before merge.
+Each language package has an independent SemVer version declared in the catalog.
+Extension annotations and native package versions do not have to match.
 
-Required quantitative results are:
+Release planning automatically locates the previous published target artifacts.
+It compares:
 
-- zero uncommitted generated-source differences;
-- zero formatter, compiler, analyzer, type-checker, or test failures;
-- zero unresolved extensions or package dependencies;
-- zero schema-validation failures for positive fixtures;
-- the expected non-zero failures for every negative fixture;
-- one release-impact classification for every changed target.
+1. Normalized extension closures and applicable schemas.
+2. Native AST-derived exported APIs.
+3. Structural binding manifests and declaration behavior.
+4. Direct native package dependencies.
+5. Minimum language versions and package coordinates.
 
-### 16.3 GitHub promotion
+Removal, rename, incompatible type change, optional-to-required change, value
+removal, validation tightening, or an unprovable schema-compatibility change is
+breaking. Compatible public additions and validation relaxations are additions.
+Compatible implementation, packaging, or metadata corrections require an
+appropriate correction release.
 
-`.github/workflows/binding-promote.yml` MUST use `workflow_dispatch` and run only
-from the default branch. It MUST accept `targets` in the same format as the
-reusable workflow and a boolean `dry_run`. Requested versions MUST come only
-from the committed `packages.yaml`; arbitrary versions and source refs are
-forbidden.
+For packages at or above `1.0.0`, breaking changes require a major bump,
+compatible additions a minor bump, and compatible corrections a patch bump.
+For `0.y.z` packages, breaking changes require a minor bump and compatible
+additions or corrections require a patch bump. The declared version must meet
+or exceed the mechanically required bump. Unchanged package content does not
+require a new release.
 
-The workflow MUST call `_binding-build.yml` once. After all selected target
-artifacts are built and verified, a separate job guarded by the protected
-`binding-github-release` environment MUST:
+A package version names immutable content. Different generated or packaged
+bytes cannot reuse a published version. A package-major change must update the
+native coordinate when required by the package manager and regenerate affected
+dependents.
 
-1. Download each selected target artifact from the same workflow run.
-2. Recompute and verify every file digest.
-3. Verify the source commit is still the default-branch head selected by the
-   workflow.
-4. Verify declared package versions satisfy the compatibility classifier.
-5. Preflight every target package tag, the source-commit release tag, and every
-   selected asset name. Reject a tag that names another commit or an existing
-   package asset whose bytes differ.
-6. Process targets in package-dependency topological order.
-7. For each target not already promoted exactly, create its exact Section 14 tag
-   on that commit.
-8. Create or reuse one GitHub Release for the promoted source commit, attached
-   to the non-language-specific tag `bindings/releases/<full-commit-sha>` and
-   named `Runtime Conditions bindings <short-commit-sha>`.
-9. Upload the selected language-specific package artifacts as assets of that
-   source-commit release, rejecting any existing asset whose bytes differ.
-10. Upload one `SHA256SUMS` file covering the release's package assets.
-11. Record the release URL, asset URLs, package coordinates, package versions,
-    and digests in the workflow summary.
+## 15. Committed source and retained artifacts
 
-The approval occurs after build and verification. With `dry_run: true`, the
-workflow MUST perform every verification through tag and release collision
-checks and then stop before its first mutation. With `dry_run: false`, it MUST
-perform the mutations above. The promotion job MUST NOT rebuild, reformat,
-regenerate, or alter a package artifact. An interrupted promotion MUST be
-resumable: an exact existing tag or release asset is skipped, and a non-exact
-collision stops the workflow before any additional target is mutated.
+The repository commits tooling, schemas, package configuration, conformance
+fixtures, expected normalized models and diagnostics, and generated source for
+enabled targets under `bindings/<package-key>/<language>`.
 
-### 16.4 External publication
+Each generated package tree includes its readable source, native package
+metadata, four package resources, and file manifest. Tool identities,
+dependency locks, native dependency artifact digests, and package versions are
+retained in the applicable generated metadata. Regeneration is the mechanism
+for updating these files.
 
-When external publication is authorized, `binding-promote.yml` MUST continue
-after creation or verification of the source-commit GitHub Release. Registry
-publication jobs MUST download the package assets from that release, verify
-`SHA256SUMS` and the package's embedded binding release metadata, and publish
-those exact bytes through one protected environment per registry. These jobs
-MUST never invoke an emitter or package builder.
+Compiled binaries, bytecode, wheels, source distributions, ZIP archives, native
+consumer caches, temporary environments, workflow logs, release plans, and
+publication receipts remain outside committed generated source. Workflow
+artifacts carry verified release outputs between jobs.
 
-Targets with `github-tag` publication mode MUST stop after GitHub promotion.
-Targets with `registry` publication mode MUST publish only to their configured
-registry. A manual retry MUST rerun `binding-promote.yml` for the existing
-source-commit release and selected targets; exact tags and assets are reused,
-and only unpublished registry targets are contacted. Registry rate limits MUST
-be respected by serializing publication per registry and preventing concurrent
-publication of the same package coordinate. A registry response with
-`Retry-After` MUST be retried at that exact delay. Without `Retry-After`, the
-workflow MUST make at most five retries after 30, 60, 120, 240, and 480 seconds,
-then fail without contacting another registry. Registry publication jobs remain
-disabled until they are separately approved.
+Generation may commit updated package source to `main` after all selected
+candidates pass verification. Publication independently requires a clean
+checkout and byte equality between fresh generation and the selected committed
+trees. Packaging archives the committed trees.
 
-## 17. Output retention and publication
+## 16. Automatic Go generation
 
-The repository is the review surface for generated bindings. It MUST commit the
-following authoritative inputs and tests:
+`.github/workflows/binding-generate.yml`, named **Generate and commit Go
+bindings**, runs on relevant changes to `main` and supports manual dispatch on
+`main`.
 
-- tooling source and tests;
-- model schemas;
-- conformance inputs, expected normalized outputs, expected diagnostics, and
-  other approved golden fixtures; and
-- package and toolchain configuration.
+Selection precedence is:
 
-It MUST also commit one complete generated package tree at
-`bindings/<package-key>/<language>` for every configured target, regardless of
-publication mode. Each generated tree MUST contain only deterministic,
-reviewable files required to understand, verify, build, or use that target:
+1. A non-empty manual `targets` input.
+2. The repository variable `BINDING_GENERATION_TARGETS`.
+3. `common-integrations:go,env-configuration:go`.
 
-1. Formatted, human-readable language-native production source.
-2. Native package metadata, dependency declarations, and static package files
-   required to build and test the source.
-3. Generated conformance source and expected profiles, kept in an explicitly
-   named test or conformance location. These are review and verification source,
-   not reports from a particular run.
-4. Exactly one package-local copy of each Runtime Conditions resource required
-   by Sections 10 and 11: the root extension definition, binding manifest,
-   normalized binding model, and binding release metadata.
-5. The deterministic file manifest required by Section 10.
+The input is a comma-separated list of `package-key:go` targets. `all` selects
+every configured Go target; it does not skip a target lacking valid inputs.
+One run requires one exact Go compiler. Python targets are not accepted by
+these workflows.
 
-`runtimeconditions.binding-release.yaml` is package provenance, not a CI-run
-record. Its committed contents MUST be derivable from declared package inputs,
-resolved extension content, and the locked toolchain. It MUST NOT contain an
-archive digest, timestamp, host path, workflow run identifier, publication URL,
-registry response, or other value known only during a particular build or
-publication run. The committed normalized model, binding manifest, binding
-release metadata, conformance data, and file manifest MUST exist only in their
-required generated-package locations; duplicate checkpoint or report trees MUST
-NOT be committed.
+The generation job:
 
-The repository MUST NOT commit:
+1. Checks out current `main` and records its exact source commit.
+2. Runs the shared `binding-tools` action.
+3. Runs CI-helper and shared Go tooling suites.
+4. Invokes `generate.py update`, which runs `rc bindings update` for the
+   selected targets with the verified core schema and profiler artifact.
+5. Invokes `generate.py commit` to stage only selected generated directories.
+6. Creates a `github-actions[bot]` commit when package files changed.
+7. Pushes through an ordinary fast-forward update to `main`.
+8. Dispatches the existing documentation deployment through
+   `DOCS_REPO_DISPATCH_TOKEN`, including when generation required no new commit.
 
-- package-manager caches, temporary directories, or staging trees;
-- wheels, source distributions, JARs, npm tarballs, generic package archives,
-  native binaries, bytecode, or class files;
-- transpiled, bundled, or minified output when it is derived from a more
-  readable committed source language;
-- source maps, archive checksums, registry responses, or publication receipts;
-- API-comparison, compatibility, conformance, or CI reports;
-- CI logs or workflow artifact downloads;
-- build timestamps, workflow run identifiers, or other run-specific metadata;
-- credentials or host-specific lock state; or
-- duplicate out-of-tree copies of package resources, normalized models,
-  manifests, conformance outputs, or release metadata.
+The commit helper rejects unexpected modifications outside selected directories,
+a non-empty preexisting index, movement of the checked-out input commit, or a
+remote `main` that advanced during generation. It never rebases or force-pushes
+candidates over newer inputs. Unchanged output creates no commit.
 
-Every change to a generation input MUST commit the affected generated package
-changes in the same pull request. Pull-request checks MUST regenerate all
-affected targets and require byte equality with those committed trees. Release
-packaging MUST consume the committed trees and MUST NOT regenerate or rewrite
-their source. The default branch therefore provides the current generated
-source, and each Section 14 target release tag provides the immutable generated
-source for one published package version. A separate generated-code branch MUST
-NOT be the authoritative source for a released package.
+Generation and publication share concurrency group `binding-generation-main`
+with cancellation disabled. The generation job has `contents: write`; branch
+rules must permit its bot commit. Bot pushes made with `GITHUB_TOKEN` do not
+supply a recursive generation mechanism, so documentation dispatch is explicit.
+Generation does not create module tags or releases.
 
-Each source-commit GitHub Release MUST contain only:
+## 17. Public Go module discovery
 
-1. The final source and native package archives required by the selected
-   targets, except ecosystems distributed directly from version-control tags.
-2. `SHA256SUMS` covering every uploaded package asset except `SHA256SUMS`
-   itself.
+### 17.1 Import coordinates
 
-The normalized model, binding release metadata, toolchain provenance, and
-required Runtime Conditions resources remain inside each package as specified
-elsewhere in this document. API comparisons, compatibility classifications,
-and conformance results belong in the Actions workflow summary and MUST NOT be
-duplicated as release assets.
+Go bindings are public modules under:
 
-Generated packages MUST place Runtime Conditions resources at the exact Section
-11 locations. Published packages MUST include the root extension definition,
-binding manifest, normalized model, and binding release manifest.
-Dependency extension definitions are supplied by their own dependency packages.
+```text
+runtimeconditions.io/x/<provider>/<extension>
+```
 
-## 18. Security and operational requirements
+Their source remains in this repository. The package catalog keeps public
+coordinates separate from source directories:
 
-1. YAML MUST be parsed with a safe data-only parser.
-2. Duplicate mapping keys MUST be rejected before normalization.
-3. YAML input MUST be limited to 64 MiB, 1,000,000 decoded nodes, 256 levels of
-   nesting, and 100 alias references. Exceeding a limit MUST fail before
-   normalization.
-4. Package code MUST never be imported or executed to discover bindings.
-5. Extension, package, and binding manifests MUST be treated as untrusted static
-   data.
-6. Each resolver download MUST require TLS certificate validation, reject every
-   redirect, allow at most 64 MiB after decompression, use a 10-second
-   connection timeout, and use a 60-second total timeout.
-7. Every downloaded or cached artifact MUST be verified against its lock digest.
-8. Logs, diagnostics, models, and profiles MUST contain no credentials, secret
-   values, environment values, or customer data.
-9. Release jobs alone receive `contents: write`; registry credentials are scoped
-   to their protected publication environment.
-10. Workflows MUST pin third-party GitHub Actions by full commit SHA.
-11. Build jobs MUST use dependency lock files and declared minimum toolchain
-    versions.
-12. A failed verification or incomplete provenance record MUST stop promotion.
+| Target | Public module | Package | Source directory |
+| --- | --- | --- | --- |
+| `common-integrations:go` | `runtimeconditions.io/x/rc/common` | `common` | `bindings/common-integrations/go` |
+| `env-configuration:go` | `runtimeconditions.io/x/rc/env` | `env` | `bindings/env-configuration/go` |
+| `aws-s3:go` | `runtimeconditions.io/x/aws/s3` | `s3` | `bindings/aws-s3/go` |
 
-## 19. Implementation phases and exit criteria
+Configured coordinates do not imply that a target has generated source or a
+published version. Additional targets become discoverable when their valid
+source trees exist.
 
-### Phase 1: binding-model schema, resolver, and normalizer
+Module names, package names, versions, source directories, repository URL, and
+major-version suffixes are validated centrally by `go_bindings.py`. Duplicate
+public prefixes, stale module declarations, and mismatched package clauses fail.
 
-Deliver the model schema, Go data model, canonical YAML writer, extension
-resolver, structural normalizer, CLI, and 12-case conformance suite.
+The package name equals the public path's final base component. An alias is
+optional:
 
-Exit requires:
+```go
+import "runtimeconditions.io/x/aws/s3"
+```
 
-- all Section 6.4 resolution checks;
-- all Section 12 determinism checks applicable to normalization;
-- schema validation of every positive expected model;
-- exact diagnostics for every negative case;
-- normalization of every configured repository extension without
-  identifier-specific code;
-- confirmation that no normalized model or model digest contains or depends on
-  source-byte SHA-256 values, source backends, source locators, or dependency-lock
-  digests;
-- zero extension YAML modifications.
+### 17.2 Static discovery pages
 
-### Phase 2: Go emitter
+`tooling/common/build_extensions_site.py` builds extension definition artifacts
+and Go discovery pages into the same static site output. Extension YAML is
+published at the path of each definition's `metadata.id`.
 
-Deliver the Go emitter, package metadata generation, conformance package, and
-package archive verification.
+For each generated Go module, the builder writes
+`/x/<provider>/<extension>/index.html` with an early metadata tag such as:
 
-Exit requires Section 13 gates 1 through 8, 12, 14, and 16 for every positive
-conformance model, plus exact expected failures for every negative model relevant
-to Go. The Go negative suite MUST include a root Condition field whose generated
-package-level type collides with its owned-kind declaration function.
+```html
+<meta name="go-import" content="runtimeconditions.io/x/rc/common git https://github.com/runtimeconditions/extensions bindings/common-integrations/go">
+```
 
-### Phase 3: Python emitter
+The four fields identify the public import prefix, Git transport, repository,
+and module subdirectory. This subdirectory discovery form requires Go 1.25 or
+later. For major versions `v2` and above, the module coordinate has its required
+`/vN` suffix, and the builder publishes both the base discovery page and the
+versioned page.
 
-Deliver the Python emitter, package metadata generation, conformance package,
-wheel and source-distribution verification.
+A `/x/` index links generated modules. Pages include installation commands,
+unaliased imports, source links, and Go documentation links. The builder emits
+no page for a target without generated Go source.
 
-Exit requires Section 13 gates 1 through 8, 12, 14, and 16 for every positive
-conformance model, plus exact expected failures for every negative model relevant
-to Python.
+The domain `runtimeconditions.io` is served through the existing
+`runtimeconditions.github.io` deployment. That deployment already invokes the
+extensions site builder. Discovery changes are implemented in the extensions
+repository and delivered through that build.
 
-### Phase 4: structural binding manifests and external profiler integration
+`.github/workflows/notify-docs-site.yml` dispatches `extensions-updated` for
+relevant catalog, site-builder, configuration, and binding changes. The
+generation workflow also dispatches after its bot commit. Publication requires
+the live discovery pages to be deployed before module tags are created.
 
-Deliver the structural binding-manifest schema and its emitter output, the
-shared, versioned `runtimeconditions.binding-release.schema.yaml`, and the
-limited Go and Python test-package assembly specified in Section 10. Upgrade
-and standardize the separate `go-rc-profiler` and `python-rc-profiler` codebases
-to consume every construct in Section 11 as installed CLIs, and deliver expected
-profile YAML for every positive conformance declaration. The profiler upgrades
-are made in their own repositories; this phase MUST NOT add profiler source
-under `tooling/extension-bindings/`.
+## 18. Manual Go publication
 
-Exit requires:
+### 18.1 Workflow inputs and jobs
 
-- Section 13 gates 1 through 14 and 16 for every positive Go and Python
-  conformance model, with gate 13 applied to assembled test packages;
-- schema-valid, test-only binding release manifests with real provenance and
-  matching package, model, extension, and dependency identities and digests;
-- all four Section 11 resources at their final locations in Go packages resolved
-  by `go list -json` and installed Python distributions read through
-  `importlib.resources`;
-- owned, direct-additive, and transitive-additive packages installed through
-  native Go and Python dependency management;
-- exact profile generation for 100% of positive conformance declarations;
-- expected semantic failure for 100% of negative declarations;
-- zero application or package-code execution;
-- native package-manager resolution tests for local and packaged dependencies;
-- installed-profiler tests in an isolated end-user environment without an
-  `extensions` or profiler repository checkout;
-- complete extension closure validation for every generated profile.
+`.github/workflows/binding-promote.yml`, named **Publish Go bindings**, uses
+manual dispatch on `main` with:
 
-### Phase 5: local orchestration and committed generated packages
+- `targets`: comma-separated `package-key:go` targets or `all`; empty uses
+  `BINDING_GENERATION_TARGETS` and then the common/env default.
+- `dry_run`: boolean, default `true`.
 
-Deliver `packages.yaml`, `toolchain.lock.yaml`, the production orchestrator,
-build planning, version classification, repository output comparison, and
-generated package trees for every target regardless of publication mode. The
-production orchestrator replaces the Phase 4 fixture assembler for generated
-targets and supplies production binding release provenance.
+Publication expands the requested set to include native package providers and
+orders them before dependents. Every selected provider must have valid committed
+source and a catalog version consistent with dependency metadata.
 
-Exit requires:
+A read-only build job uses the shared prerequisites, runs helper tests, and
+invokes `publish.py build`. That helper calls `rc bindings package` and
+`rc bindings plan-release`, writes checksums and publication metadata, and
+uploads `go-binding-assets` with seven-day workflow retention.
 
-- all 16 gates in Section 13 for every generated target;
-- a clean full build from an empty work directory;
-- a second full build with a zero-byte Git diff;
-- byte-for-byte equality between packaged source and the committed generated
-  package tree;
-- correct topological language-package build ordering;
-- exact package archive content checks;
-- successful local execution using each supported network-backed resolver
-  scheme.
+A separate job with `contents: write` checks out that exact source commit and
+downloads those exact artifacts. It performs promotion without invoking an
+emitter or rebuilding archives.
 
-### Phase 6: pull-request and GitHub promotion workflows
+### 18.2 Complete preflight
 
-Deliver `_binding-build.yml`, `binding-checks.yml`, protected promotion
-configuration, and `binding-promote.yml`.
+Before creating any remote tag or release, `publish.py promote` checks:
 
-Exit requires:
+1. The checkout is clean and matches the packaged source commit and target set.
+2. Current remote `main` still equals that source commit.
+3. Release-plan target identities and versions match the catalog.
+4. Every packaged artifact matches the output file manifest and `SHA256SUMS`.
+5. Source and module archives contain exactly the committed file inventory and
+   file bytes at their expected prefixes.
+6. Live `?go-get=1` metadata matches the expected public prefix, repository,
+   and source subdirectory, including base-prefix checks for major versions.
+7. Existing module tags identify the same complete module tree.
+8. Existing releases have the expected tag and asset names, and every existing
+   asset has exactly the verified bytes.
 
-- one pull-request run with no write permissions and no publication;
-- one manually approved dry-run promotion that performs no release mutation;
-- one approved GitHub release using artifacts built before approval;
-- package source metadata and every target release tag resolve to the committed
-  generated directory for the released version;
-- matching local and Actions artifact SHA-256 values;
-- zero rebuild steps after the protected-environment approval.
+An existing tag may point to an earlier repository commit when its module tree
+is identical. An unrelated change elsewhere in the repository does not require
+moving that tag. A different module tree or asset under the same version stops
+publication and requires a new package version.
 
-### Phase 7: external registry publication
+A dry run performs this preflight, including live discovery and collision
+checks, then stops without publishing. A missing discovery page is an error even
+in a dry run.
 
-This phase starts only after explicit approval. It adds registry-publication
-jobs to `binding-promote.yml` and provides registry-specific credential
-environments.
+### 18.3 Tags, releases, and assets
 
-Exit requires, for each enabled registry:
+The immutable module tag is:
 
-- publication of a disposable pre-release package from existing GitHub assets;
-- exact downloaded-versus-published artifact digest equality where the registry
-  exposes artifact bytes;
-- an idempotent rerun that performs no duplicate publication;
-- one isolated failed-registry retry without contacting any already successful
-  target registry;
-- documented rollback or deprecation procedure supported by that registry.
+```text
+bindings/<package-key>/go/v<package-version>
+```
 
-## 20. Definition of production readiness
+For example:
 
-The system is production-ready only when all seven phases are complete for every
-enabled language and registry, every check in Sections 6.4, 7, 12, and 13 passes,
-the default branch has zero generated-source drift, all production workflows use
-released locked tooling and separately released locked Go and Python profiler
-CLIs, and a complete binding release can be reproduced from its release
-manifest with byte-identical outputs.
+```text
+bindings/common-integrations/go/v0.1.0
+```
 
-Until then, generated packages MUST be labeled pre-release, external registry
-publication MUST remain disabled, and GitHub Releases MUST state which production
-readiness gates remain incomplete.
+All new selected module tags are pushed atomically after preflight. Tags are
+never moved or force-updated.
+
+Each module tag has its own GitHub Release. For asset stem
+`<package-key>-go-<version>`, that release contains:
+
+- `<stem>.source.zip`.
+- `<stem>.module.zip`.
+- `<stem>.runtimeconditions.binding-model.yaml`.
+- `<stem>.runtimeconditions.binding-release.yaml`.
+- `<stem>.runtimeconditions.bindings.yaml`.
+- `<stem>.runtimeconditions.file-manifest.yaml`.
+- `SHA256SUMS` covering the six named artifacts.
+
+Source archives contain the committed package tree under its repository
+subdirectory prefix. Module archives contain it under the native
+`<module>@v<version>/` prefix. The root extension resource remains inside the
+package archives.
+
+Releases are created as drafts, populated with verified assets, then made
+public. Retries reuse identical tags and assets and upload only missing assets.
+A byte mismatch or unexpected asset fails rather than replacing published data.
+Publication rechecks `main` before its first remote mutation.
+
+### 18.4 Public installation checks
+
+After publication, fresh consumers install each module through both direct
+retrieval and `https://proxy.golang.org,direct`. These checks use isolated module
+caches, public checksum verification, empty private-module settings, and no
+publishing tokens. They run `go get` for the released version and compile an
+import that uses the generated package name without an alias.
+
+Successful installation requires no GitHub credentials, private-module
+configuration, local replacement, or source checkout. The public module tag
+supplies Go installation; release ZIPs additionally provide downloadable,
+checksummed artifacts.
+
+### 18.5 Operational sequence
+
+1. Update extension inputs or delivery configuration on `main`.
+2. Let automatic generation verify and commit selected Go package trees.
+3. Let the documentation build deploy the discovery pages.
+4. Dispatch publication with the desired targets and `dry_run: true`.
+5. Dispatch with `dry_run: false` after preflight succeeds.
+6. Confirm the workflow's fresh public consumer installation checks succeed.
+
+A failed target is corrected through its inputs and regeneration. Publication
+never repairs source or rewrites an existing module version.
+
+## 19. Consumer example
+
+Install the published common and environment bindings:
+
+```sh
+go get runtimeconditions.io/x/rc/common@v0.1.0 runtimeconditions.io/x/rc/env@v0.1.0
+```
+
+A Go project can declare a Redis cache and environment configuration without
+import aliases:
+
+```go
+package main
+
+import (
+    "runtimeconditions.io/x/rc/common"
+    "runtimeconditions.io/x/rc/env"
+)
+
+func init() {
+    _ = common.Cache(
+        common.KeyValue{
+            Engine: &[]common.KeyValueEngine{common.KeyValueEngineRedis}[0],
+        },
+        env.KeyValueConfiguration{
+            Env: env.KeyValueConfigurationEnv{
+                {Name: "REDIS_URL", Property: env.KeyValueConfigurationEnvPropertyUrl},
+            },
+        },
+    )
+}
+
+func main() {}
+```
+
+An independently installed compatible Go profiler generates the profile from
+the project root:
+
+```sh
+go-rc-profiler generate -dir . -out ./profile.yaml
+```
+
+The common CLI will expose this profiler operation as `rc profile go generate`
+and its Go-default form `rc profile generate`. Both routes use the same
+installed profiler and binding resources.
+
+The resulting profile identifies the complete extension URIs and includes the
+cache interface and configuration. Generated declarations do not require the
+application to execute in order to extract this information.
+
+## 20. Safety, determinism, and delivery acceptance
+
+YAML parsing rejects duplicate keys, non-string mapping keys, custom tags, and
+resource-limit violations. Inputs are bounded to 64 MiB, 1,000,000 decoded nodes,
+256 nesting levels, and 100 alias references. Normalized outputs contain no
+aliases or presentation-dependent identity.
+
+HTTPS resolution uses certificate validation, a 10-second connection timeout,
+a 60-second total timeout, bounded response data, and no redirects. Downloads,
+cache entries, package resources, and release assets are verified against the
+applicable identities and digests. Credentials are not persisted in artifacts
+or included in diagnostics.
+
+Generation writes only selected generated package directories. Build jobs have
+read permissions; the controlled generation commit and publication jobs receive
+their required write permissions. Public consumers do not inherit publishing
+credentials.
+
+The implementation is accepted when:
+
+1. Semantic fixtures and native emitter suites establish deterministic,
+   extension-independent behavior.
+2. Package verification checks schemas, native APIs, provider relationships,
+   installed tool identities, archives, and regeneration equality.
+3. Generation commits only complete verified target updates and fails safely
+   when `main` advances.
+4. Documentation deployment serves definition resources and exact Go discovery
+   metadata for generated modules.
+5. Publication promotes the packaged committed trees, enforces compatible
+   versions, and preserves immutable module tags and release assets.
+6. Fresh public Go consumers retrieve released modules and compile unaliased
+   imports without private settings or local replacements.
+7. The common CLI can expose the binding interface through a thin adapter while
+   retaining these inputs, outputs, provenance, and failure boundaries.
