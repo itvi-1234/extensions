@@ -1,4 +1,4 @@
-"""Select, update, and commit verified Go bindings for the Actions workflow."""
+"""Shared target selection and commit-back for the generate-<language>.py scripts."""
 
 from __future__ import annotations
 
@@ -10,6 +10,10 @@ from pathlib import Path
 
 import yaml
 
+LANGUAGES = {"go": "Go", "python": "Python"}
+
+Target = tuple[str, str, str]
+
 
 def git(root: Path, *args: str) -> str:
     return subprocess.run(
@@ -17,39 +21,77 @@ def git(root: Path, *args: str) -> str:
     ).stdout
 
 
-def select_targets(catalog: Path, requested: str) -> list[tuple[str, str, str]]:
-    if requested.strip() == "all":
-        requested = ""
+def language_of(target: Target) -> str:
+    return target[0].rsplit(":", 1)[1]
+
+
+def of_language(targets: list[Target], language: str) -> list[Target]:
+    return [target for target in targets if language_of(target) == language]
+
+
+def exact_version(targets: list[Target], language: str) -> str:
+    versions = {target[2] for target in of_language(targets, language)}
+    return versions.pop() if versions else ""
+
+
+def describe(targets: list[Target]) -> str:
+    return " and ".join(
+        label
+        for language, label in LANGUAGES.items()
+        if of_language(targets, language)
+    )
+
+
+def load_targets(
+    catalog: Path, languages: tuple[str, ...] = tuple(LANGUAGES)
+) -> dict[str, Target]:
     packages = yaml.safe_load(catalog.read_text(encoding="utf-8"))["packages"]
     targets = {}
     for key, package in packages.items():
         if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", key):
             raise ValueError(f"invalid package key: {key}")
-        config = package["languages"].get("go")
-        if config is None:
-            continue
-        directory = f"bindings/{key}/go"
-        if config["sourceDirectory"] != directory:
-            raise ValueError(f"{key}:go: unexpected source directory")
-        version = str(config["languageVersion"])
-        if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
-            raise ValueError(f"{key}:go: invalid Go version")
-        targets[f"{key}:go"] = (f"{key}:go", directory, version)
+        for language in languages:
+            config = package["languages"].get(language)
+            if config is None:
+                continue
+            directory = f"bindings/{key}/{language}"
+            if config["sourceDirectory"] != directory:
+                raise ValueError(f"{key}:{language}: unexpected source directory")
+            version = str(config["languageVersion"])
+            if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
+                raise ValueError(
+                    f"{key}:{language}: invalid {LANGUAGES[language]} version"
+                )
+            targets[f"{key}:{language}"] = (f"{key}:{language}", directory, version)
+    return targets
+
+
+def select_targets(
+    catalog: Path, requested: str, languages: tuple[str, ...] = tuple(LANGUAGES)
+) -> list[Target]:
+    if requested.strip() == "all":
+        requested = ""
+    targets = load_targets(catalog, languages)
     keys = (
         [item.strip() for item in requested.split(",")]
         if requested.strip()
         else sorted(targets)
     )
     if not keys or len(set(keys)) != len(keys):
-        raise ValueError("select at least one Go target without duplicates")
+        raise ValueError("select at least one binding target without duplicates")
+    enabled = " and ".join(LANGUAGES[language] for language in languages)
     for key in keys:
         if key not in targets:
             raise ValueError(
-                f"unknown or disabled target: {key}; this workflow enables Go only"
+                f"unknown or disabled target: {key}; this workflow enables {enabled} only"
             )
     selected = [targets[key] for key in sorted(keys)]
-    if len({target[2] for target in selected}) != 1:
-        raise ValueError("one generation run requires one exact Go version")
+    for language in languages:
+        versions = {target[2] for target in of_language(selected, language)}
+        if len(versions) > 1:
+            raise ValueError(
+                f"one generation run requires one exact {LANGUAGES[language]} version"
+            )
     return selected
 
 
@@ -60,29 +102,14 @@ def summarize(message: str) -> None:
             stream.write(message + "\n\n")
 
 
-def update(
-    root: Path, targets: list[tuple[str, str, str]], rc: Path, core: Path
-) -> None:
-    tooling = root / "tooling" / "extension-bindings"
-    args = [
-        str(rc.resolve()),
-        "bindings",
-        "update",
-        "--packages",
-        str(tooling / "packages.yaml"),
-        "--toolchain-lock",
-        str(tooling / "toolchain.lock.yaml"),
-        "--core-schema",
-        str(core.resolve()),
-    ]
-    for key, _, _ in targets:
-        args.extend(["--target", key])
-    # update verifies all candidates before atomically replacing generated source.
-    subprocess.run(args, cwd=root, check=True)
-    summarize(f"Verified and synchronized {len(targets)} Go binding targets.")
+def write_outputs(**outputs: str) -> None:
+    if path := os.environ.get("GITHUB_OUTPUT"):
+        with Path(path).open("a", encoding="utf-8") as stream:
+            for name, value in outputs.items():
+                stream.write(f"{name.replace('_', '-')}={value}\n")
 
 
-def commit(root: Path, targets: list[tuple[str, str, str]], source_commit: str) -> bool:
+def commit(root: Path, targets: list[Target], source_commit: str) -> bool:
     if not re.fullmatch(r"[0-9a-f]{40}", source_commit):
         raise ValueError("a full source commit is required")
     if git(root, "rev-parse", "HEAD").strip() != source_commit:
@@ -109,7 +136,7 @@ def commit(root: Path, targets: list[tuple[str, str, str]], source_commit: str) 
             f"refusing to commit changes outside selected bindings: {unexpected}"
         )
     if not changed:
-        summarize("Go bindings are current; no commit was created.")
+        summarize(f"{describe(targets)} bindings are current; no commit was created.")
         return False
     remote = git(root, "ls-remote", "origin", "refs/heads/main").split()
     if not remote or remote[0] != source_commit:
@@ -123,24 +150,23 @@ def commit(root: Path, targets: list[tuple[str, str, str]], source_commit: str) 
         "user.email=41898282+github-actions[bot]@users.noreply.github.com",
         "commit",
         "-m",
-        "chore(bindings): regenerate Go bindings",
+        f"chore(bindings): regenerate {describe(targets)} bindings",
         "-m",
         f"Generated and verified from {source_commit}.",
     )
-    # A concurrent push also fails Git's fast-forward check. Never rebase or force.
     git(root, "push", "origin", "HEAD:refs/heads/main")
     generated_commit = git(root, "rev-parse", "HEAD").strip()
-    summarize(f"Committed verified Go bindings to main: `{generated_commit}`.")
+    summarize(
+        f"Committed verified {describe(targets)} bindings to main: `{generated_commit}`."
+    )
     return True
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["configure", "update", "commit"])
+    parser.add_argument("command", choices=["configure", "commit"])
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--targets", default="")
-    parser.add_argument("--rc", type=Path)
-    parser.add_argument("--core-schema", type=Path)
     parser.add_argument("--source-commit", default="")
     args = parser.parse_args()
     root = args.root.resolve()
@@ -149,20 +175,14 @@ def main() -> None:
             root / "tooling/extension-bindings/packages.yaml", args.targets
         )
         if args.command == "configure":
-            if output := os.environ.get("GITHUB_OUTPUT"):
-                with Path(output).open("a", encoding="utf-8") as stream:
-                    stream.write(f"go-version={targets[0][2]}\n")
-                    stream.write("targets=" + ",".join(target[0] for target in targets) + "\n")
-                    stream.write(
-                        f"source-commit={git(root, 'rev-parse', 'HEAD').strip()}\n"
-                    )
-            summarize(
-                "Selected Go targets: " + ", ".join(target[0] for target in targets)
+            write_outputs(
+                targets=",".join(target[0] for target in targets),
+                source_commit=git(root, "rev-parse", "HEAD").strip(),
             )
-        elif args.command == "update":
-            if args.rc is None or args.core_schema is None:
-                raise ValueError("update requires --rc and --core-schema")
-            update(root, targets, args.rc, args.core_schema)
+            summarize(
+                f"Selected {describe(targets)} targets: "
+                + ", ".join(target[0] for target in targets)
+            )
         else:
             commit(root, targets, args.source_commit)
     except (ValueError, KeyError, OSError, subprocess.CalledProcessError) as error:

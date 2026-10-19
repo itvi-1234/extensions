@@ -1,4 +1,4 @@
-name: Generate and commit Go bindings
+name: Generate and commit Go and Python bindings
 
 on:
   push:
@@ -9,17 +9,19 @@ on:
       - 'tooling/common/go_bindings.py'
       - 'catalog/**'
       - 'bindings/**/go/**'
+      - 'bindings/**/python/**'
       - 'tooling/extension-bindings/packages.yaml'
       - 'tooling/extension-bindings/toolchain.lock.yaml'
       - 'tooling/extension-bindings/model/**'
       - 'tooling/extension-bindings/normalizer/**'
       - 'tooling/extension-bindings/emitters/go/**'
+      - 'tooling/extension-bindings/emitters/python/**'
       - 'tooling/extension-bindings/orchestrator/**'
       - 'tooling/extension-bindings/ci/**'
   workflow_dispatch:
     inputs:
       targets:
-        description: 'Comma-separated package-key:go targets, or all; empty uses automatic targets'
+        description: 'Comma-separated package-key:go or package-key:python targets, or all; empty uses automatic targets'
         type: string
         default: ''
 
@@ -38,7 +40,7 @@ jobs:
     permissions:
       contents: write
     env:
-      INPUT_TARGETS: ${{ inputs.targets || vars.BINDING_GENERATION_TARGETS || 'common-integrations:go,env-configuration:go' }}
+      INPUT_TARGETS: ${{ inputs.targets || vars.BINDING_GENERATION_TARGETS || 'common-integrations:go,env-configuration:go,common-integrations:python,env-configuration:python' }}
       GOTOOLCHAIN: local
     steps:
       - name: Check out current main
@@ -47,35 +49,45 @@ jobs:
           ref: main
           persist-credentials: true
 
-      - name: Prepare shared Go binding tools
+      - name: Prepare shared binding tools
         uses: ./.github/actions/binding-tools
         id: tools
         with:
           targets: ${{ env.INPUT_TARGETS }}
 
-      - name: Test generation helper and Go tooling
+      - name: Test generation helper and emitter tooling
         shell: bash
+        env:
+          HAS_PYTHON: ${{ steps.tools.outputs.has-python }}
         run: |
           set -euo pipefail
           python -m unittest discover -s tooling/extension-bindings/ci -p 'test_*.py'
           go -C tooling/extension-bindings/normalizer test -count=1 ./...
           go -C tooling/extension-bindings/emitters/go test -count=1 ./...
           go -C tooling/extension-bindings/orchestrator test -count=1 ./...
+          if [[ "$HAS_PYTHON" == true ]]; then
+            PYTHONPATH=tooling/extension-bindings/emitters/python/src \
+              "$RC_BINDINGS_PYTHON" -m pytest -q -p no:cacheprovider \
+              tooling/extension-bindings/emitters/python/tests \
+              --ignore=tooling/extension-bindings/emitters/python/tests/test_packages.py
+          fi
 
-      - name: Generate and verify Go bindings
+      - name: Generate and verify bindings
         env:
           RC: ${{ steps.tools.outputs.rc }}
           CORE_SCHEMA: ${{ steps.tools.outputs.core-schema }}
         run: |
-          python tooling/extension-bindings/ci/generate.py update --targets "$INPUT_TARGETS" \
+          python tooling/extension-bindings/ci/generate-go.py update --targets "$INPUT_TARGETS" \
+            --rc "$RC" --core-schema "$CORE_SCHEMA"
+          python tooling/extension-bindings/ci/generate-python.py update --targets "$INPUT_TARGETS" \
             --rc "$RC" --core-schema "$CORE_SCHEMA"
 
       - name: Commit verified generated source to main
         env:
           SOURCE_COMMIT: ${{ steps.tools.outputs.source-commit }}
-        run: python tooling/extension-bindings/ci/generate.py commit --targets "$INPUT_TARGETS" --source-commit "$SOURCE_COMMIT"
+        run: python tooling/extension-bindings/ci/generation.py commit --targets "$INPUT_TARGETS" --source-commit "$SOURCE_COMMIT"
 
-      - name: Publish updated Go discovery pages through the existing docs build
+      - name: Publish updated discovery pages through the existing docs build
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.DOCS_REPO_DISPATCH_TOKEN }}
