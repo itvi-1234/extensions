@@ -1,0 +1,36 @@
+name: Publish Java bindings
+
+on:
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: 'Comma-separated package-key:java targets, or all'
+        type: string
+        default: ''
+      dry_run:
+        description: 'Verify publication without pushing to Maven'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: binding-publish-maven
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Publish to Maven (placeholder)
+        env:
+          TARGETS: ${{ inputs.targets }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          echo "Maven publication is not implemented; no package was published."
+          echo "targets=${TARGETS:-<none>} dry_run=${DRY_RUN}"
