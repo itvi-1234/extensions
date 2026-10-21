@@ -4,34 +4,39 @@ import static io.runtimeconditions.bindings.emitter.DiagnosticError.fail;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.ValidationMessage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class Target {
     public static final String API = "runtimeconditions.io/java-package-target/v1alpha1";
     public static final String KIND = "RuntimeConditionsJavaPackageTarget";
-    public static final Pattern VERSION =
-            Pattern.compile(
-                    "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-(?:alpha|beta|rc)\\.(0|[1-9][0-9]*))?$");
-    public static final Pattern KEY = Pattern.compile("^[a-z0-9]+(?:-[a-z0-9]+)*$");
-    public static final Pattern GROUP_ID = Pattern.compile("^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$");
-    public static final Pattern ARTIFACT_ID = Pattern.compile("^[a-z0-9]+(?:-[a-z0-9]+)*$");
-    public static final Pattern JAVA_PACKAGE =
+    private static final String SCHEMA_RESOURCE = "/target/package-target.schema.yaml";
+    private static final Pattern DEPENDENCY = Pattern.compile("^/dependencies/\\d+(?:/\\w+)?$");
+    private static final Pattern JAVA_PACKAGE =
             Pattern.compile("^[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)*$");
-    public static final Pattern SHA = Pattern.compile("^[0-9a-f]{64}$");
-    private static final Pattern JAVA_VERSION = Pattern.compile("^(0|[1-9][0-9]*)$");
-    private static final int MINIMUM_JAVA = 17;
 
     public record Dependency(
-            String extension, String groupId, String artifactId, String javaPackage, String version) {
+            String extension,
+            String groupId,
+            String artifactId,
+            String javaPackage,
+            String version,
+            String versionRange) {
+        public Dependency(String extension, String groupId, String artifactId, String javaPackage, String version) {
+            this(extension, groupId, artifactId, javaPackage, version, null);
+        }
+
         public String coordinate() {
             return groupId + ":" + artifactId;
         }
@@ -73,46 +78,99 @@ public final class Target {
         }
     }
 
-    private static final List<String> ALLOWED =
-            List.of(
-                    "apiVersion",
-                    "kind",
-                    "packageKey",
-                    "rootExtension",
-                    "groupId",
-                    "artifactId",
-                    "javaPackage",
-                    "version",
-                    "sourceDirectory",
-                    "minimumJavaVersion",
-                    "publicationMode",
-                    "registryId",
-                    "repositoryUrl",
-                    "dependencies",
-                    "emitterSha256");
-    private static final Set<String> OPTIONAL = Set.of("registryId", "dependencies", "emitterSha256");
-    private static final List<String> DEPENDENCY_FIELDS =
-            List.of("extension", "groupId", "artifactId", "javaPackage", "version");
+    private static JsonSchema validator;
 
     private Target() {}
 
-    private static DiagnosticError configFail(String message, String pointer) {
-        return fail("package-config", "RCJ1006", "package-target", message, pointer);
-    }
+    private record Described(String code, String message, String pointer) {}
 
-    private static DiagnosticError configFail(String message, String pointer, String coordinate) {
-        return fail("package-config", "RCJ1006", coordinate, message, pointer);
-    }
-
-    private static String text(JsonNode value, String name, String pointer, String coordinate) {
-        JsonNode node = value.get(name);
-        if (node == null || !node.isTextual() || node.asText().isEmpty()) {
-            throw configFail("invalid " + name, pointer, coordinate);
+    private static String schemaText() {
+        String override = System.getenv("RC_PACKAGE_TARGET_SCHEMA");
+        try {
+            if (override != null && !override.isEmpty()) {
+                return Files.readString(Path.of(override), StandardCharsets.UTF_8);
+            }
+            try (InputStream stream = Target.class.getResourceAsStream(SCHEMA_RESOURCE)) {
+                if (stream == null) {
+                    throw fail("package-config", "RCJ1006", "package-target", "package target schema is unavailable");
+                }
+                return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (IOException error) {
+            throw fail("package-config", "RCJ1006", "package-target", "package target schema is unavailable");
         }
-        return node.asText();
     }
 
-    static boolean validJavaPackage(String value) {
+    private static synchronized JsonSchema validator() {
+        if (validator == null) {
+            validator = Model.createValidator(schemaText());
+        }
+        return validator;
+    }
+
+    private static Described configError(String message, String pointer) {
+        return new Described("RCJ1006", message, pointer);
+    }
+
+    private static Described describe(ValidationMessage error) {
+        String path = error.getInstanceLocation().toString();
+        String type = error.getType();
+        Described registry = configError("registryId is required exactly for registry publication", "/registryId");
+        if (type.equals("required")) {
+            String missing = error.getProperty();
+            if (path.isEmpty()) {
+                return missing.equals("registryId") ? registry : configError("missing required field '" + missing + "'", "/" + missing);
+            }
+            return configError("missing dependency field '" + missing + "'", path + "/" + missing);
+        }
+        if (type.equals("additionalProperties")) {
+            String extra = error.getProperty();
+            return path.isEmpty()
+                    ? configError("unknown field '" + extra + "'", "/" + extra)
+                    : configError("unknown dependency field '" + extra + "'", path + "/" + extra);
+        }
+        if (type.equals("if") || type.equals("not")) {
+            return registry;
+        }
+        return switch (path) {
+            case "/apiVersion", "/kind" -> configError("unsupported target apiVersion or kind", "");
+            case "/sourceDirectory" -> new Described("RCJ1007", "source directory does not match package key", path);
+            case "/minimumJavaVersion" -> new Described("RCJ1008", "unsupported minimum Java version", path);
+            case "/emitterSha256" -> configError("emitterSha256 must be a 64-character lowercase SHA-256 of the emitter tool", path);
+            case "/version" -> configError("unsupported package version", path);
+            case "/publicationMode" -> configError("unsupported publication mode", path);
+            case "/repositoryUrl" -> configError("repositoryUrl must use https", path);
+            case "/dependencies" -> configError("dependencies must be a sequence", path);
+            default -> {
+                if (DEPENDENCY.matcher(path).matches()) {
+                    yield configError(
+                            path.chars().filter(character -> character == '/').count() == 2
+                                    ? "dependency must be a mapping"
+                                    : "invalid dependency package metadata",
+                            path);
+                }
+                yield configError("invalid " + path.substring(path.lastIndexOf('/') + 1), path);
+            }
+        };
+    }
+
+    private static int rank(ValidationMessage error) {
+        if (!error.getInstanceLocation().toString().isEmpty()) {
+            return 3;
+        }
+        return switch (error.getType()) {
+            case "required" -> error.getProperty().equals("registryId") ? 2 : 0;
+            case "additionalProperties" -> 1;
+            case "if", "not" -> 2;
+            default -> 3;
+        };
+    }
+
+    private static String sortKey(ValidationMessage error) {
+        return rank(error) + (error.getProperty() == null ? "" : error.getProperty()) + error.getInstanceLocation() + error.getType();
+    }
+
+    private static boolean validJavaPackage(String value) {
         if (!JAVA_PACKAGE.matcher(value).matches()) {
             return false;
         }
@@ -126,157 +184,55 @@ public final class Target {
 
     public static PackageTarget load(Path path) {
         ObjectNode value = YamlIo.load(path, false);
-        List<String> missing = new ArrayList<>();
-        for (String name : ALLOWED) {
-            if (!OPTIONAL.contains(name) && !value.has(name)) {
-                missing.add(name);
-            }
-        }
-        missing.sort(Comparator.naturalOrder());
-        for (String name : missing) {
-            throw configFail("missing required field '" + name + "'", "/" + name);
-        }
-        Set<String> unknown = new TreeSet<>();
-        for (Iterator<String> names = value.fieldNames(); names.hasNext(); ) {
-            String name = names.next();
-            if (!ALLOWED.contains(name)) {
-                unknown.add(name);
-            }
-        }
-        for (String name : unknown) {
-            throw configFail("unknown field '" + name + "'", "/" + name);
-        }
-        if (!API.equals(value.path("apiVersion").asText(null))
-                || !KIND.equals(value.path("kind").asText(null))) {
-            throw configFail("unsupported target apiVersion or kind", "");
-        }
-        String emitterSha256 = "";
-        if (value.has("emitterSha256")) {
-            JsonNode node = value.get("emitterSha256");
-            if (!node.isTextual() || !SHA.matcher(node.asText()).matches()) {
-                throw configFail(
-                        "emitterSha256 must be a 64-character lowercase SHA-256 of the emitter tool",
-                        "/emitterSha256");
-            }
-            emitterSha256 = node.asText();
-        }
-        for (String name : ALLOWED) {
-            if (OPTIONAL.contains(name) || name.equals("apiVersion") || name.equals("kind")) {
-                continue;
-            }
-            text(value, name, "/" + name, "package-target");
+        List<ValidationMessage> errors = new ArrayList<>(Model.validate(validator(), value));
+        String coordinate = value.path("packageKey").isTextual() ? value.path("packageKey").asText() : "package-target";
+        if (!errors.isEmpty()) {
+            errors.sort(Comparator.comparing(Target::sortKey));
+            Described described = describe(errors.get(0));
+            throw fail("package-config", described.code(), coordinate, described.message(), described.pointer());
         }
         String packageKey = value.get("packageKey").asText();
-        String groupId = value.get("groupId").asText();
-        String artifactId = value.get("artifactId").asText();
-        String javaPackage = value.get("javaPackage").asText();
-        String version = value.get("version").asText();
-        if (!KEY.matcher(packageKey).matches()) {
-            throw configFail("invalid packageKey", "/packageKey");
-        }
-        if (!GROUP_ID.matcher(groupId).matches() || groupId.length() > 128) {
-            throw configFail("invalid groupId", "/groupId");
-        }
-        if (!ARTIFACT_ID.matcher(artifactId).matches() || artifactId.length() > 128) {
-            throw configFail("invalid artifactId", "/artifactId");
-        }
-        if (!validJavaPackage(javaPackage)) {
-            throw configFail("invalid javaPackage", "/javaPackage");
-        }
-        if (!VERSION.matcher(version).matches()) {
-            throw configFail("unsupported package version", "/version");
+        if (!validJavaPackage(value.get("javaPackage").asText())) {
+            throw fail("package-config", "RCJ1006", packageKey, "invalid javaPackage", "/javaPackage");
         }
         if (!value.get("sourceDirectory").asText().equals("bindings/" + packageKey + "/java")) {
-            throw fail(
-                    "package-config",
-                    "RCJ1007",
-                    packageKey,
-                    "source directory does not match package key",
-                    "/sourceDirectory");
-        }
-        String minimum = value.get("minimumJavaVersion").asText();
-        Matcher parts = JAVA_VERSION.matcher(minimum);
-        if (!parts.matches() || Integer.parseInt(minimum) < MINIMUM_JAVA) {
-            throw fail(
-                    "package-config",
-                    "RCJ1008",
-                    packageKey,
-                    "unsupported minimum Java version",
-                    "/minimumJavaVersion");
-        }
-        String mode = value.get("publicationMode").asText();
-        if (!mode.equals("github-tag") && !mode.equals("registry")) {
-            throw configFail("unsupported publication mode", "/publicationMode", packageKey);
-        }
-        String repositoryUrl = value.get("repositoryUrl").asText();
-        if (!repositoryUrl.startsWith("https://") || repositoryUrl.chars().anyMatch(Character::isWhitespace)) {
-            throw configFail("repositoryUrl must use https", "/repositoryUrl", packageKey);
-        }
-        String registry = value.has("registryId") ? text(value, "registryId", "/registryId", packageKey) : null;
-        if (mode.equals("registry") != (registry != null)) {
-            throw configFail(
-                    "registryId is required exactly for registry publication",
-                    "/registryId",
-                    packageKey);
-        }
-        JsonNode entries = value.has("dependencies") ? value.get("dependencies") : Json.MAPPER.createArrayNode();
-        if (!entries.isArray()) {
-            throw configFail("dependencies must be a sequence", "/dependencies", packageKey);
+            throw fail("package-config", "RCJ1007", packageKey, "source directory does not match package key", "/sourceDirectory");
         }
         List<Dependency> dependencies = new ArrayList<>();
         Set<String> seen = new HashSet<>();
         int index = 0;
-        for (JsonNode entry : entries) {
+        for (JsonNode entry : value.has("dependencies") ? value.get("dependencies") : Json.MAPPER.createArrayNode()) {
             String pointer = "/dependencies/" + index;
             index += 1;
-            if (!entry.isObject()) {
-                throw configFail("dependency must be a mapping", pointer, packageKey);
-            }
-            for (String name : DEPENDENCY_FIELDS.stream().sorted().toList()) {
-                if (!entry.has(name)) {
-                    throw configFail("missing dependency field '" + name + "'", pointer + "/" + name, packageKey);
-                }
-            }
-            Set<String> extra = new TreeSet<>();
-            for (Iterator<String> names = entry.fieldNames(); names.hasNext(); ) {
-                String name = names.next();
-                if (!DEPENDENCY_FIELDS.contains(name)) {
-                    extra.add(name);
-                }
-            }
-            for (String name : extra) {
-                throw configFail("unknown dependency field '" + name + "'", pointer + "/" + name, packageKey);
-            }
-            String extension = text(entry, "extension", pointer + "/extension", packageKey);
-            String dependencyGroup = text(entry, "groupId", pointer + "/groupId", packageKey);
-            String dependencyArtifact = text(entry, "artifactId", pointer + "/artifactId", packageKey);
-            String dependencyPackage = text(entry, "javaPackage", pointer + "/javaPackage", packageKey);
-            String dependencyVersion = text(entry, "version", pointer + "/version", packageKey);
+            String extension = entry.get("extension").asText();
             if (!seen.add(extension)) {
-                throw configFail("duplicate dependency '" + extension + "'", pointer, packageKey);
+                throw fail("package-config", "RCJ1006", packageKey, "duplicate dependency '" + extension + "'", pointer);
             }
-            if (!GROUP_ID.matcher(dependencyGroup).matches()
-                    || !ARTIFACT_ID.matcher(dependencyArtifact).matches()
-                    || !validJavaPackage(dependencyPackage)
-                    || !VERSION.matcher(dependencyVersion).matches()) {
-                throw configFail("invalid dependency package metadata", pointer, packageKey);
+            if (!validJavaPackage(entry.get("javaPackage").asText())) {
+                throw fail("package-config", "RCJ1006", packageKey, "invalid dependency package metadata", pointer);
             }
             dependencies.add(
-                    new Dependency(extension, dependencyGroup, dependencyArtifact, dependencyPackage, dependencyVersion));
+                    new Dependency(
+                            extension,
+                            entry.get("groupId").asText(),
+                            entry.get("artifactId").asText(),
+                            entry.get("javaPackage").asText(),
+                            entry.get("version").asText(),
+                            entry.has("versionRange") ? entry.get("versionRange").asText() : null));
         }
         return new PackageTarget(
                 packageKey,
                 value.get("rootExtension").asText(),
-                groupId,
-                artifactId,
-                javaPackage,
-                version,
+                value.get("groupId").asText(),
+                value.get("artifactId").asText(),
+                value.get("javaPackage").asText(),
+                value.get("version").asText(),
                 value.get("sourceDirectory").asText(),
-                minimum,
-                mode,
-                repositoryUrl,
-                registry,
+                value.get("minimumJavaVersion").asText(),
+                value.get("publicationMode").asText(),
+                value.get("repositoryUrl").asText(),
+                value.has("registryId") ? value.get("registryId").asText() : null,
                 List.copyOf(dependencies),
-                emitterSha256);
+                value.has("emitterSha256") ? value.get("emitterSha256").asText() : "");
     }
 }

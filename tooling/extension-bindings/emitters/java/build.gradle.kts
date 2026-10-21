@@ -36,6 +36,15 @@ application {
 }
 
 tasks.processResources {
+    filesMatching("emitter.properties") {
+        expand("name" to application.applicationName, "version" to project.version)
+    }
+    from(layout.projectDirectory.dir("templates")) {
+        into("templates")
+    }
+    from(layout.projectDirectory.file("package-target.schema.yaml")) {
+        into("target")
+    }
     from(layout.projectDirectory.file("../../model/runtimeconditions.binding-model.schema.yaml")) {
         into("model")
     }

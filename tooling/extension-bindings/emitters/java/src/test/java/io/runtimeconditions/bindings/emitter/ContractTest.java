@@ -139,7 +139,9 @@ class ContractTest {
         JsonNode tools = java.path("tools");
         assertEquals("maven", java.path("packageManager").asText());
         assertEquals("gradle", java.path("buildBackend").asText());
-        assertEquals(Metadata.COMPILER_PLUGIN_VERSION, tools.path("maven-compiler-plugin").asText());
+        Matcher plugin = Pattern.compile("<artifactId>maven-compiler-plugin</artifactId>\\s*<version>([^<]+)</version>").matcher(Templates.read("pom.xml.tmpl"));
+        assertTrue(plugin.find());
+        assertEquals(plugin.group(1), tools.path("maven-compiler-plugin").asText());
         String build = read(EMITTER_ROOT.resolve("build.gradle.kts"));
         Matcher matcher = Pattern.compile("\"([A-Za-z0-9_.-]+):([A-Za-z0-9_.-]+):([0-9][A-Za-z0-9_.-]*)\"").matcher(build);
         int matched = 0;
@@ -150,6 +152,16 @@ class ContractTest {
         }
         assertTrue(matched >= 4, "build.gradle.kts pins at least the runtime dependencies");
         assertEquals(tools.path("gradle").asText(), gradleVersion());
+    }
+
+    @Test
+    void identityComesFromTheBuildAndDependencyRangesCanBeOverridden() {
+        assertEquals("runtimeconditions-binding-emitter-java", Metadata.EMITTER_NAME);
+        assertTrue(Pattern.matches("\\d+\\.\\d+\\.\\d+", Metadata.EMITTER_VERSION), Metadata.EMITTER_VERSION);
+        Target.Dependency plain = new Target.Dependency("e", "g", "a", "p", "1.2.3");
+        Target.Dependency pinned = new Target.Dependency("e", "g", "a", "p", "1.2.3", "[1.2,2)");
+        assertEquals("[1.2.3,2.0.0)", Metadata.dependencyVersion(plain));
+        assertEquals("[1.2,2)", Metadata.dependencyVersion(pinned));
     }
 
     private static String gradleVersion() {

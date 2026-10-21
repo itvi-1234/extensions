@@ -86,6 +86,12 @@ final class TestSupport {
             for (Path path : walk.filter(item -> item.toString().endsWith(".java")).sorted().toList()) {
                 inventory.put(EMITTER_ROOT.relativize(path).toString(), sha256(Files.readAllBytes(path)));
             }
+            try (Stream<Path> templates = Files.walk(EMITTER_ROOT.resolve("templates"))) {
+                for (Path path : templates.filter(Files::isRegularFile).sorted().toList()) {
+                    inventory.put(EMITTER_ROOT.relativize(path).toString(), sha256(Files.readAllBytes(path)));
+                }
+            }
+            inventory.put("package-target.schema.yaml", sha256(Files.readAllBytes(EMITTER_ROOT.resolve("package-target.schema.yaml"))));
             inventory.put("build.gradle.kts", sha256(Files.readAllBytes(EMITTER_ROOT.resolve("build.gradle.kts"))));
             return sha256(Json.MAPPER.writeValueAsString(inventory).getBytes(StandardCharsets.UTF_8));
         } catch (IOException error) {

@@ -86,6 +86,10 @@ properties:
         version:
           type: string
           pattern: '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(?:alpha|beta|rc)\.(0|[1-9][0-9]*))?$'
+        versionRange:
+          description: A Maven version range for this dependency. When absent, the range from the declared version up to the next breaking version is used.
+          type: string
+          minLength: 1
 allOf:
   - if:
       properties:
