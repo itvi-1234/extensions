@@ -1,19 +1,17 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { Ajv2020, type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
+import addFormats from "ajv-formats";
+import { parse } from "yaml";
+
 import { fail } from "./diagnostics.js";
 import { loadYaml, type JsonObject } from "./yamlio.js";
-
-export const TARGET_API = "runtimeconditions.io/typescript-package-target/v1alpha1";
-export const TARGET_KIND = "RuntimeConditionsTypeScriptPackageTarget";
-export const VERSION_PATTERN =
-  /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(?:alpha|beta|rc)\.(0|[1-9][0-9]*))?$/;
-export const KEY_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-export const PACKAGE_NAME_PATTERN = /^(?:@[a-z0-9][a-z0-9-]*\/)?[a-z0-9][a-z0-9-]*$/;
-export const SHA_PATTERN = /^[0-9a-f]{64}$/;
-const MINIMUM_NODE = [20, 0] as const;
 
 export interface PackageDependency {
   readonly extension: string;
   readonly packageName: string;
   readonly version: string;
+  readonly versionRange?: string;
 }
 
 export interface PackageTarget {
@@ -30,68 +28,118 @@ export interface PackageTarget {
   readonly emitterSha256: string;
 }
 
-const ALLOWED = [
-  "apiVersion",
-  "kind",
-  "packageKey",
-  "rootExtension",
-  "packageName",
-  "version",
-  "sourceDirectory",
-  "minimumNodeVersion",
-  "publicationMode",
-  "registryId",
-  "repositoryUrl",
-  "dependencies",
-  "emitterSha256",
-];
-const REQUIRED = ALLOWED.filter(
-  (name) => !["registryId", "dependencies", "emitterSha256"].includes(name),
-);
-
-function configFail(message: string, pointer = "", coordinate = "package-target"): never {
-  return fail("package-config", "RCT1006", coordinate, message, pointer);
+interface Described {
+  readonly code: string;
+  readonly message: string;
+  readonly pointer: string;
 }
 
-function text(value: unknown, name: string): string {
-  if (typeof value !== "string" || value === "") return configFail(`invalid ${name}`, `/${name}`);
-  return value;
+export function targetSchemaPath(): string {
+  return (
+    process.env["RC_PACKAGE_TARGET_SCHEMA"] ??
+    fileURLToPath(new URL("../../package-target.schema.yaml", import.meta.url))
+  );
+}
+
+let validator: ValidateFunction | undefined;
+
+function targetValidator(): ValidateFunction {
+  if (validator === undefined) {
+    const ajv = new Ajv2020({ strict: false, allErrors: true, allowUnionTypes: true });
+    addFormats.default(ajv);
+    validator = ajv.compile(parse(readFileSync(targetSchemaPath(), "utf-8")) as object);
+  }
+  return validator;
+}
+
+function configError(message: string, pointer = ""): Described {
+  return { code: "RCT1006", message, pointer };
+}
+
+function describe(error: ErrorObject): Described {
+  const path = error.instancePath;
+  const registry = configError(
+    "registryId is required exactly for registry publication",
+    "/registryId",
+  );
+  if (error.keyword === "required") {
+    const missing = (error.params as { missingProperty: string }).missingProperty;
+    if (path === "") {
+      return missing === "registryId"
+        ? registry
+        : configError(`missing required field '${missing}'`, `/${missing}`);
+    }
+    return configError(`missing dependency field '${missing}'`, `${path}/${missing}`);
+  }
+  if (error.keyword === "additionalProperties") {
+    const extra = (error.params as { additionalProperty: string }).additionalProperty;
+    return path === ""
+      ? configError(`unknown field '${extra}'`, `/${extra}`)
+      : configError(`unknown dependency field '${extra}'`, `${path}/${extra}`);
+  }
+  if (error.keyword === "if" || error.keyword === "not") return registry;
+  if (path === "/apiVersion" || path === "/kind") {
+    return configError("unsupported target apiVersion or kind");
+  }
+  if (path === "/sourceDirectory") {
+    return {
+      code: "RCT1007",
+      message: "source directory does not match package key",
+      pointer: path,
+    };
+  }
+  if (path === "/minimumNodeVersion") {
+    return { code: "RCT1008", message: "unsupported minimum Node.js version", pointer: path };
+  }
+  if (path === "/emitterSha256") {
+    return configError(
+      "emitterSha256 must be a 64-character lowercase SHA-256 of the emitter tool",
+      path,
+    );
+  }
+  if (path === "/version") return configError("unsupported package version", path);
+  if (path === "/publicationMode") return configError("unsupported publication mode", path);
+  if (path === "/repositoryUrl") return configError("repositoryUrl must use https", path);
+  if (path === "/dependencies") return configError("dependencies must be a sequence", path);
+  const dependency = /^\/dependencies\/\d+(?:\/\w+)?$/.exec(path);
+  if (dependency) {
+    return configError(
+      path.split("/").length === 3 ? "dependency must be a mapping" : "invalid dependency package metadata",
+      path,
+    );
+  }
+  return configError(`invalid ${path.split("/").pop()}`, path);
+}
+
+function rank(error: ErrorObject): number {
+  if (error.instancePath !== "") return 3;
+  if (error.keyword === "required") {
+    return (error.params as { missingProperty: string }).missingProperty === "registryId" ? 2 : 0;
+  }
+  if (error.keyword === "additionalProperties") return 1;
+  return error.keyword === "if" || error.keyword === "not" ? 2 : 3;
+}
+
+function first(errors: readonly ErrorObject[]): ErrorObject {
+  const key = (error: ErrorObject): string =>
+    String(rank(error)) +
+    ((error.params as Record<string, string>)["missingProperty"] ??
+      (error.params as Record<string, string>)["additionalProperty"] ??
+      "") +
+    error.instancePath +
+    error.keyword;
+  return [...errors].sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0))[0]!;
 }
 
 export function loadTarget(path: string): PackageTarget {
   const value: JsonObject = loadYaml(path, false);
-  for (const name of REQUIRED.filter((item) => !(item in value)).sort()) {
-    configFail(`missing required field '${name}'`, `/${name}`);
-  }
-  for (const name of Object.keys(value)
-    .filter((item) => !ALLOWED.includes(item))
-    .sort()) {
-    configFail(`unknown field '${name}'`, `/${name}`);
-  }
-  if (value["apiVersion"] !== TARGET_API || value["kind"] !== TARGET_KIND) {
-    configFail("unsupported target apiVersion or kind");
-  }
-  const emitterSha256 = value["emitterSha256"] ?? "";
-  if (
-    "emitterSha256" in value &&
-    (typeof emitterSha256 !== "string" || !SHA_PATTERN.test(emitterSha256))
-  ) {
-    configFail(
-      "emitterSha256 must be a 64-character lowercase SHA-256 of the emitter tool",
-      "/emitterSha256",
-    );
-  }
-  for (const name of REQUIRED.filter((item) => item !== "apiVersion" && item !== "kind")) {
-    text(value[name], name);
+  const validate = targetValidator();
+  const coordinate = typeof value["packageKey"] === "string" ? value["packageKey"] : "package-target";
+  if (!validate(value)) {
+    const described = describe(first(validate.errors!));
+    fail("package-config", described.code, coordinate, described.message, described.pointer);
   }
   const packageKey = value["packageKey"] as string;
-  const packageName = value["packageName"] as string;
-  const version = value["version"] as string;
-  if (!KEY_PATTERN.test(packageKey)) configFail("invalid packageKey", "/packageKey");
-  if (!PACKAGE_NAME_PATTERN.test(packageName) || packageName.length > 214) {
-    configFail("invalid packageName", "/packageName");
-  }
-  if (!VERSION_PATTERN.test(version)) configFail("unsupported package version", "/version");
   if (value["sourceDirectory"] !== `bindings/${packageKey}/typescript`) {
     fail(
       "package-config",
@@ -101,83 +149,32 @@ export function loadTarget(path: string): PackageTarget {
       "/sourceDirectory",
     );
   }
-  const minimum = value["minimumNodeVersion"] as string;
-  const parts = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/.exec(minimum);
-  const major = Number(parts?.[1]);
-  const minor = Number(parts?.[2]);
-  if (
-    parts === null ||
-    major < MINIMUM_NODE[0] ||
-    (major === MINIMUM_NODE[0] && minor < MINIMUM_NODE[1])
-  ) {
-    fail(
-      "package-config",
-      "RCT1008",
-      packageKey,
-      "unsupported minimum Node.js version",
-      "/minimumNodeVersion",
-    );
-  }
-  const mode = value["publicationMode"];
-  if (mode !== "github-tag" && mode !== "registry") {
-    configFail("unsupported publication mode", "/publicationMode", packageKey);
-  }
-  const repositoryUrl = value["repositoryUrl"] as string;
-  if (!repositoryUrl.startsWith("https://") || /\s/.test(repositoryUrl)) {
-    configFail("repositoryUrl must use https", "/repositoryUrl", packageKey);
-  }
-  const registry = "registryId" in value ? text(value["registryId"], "registryId") : null;
-  if ((mode === "registry") !== (registry !== null)) {
-    configFail(
-      "registryId is required exactly for registry publication",
-      "/registryId",
-      packageKey,
-    );
-  }
-  const entries = value["dependencies"] ?? [];
-  if (!Array.isArray(entries)) {
-    configFail("dependencies must be a sequence", "/dependencies", packageKey);
-  }
   const dependencies: PackageDependency[] = [];
   const seen = new Set<string>();
-  entries.forEach((entry: unknown, index: number) => {
-    const pointer = `/dependencies/${index}`;
-    if (entry === null || typeof entry !== "object" || Array.isArray(entry)) {
-      configFail("dependency must be a mapping", pointer, packageKey);
-    }
-    const record = entry as JsonObject;
-    const fields = ["extension", "packageName", "version"];
-    for (const name of fields.filter((item) => !(item in record)).sort()) {
-      configFail(`missing dependency field '${name}'`, `${pointer}/${name}`, packageKey);
-    }
-    for (const name of Object.keys(record)
-      .filter((item) => !fields.includes(item))
-      .sort()) {
-      configFail(`unknown dependency field '${name}'`, `${pointer}/${name}`, packageKey);
-    }
-    const extension = text(record["extension"], "extension");
-    const dependencyName = text(record["packageName"], "packageName");
-    const dependencyVersion = text(record["version"], "version");
+  ((value["dependencies"] ?? []) as JsonObject[]).forEach((entry, index) => {
+    const extension = entry["extension"] as string;
     if (seen.has(extension)) {
-      configFail(`duplicate dependency '${extension}'`, pointer, packageKey);
+      fail("package-config", "RCT1006", packageKey, `duplicate dependency '${extension}'`, `/dependencies/${index}`);
     }
     seen.add(extension);
-    if (!PACKAGE_NAME_PATTERN.test(dependencyName) || !VERSION_PATTERN.test(dependencyVersion)) {
-      configFail("invalid dependency package metadata", pointer, packageKey);
-    }
-    dependencies.push({ extension, packageName: dependencyName, version: dependencyVersion });
+    dependencies.push({
+      extension,
+      packageName: entry["packageName"] as string,
+      version: entry["version"] as string,
+      ...(typeof entry["versionRange"] === "string" ? { versionRange: entry["versionRange"] } : {}),
+    });
   });
   return {
     packageKey,
     rootExtension: value["rootExtension"] as string,
-    packageName,
-    version,
+    packageName: value["packageName"] as string,
+    version: value["version"] as string,
     sourceDirectory: value["sourceDirectory"] as string,
-    minimumNodeVersion: minimum,
-    publicationMode: mode,
-    repositoryUrl,
-    registryId: registry,
+    minimumNodeVersion: value["minimumNodeVersion"] as string,
+    publicationMode: value["publicationMode"] as string,
+    repositoryUrl: value["repositoryUrl"] as string,
+    registryId: typeof value["registryId"] === "string" ? value["registryId"] : null,
     dependencies,
-    emitterSha256: emitterSha256 as string,
+    emitterSha256: typeof value["emitterSha256"] === "string" ? value["emitterSha256"] : "",
   };
 }

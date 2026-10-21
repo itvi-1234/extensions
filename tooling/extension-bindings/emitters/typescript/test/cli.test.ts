@@ -94,7 +94,10 @@ test("bad usage and mismatched targets fail with a nonzero status", () => {
   assert.equal(run("emit", "--model", "x").status, 1);
   assert.equal(run("emit", "--bogus").status, 1);
   assert.equal(run("api").status, 1);
-  assert.equal(run("--version").stdout.trim(), "0.1.0");
+  assert.equal(
+    run("--version").stdout.trim(),
+    JSON.parse(readFileSync(join(EMITTER_ROOT, "package.json"), "utf-8")).version,
+  );
   const directory = temporaryDirectory();
   try {
     const target = targetFile(directory);

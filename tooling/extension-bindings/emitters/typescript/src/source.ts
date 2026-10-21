@@ -5,8 +5,9 @@ import * as prettier from "prettier";
 import { fail } from "./diagnostics.js";
 import type { Model } from "./model.js";
 import type { EmissionPlan, TypePlan } from "./plan.js";
-import { PRETTIER_VERSION, header, renderResources } from "./metadata.js";
+import { header, renderResources } from "./metadata.js";
 import { JSON_VALUE_ALIAS_RHS } from "./plan.js";
+import { readTemplate } from "./templates.js";
 
 function sourceHeader(model: Model): string {
   return `// ${header(model)}`;
@@ -125,13 +126,7 @@ function indexSource(model: Model): string {
   return `${sourceHeader(model)}\n\nexport * from "./bindings.js";\n`;
 }
 
-export const FORMAT_OPTIONS: prettier.Options = {
-  parser: "typescript",
-  printWidth: 100,
-  semi: true,
-  singleQuote: false,
-  trailingComma: "all",
-};
+export const FORMAT_OPTIONS: prettier.Options = JSON.parse(readTemplate("prettier.json"));
 
 export async function formatSource(source: string, filepath: string): Promise<string> {
   return prettier.format(source, { ...FORMAT_OPTIONS, filepath });
@@ -146,14 +141,6 @@ export async function renderSources(
     model["rootExtension"].id !== plan.target.rootExtension
   ) {
     fail("model", "RCT1003", "model", "emission plan does not match supplied model");
-  }
-  if (prettier.version !== PRETTIER_VERSION) {
-    fail(
-      "toolchain",
-      "RCT4002",
-      plan.target.packageKey,
-      `Prettier formatter version '${prettier.version}' differs from toolchain lock`,
-    );
   }
   const sources = {
     "src/index.ts": indexSource(model),

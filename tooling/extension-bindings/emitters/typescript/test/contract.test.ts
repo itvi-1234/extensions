@@ -6,7 +6,8 @@ import { Ajv2020 } from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { parse } from "yaml";
 
-import { PRETTIER_VERSION, TYPESCRIPT_VERSION } from "../src/metadata.js";
+import { EMITTER_NAME, EMITTER_VERSION, PRETTIER_VERSION, TYPESCRIPT_VERSION } from "../src/metadata.js";
+import { buildPlan } from "../src/plan.js";
 import { renderPackage } from "../src/source.js";
 import { EMITTER_ROOT, TARGET, TOOLING, buildCase, temporaryDirectory } from "./support.js";
 import { rmSync } from "node:fs";
@@ -111,4 +112,31 @@ test("the emitter's tool pins equal the shared toolchain lock", () => {
     assert.equal(manifest.dependencies[name], version, `${name} dependency matches the lock`);
   }
   assert.equal(lock.languages.typescript.packageManager, "npm");
+});
+
+test("emitter identity and tool versions are read from the installed packages", () => {
+  const manifest = JSON.parse(readFileSync(join(EMITTER_ROOT, "package.json"), "utf-8"));
+  assert.equal(EMITTER_VERSION, manifest.version);
+  assert.equal(EMITTER_NAME, Object.keys(manifest.bin)[0]);
+  assert.equal(TYPESCRIPT_VERSION, JSON.parse(readFileSync(join(EMITTER_ROOT, "node_modules/typescript/package.json"), "utf-8")).version);
+  assert.equal(PRETTIER_VERSION, JSON.parse(readFileSync(join(EMITTER_ROOT, "node_modules/prettier/package.json"), "utf-8")).version);
+});
+
+test("a dependency range defaults to the npm caret and can be set per dependency", async () => {
+  const workspace = temporaryDirectory();
+  try {
+    const built = await buildCase("02-additive-field", workspace);
+    const dependency = built.plan.target.dependencies[0]!;
+    const caret = JSON.parse((await renderPackage(built.plan, built.model))["package.json"]!);
+    assert.equal(caret.dependencies[dependency.packageName], `^${dependency.version}`);
+    assert.equal(caret.devDependencies.typescript, TYPESCRIPT_VERSION);
+    const target = {
+      ...built.plan.target,
+      dependencies: [{ ...dependency, versionRange: ">=1.0.0 <3.0.0" }],
+    };
+    const custom = JSON.parse((await renderPackage(buildPlan(built.model, target), built.model))["package.json"]!);
+    assert.equal(custom.dependencies[dependency.packageName], ">=1.0.0 <3.0.0");
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
 });

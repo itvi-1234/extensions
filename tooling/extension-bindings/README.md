@@ -3,7 +3,7 @@
 `IMPLEMENTATION.md` is historical design guidance; the repository owner's
 standing overrides govern generation and publication.
 The shared Go resolver and normalizer feed native Go and Python emitters. A native TypeScript
-emitter lives under `emitters/typescript/`; its contract is in `CONTRACT.md`.
+emitter lives under `emitters/typescript/`.
 The Go orchestrator exposes eight commands through Go's standard `flag` package.
 GitHub Actions generates and commits Go and Python bindings to `main`, then a
 separate manual workflow publishes verified Go module tags and release assets.
