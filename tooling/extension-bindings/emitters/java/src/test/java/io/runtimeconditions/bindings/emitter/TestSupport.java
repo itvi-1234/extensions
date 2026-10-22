@@ -126,10 +126,11 @@ final class TestSupport {
     static PackageTarget targetFor(String name, ObjectNode model, Map<String, Integer> providers) {
         PackageTarget base = developmentTarget();
         List<Dependency> dependencies = new ArrayList<>();
-        for (String extension : directDependencies(model)) {
-            int index = providers.get(extension);
+        for (Map.Entry<String, Integer> provider : providers.entrySet()) {
+            int index = provider.getValue();
             dependencies.add(
-                    new Dependency(extension, "io.runtimeconditions.providers", "provider-" + index, "provider.p" + index, "1.0.0"));
+                    new Dependency(
+                            provider.getKey(), "io.runtimeconditions.providers", "provider-" + index, "provider.p" + index, "1.0.0"));
         }
         return new PackageTarget(
                 name,
@@ -147,10 +148,14 @@ final class TestSupport {
                 base.emitterSha256());
     }
 
+    /** The direct dependencies and the owners of imported declarations, each with its own provider package. */
     static Map<String, Integer> providersOf(ObjectNode model) {
         Map<String, Integer> providers = new LinkedHashMap<>();
         for (String extension : directDependencies(model)) {
             providers.put(extension, providers.size());
+        }
+        for (var item : Json.list(model.path("vocabulary").path("importedDeclarations"))) {
+            providers.putIfAbsent(item.path("owner").asText(), providers.size());
         }
         return providers;
     }

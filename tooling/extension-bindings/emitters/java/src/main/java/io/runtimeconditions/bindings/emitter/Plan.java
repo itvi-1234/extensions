@@ -95,6 +95,38 @@ public final class Plan {
         return new TypeExpr(kind, List.of(), key);
     }
 
+    /**
+     * Replaces a reference to a definition that has no type of its own (a scalar, {@code any}, or another
+     * reference) with that definition's expression, following chains. Objects, enums, and collections keep
+     * their named reference.
+     */
+    static TypeExpr resolve(TypeExpr expression, Map<String, TypeExpr> definitions, List<String> active) {
+        if (expression.kind().equals("ref")) {
+            String key = expression.symbolKey();
+            TypeExpr definition = definitions.get(key);
+            if (definition == null) {
+                throw fail("model", "RCJ1012", key, "reference to a definition that was not planned");
+            }
+            if (definition.symbolKey().equals(key)) {
+                return expression;
+            }
+            if (active.contains(key)) {
+                throw fail("model", "RCJ1012", key, "definition refers to itself without a structure");
+            }
+            List<String> next = new ArrayList<>(active);
+            next.add(key);
+            return resolve(definition, definitions, next);
+        }
+        if (expression.arguments().isEmpty()) {
+            return expression;
+        }
+        List<TypeExpr> arguments = new ArrayList<>();
+        for (TypeExpr argument : expression.arguments()) {
+            arguments.add(resolve(argument, definitions, active));
+        }
+        return new TypeExpr(expression.kind(), List.copyOf(arguments), expression.symbolKey());
+    }
+
     public static String annotate(TypeExpr expression, Map<String, String> names) {
         return switch (expression.kind()) {
             case "string" -> "String";
@@ -140,38 +172,18 @@ public final class Plan {
         throw fail("model", "RCJ1011", root, "root extension is absent from resolved extension closure");
     }
 
-    private static ProviderPackage providerPackage(JsonNode model, PackageTarget target, String owner) {
-        Map<String, List<String>> graph = new LinkedHashMap<>();
-        for (JsonNode item : Json.list(model.path("extensions"))) {
-            List<String> dependencies = new ArrayList<>();
-            for (JsonNode dependency : Json.list(item.path("dependencies"))) {
-                dependencies.add(dependency.asText());
-            }
-            graph.put(item.path("id").asText(), dependencies);
-        }
-        List<Dependency> dependencies = new ArrayList<>(target.dependencies());
-        dependencies.sort(Comparator.comparing(Dependency::extension));
-        for (Dependency dependency : dependencies) {
-            if (reaches(graph, dependency.extension(), owner, new HashSet<>())) {
+    private static ProviderPackage providerPackage(PackageTarget target, String owner) {
+        for (Dependency dependency : target.dependencies()) {
+            if (dependency.extension().equals(owner)) {
                 return new ProviderPackage(dependency.coordinate(), dependency.javaPackage());
             }
         }
-        throw fail("model", "RCJ1011", owner, "imported declaration has no direct dependency provider");
-    }
-
-    private static boolean reaches(Map<String, List<String>> graph, String current, String owner, Set<String> visited) {
-        if (current.equals(owner)) {
-            return true;
-        }
-        if (!visited.add(current)) {
-            return false;
-        }
-        for (String dependency : graph.getOrDefault(current, List.of())) {
-            if (reaches(graph, dependency, owner, visited)) {
-                return true;
-            }
-        }
-        return false;
+        throw fail(
+                "package-config",
+                "RCJ1011",
+                owner,
+                "imported declaration owner has no entry in the target dependencies",
+                "/dependencies");
     }
 
     static String location(JsonNode item) {
@@ -210,6 +222,7 @@ public final class Plan {
         boolean anyUsed;
         final Map<List<String>, String> definitionKeys = new LinkedHashMap<>();
         final Set<String> referencedDefinitions = new LinkedHashSet<>();
+        final Map<String, TypeExpr> definitionExpressions = new LinkedHashMap<>();
 
         Builder(JsonNode model, PackageTarget target) {
             this.model = model;
@@ -389,14 +402,21 @@ public final class Plan {
         for (Dependency dependency : target.dependencies()) {
             configured.add(dependency.extension());
         }
-        List<String> directSorted = new ArrayList<>(new TreeSet<>(direct));
-        List<String> configuredSorted = new ArrayList<>(configured);
-        if (!directSorted.equals(configuredSorted)) {
+        Set<String> owners = new TreeSet<>();
+        for (JsonNode item : Json.list(model.path("vocabulary").path("importedDeclarations"))) {
+            owners.add(item.path("owner").asText());
+        }
+        Set<String> allowed = new TreeSet<>(direct);
+        allowed.addAll(owners);
+        if (!configured.containsAll(direct) || !allowed.containsAll(configured)) {
             throw fail(
                     "package-config",
                     "RCJ1009",
                     pkg,
-                    "direct dependency set differs: model=" + jsonList(directSorted) + ", target=" + jsonList(configuredSorted),
+                    "dependencies must be the direct dependencies plus the owners of imported declarations: model="
+                            + jsonList(new ArrayList<>(allowed))
+                            + ", target="
+                            + jsonList(new ArrayList<>(configured)),
                     "/dependencies");
         }
         Set<String> extensionIds = new HashSet<>();
@@ -451,7 +471,7 @@ public final class Plan {
                             functionKey,
                             protocolKey,
                             markerMethod(owner, coordinate),
-                            providerPackage(model, target, owner));
+                            providerPackage(target, owner));
             imported.add(plan);
             if (importedKinds.containsKey(kind)) {
                 throw fail("model", "RCJ1011", coordinate, "duplicate imported kind");
@@ -605,8 +625,10 @@ public final class Plan {
                 JsonNode definition = (JsonNode) pending[0];
                 @SuppressWarnings("unchecked")
                 List<String> scope = (List<String>) pending[1];
-                builder.registerShape(
-                        definition.path("shape"), definitionKey, definition.path("name").asText(), scope, null, null);
+                builder.definitionExpressions.put(
+                        definitionKey,
+                        builder.registerShape(
+                                definition.path("shape"), definitionKey, definition.path("name").asText(), scope, null, null));
             }
         }
 
@@ -617,13 +639,14 @@ public final class Plan {
             RawType raw = entry.getValue();
             List<FieldPlan> fields = new ArrayList<>();
             for (RawField field : raw.fields()) {
+                TypeExpr resolved = resolve(field.typeExpr(), builder.definitionExpressions, new ArrayList<>());
                 fields.add(
                         new FieldPlan(
                                 field.coordinate(),
                                 field.sourceName(),
                                 names.get(field.key()),
-                                field.typeExpr(),
-                                annotate(field.typeExpr(), names),
+                                resolved,
+                                annotate(resolved, names),
                                 field.required()));
             }
             fields.sort(
@@ -648,7 +671,9 @@ public final class Plan {
                             names.get(key),
                             raw.kind(),
                             List.copyOf(fields),
-                            raw.expression(),
+                            raw.expression() == null
+                                    ? null
+                                    : resolve(raw.expression(), builder.definitionExpressions, new ArrayList<>()),
                             List.copyOf(members),
                             marker,
                             raw.marker() != null && raw.kind() == Kind.OBJECT,

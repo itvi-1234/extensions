@@ -58,15 +58,21 @@ public final class Verification {
 
     static Map<String, ParsedType> parse(Path directory) {
         Path root = directory.resolve("src/main/java");
-        List<Path> files;
-        try (Stream<Path> walk = Files.walk(root)) {
-            files = walk.filter(path -> path.toString().endsWith(".java")).sorted().toList();
-        } catch (IOException error) {
-            throw new IllegalStateException(MISMATCH + ": cannot read " + root);
+        List<Path> files = List.of();
+        // A package that declares and imports nothing of its own has no Java source directory.
+        if (Files.isDirectory(root)) {
+            try (Stream<Path> walk = Files.walk(root)) {
+                files = walk.filter(path -> path.toString().endsWith(".java")).sorted().toList();
+            } catch (IOException error) {
+                throw new IllegalStateException(MISMATCH + ": cannot read " + root);
+            }
+        }
+        Map<String, ParsedType> result = new LinkedHashMap<>();
+        if (files.isEmpty()) {
+            return result;
         }
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-        Map<String, ParsedType> result = new LinkedHashMap<>();
         try (StandardJavaFileManager manager =
                 compiler.getStandardFileManager(diagnostics, null, StandardCharsets.UTF_8)) {
             JavacTask task =
@@ -344,15 +350,20 @@ public final class Verification {
 
     public static Verified verifyPackage(EmissionPlan plan, Path directory, JsonNode model) {
         checkPublicApi(plan, directory);
-        String expected = Metadata.renderResources(plan, model).get(Metadata.MANIFEST_PATH);
-        String actual;
-        try {
-            actual = Files.readString(directory.resolve(Metadata.MANIFEST_PATH), StandardCharsets.UTF_8);
-        } catch (IOException error) {
-            throw new IllegalStateException("binding manifest is missing from the package");
-        }
-        if (!actual.equals(expected)) {
-            throw new IllegalStateException("binding manifest mappings differ from normalized model");
+        Map<String, String> expected = Metadata.renderResources(plan, model);
+        for (String path : List.of("pom.xml", Metadata.MANIFEST_PATH)) {
+            String actual;
+            try {
+                actual = Files.readString(directory.resolve(path), StandardCharsets.UTF_8);
+            } catch (IOException error) {
+                throw new IllegalStateException(path + " is missing from the package");
+            }
+            if (!actual.equals(expected.get(path))) {
+                throw new IllegalStateException(
+                        path.equals("pom.xml")
+                                ? "pom.xml differs from the package target and normalized model"
+                                : "binding manifest mappings differ from normalized model");
+            }
         }
         return new Verified(apiSurface(directory), true);
     }

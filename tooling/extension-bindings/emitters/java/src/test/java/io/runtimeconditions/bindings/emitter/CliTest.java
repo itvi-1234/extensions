@@ -142,4 +142,38 @@ class CliTest {
             delete(directory);
         }
     }
+
+    @Test
+    void anOversizedInputIsRejectedWithoutReadingItAllIntoMemory() throws Exception {
+        Path directory = temporaryDirectory();
+        try {
+            Path target = targetFile(directory);
+            Path oversized = directory.resolve("model.yaml");
+            try (java.io.RandomAccessFile file = new java.io.RandomAccessFile(oversized.toFile(), "rw")) {
+                file.setLength(1L << 30);
+            }
+            Process process =
+                    new ProcessBuilder(
+                                    Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+                                    "-Xmx256m",
+                                    "-cp",
+                                    System.getProperty("java.class.path"),
+                                    "io.runtimeconditions.bindings.emitter.Main",
+                                    "emit",
+                                    "--model",
+                                    oversized.toString(),
+                                    "--package-config",
+                                    target.toString(),
+                                    "--output",
+                                    directory.resolve("package").toString())
+                            .redirectErrorStream(true)
+                            .start();
+            String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            assertEquals(1, process.waitFor(), output);
+            assertTrue(output.contains("RCJ1001") && output.contains("exceeds 64 MiB"), output);
+            assertTrue(!output.contains("OutOfMemoryError"), output);
+        } finally {
+            delete(directory);
+        }
+    }
 }

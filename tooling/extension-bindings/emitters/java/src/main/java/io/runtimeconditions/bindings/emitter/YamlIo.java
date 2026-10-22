@@ -5,6 +5,7 @@ import static io.runtimeconditions.bindings.emitter.DiagnosticError.fail;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
@@ -197,8 +198,8 @@ final class YamlIo {
     static ObjectNode load(Path path, boolean model) {
         String coordinate = model ? "model" : "package-target";
         byte[] data;
-        try {
-            data = Files.readAllBytes(path);
+        try (InputStream stream = Files.newInputStream(path)) {
+            data = stream.readNBytes(MAX_BYTES + 1);
         } catch (IOException error) {
             throw fail("input", "RCJ1001", coordinate, "cannot read YAML input: unreadable");
         }
