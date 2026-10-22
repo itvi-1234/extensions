@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync, mkdirSync, truncateSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 
@@ -159,6 +159,30 @@ test("verify rejects a tampered API or manifest", () => {
     );
     assert.equal(tamperedManifest.status, 1);
     assert.match(tamperedManifest.stderr, /manifest mappings/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("an oversized input is rejected without being read into memory", () => {
+  const directory = temporaryDirectory();
+  try {
+    const target = targetFile(directory);
+    const oversized = join(directory, "model.yaml");
+    // A sparse 3 GiB file: reading it whole fails for another reason than the size limit.
+    writeFileSync(oversized, "");
+    truncateSync(oversized, 3 * 1024 * 1024 * 1024);
+    const result = run(
+      "emit",
+      "--model",
+      oversized,
+      "--package-config",
+      target,
+      "--output",
+      join(directory, "out"),
+    );
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /RCT1001.*exceeds 64 MiB/);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

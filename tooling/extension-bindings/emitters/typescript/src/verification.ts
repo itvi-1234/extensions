@@ -22,6 +22,14 @@ function parse(path: string): ts.SourceFile {
   );
 }
 
+function readOrMissing(path: string, description: string): string {
+  try {
+    return readFileSync(path, "utf-8");
+  } catch {
+    throw new Error(`${description} is missing from the package`);
+  }
+}
+
 function squash(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
@@ -287,14 +295,15 @@ export function verifyPackage(
   model: Model,
 ): { api: string[]; modelMapping: boolean } {
   checkPublicApi(plan, directory);
-  const expected = renderResources(plan, model)[
-    "runtimeconditions/runtimeconditions.bindings.yaml"
-  ];
-  const actual = readFileSync(
-    join(directory, "runtimeconditions/runtimeconditions.bindings.yaml"),
-    "utf-8",
-  );
-  if (actual !== expected)
+  const expected = renderResources(plan, model);
+  for (const path of ["package.json", "tsconfig.json"]) {
+    if (readOrMissing(join(directory, path), path) !== expected[path]) {
+      throw new Error(`${path} differs from the package target and normalized model`);
+    }
+  }
+  const manifest = "runtimeconditions/runtimeconditions.bindings.yaml";
+  if (readOrMissing(join(directory, manifest), "binding manifest") !== expected[manifest]) {
     throw new Error("binding manifest mappings differ from normalized model");
+  }
   return { api: apiSurface(directory), modelMapping: true };
 }

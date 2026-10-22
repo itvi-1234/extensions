@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { closeSync, openSync, readSync } from "node:fs";
 import {
   CST,
   Lexer,
@@ -19,6 +19,25 @@ export const MAX_DEPTH = 256;
 export const MAX_ALIASES = 100;
 
 export type JsonObject = Record<string, unknown>;
+
+/** Reads at most `limit` bytes, so an oversized or endless input is never held in memory. */
+function readAtMost(path: string, limit: number): Buffer {
+  const descriptor = openSync(path, "r");
+  try {
+    const chunks: Buffer[] = [];
+    let total = 0;
+    while (total < limit) {
+      const chunk = Buffer.allocUnsafe(Math.min(1024 * 1024, limit - total));
+      const count = readSync(descriptor, chunk, 0, chunk.length, null);
+      if (count === 0) break;
+      chunks.push(chunk.subarray(0, count));
+      total += count;
+    }
+    return Buffer.concat(chunks, total);
+  } finally {
+    closeSync(descriptor);
+  }
+}
 
 function strictDecode(data: Buffer, coordinate: string): string {
   try {
@@ -80,7 +99,7 @@ export function loadYaml(path: string, model: boolean): JsonObject {
   const coordinate = model ? "model" : "package-target";
   let data: Buffer;
   try {
-    data = readFileSync(path);
+    data = readAtMost(path, MAX_BYTES + 1);
   } catch (error) {
     const reason = (error as NodeJS.ErrnoException).code ?? "unreadable";
     return fail("input", "RCT1001", coordinate, `cannot read YAML input: ${reason}`);

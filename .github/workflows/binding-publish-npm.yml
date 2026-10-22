@@ -1,4 +1,4 @@
-name: Publish TypeScript bindings
+name: Publish TypeScript bindings (placeholder, publishes nothing)
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
         type: string
         default: ''
       dry_run:
-        description: 'Verify publication without pushing to npm'
+        description: 'Must stay true: the workflow is a placeholder and verifies and publishes nothing'
         type: boolean
         default: true
 
@@ -26,11 +26,23 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - name: Publish to npm (placeholder)
+      - name: Reject real publication
+        if: ${{ !inputs.dry_run }}
+        run: |
+          echo "::error::npm publication is not implemented. Run with dry_run enabled; nothing was published."
+          exit 1
+      - name: Record that nothing was verified or published
         env:
           TARGETS: ${{ inputs.targets }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
-          echo "npm publication is not implemented; no package was published."
-          echo "targets=${TARGETS:-<none>} dry_run=${DRY_RUN}"
+          {
+            echo "## Placeholder: nothing was verified or published"
+            echo
+            echo "npm publication is not implemented. This run did not verify, build, or publish any package."
+            echo
+            echo "- targets: \`${TARGETS:-<none>}\`"
+            echo "- dry_run: \`${DRY_RUN}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice::Placeholder only. No package was verified or published."

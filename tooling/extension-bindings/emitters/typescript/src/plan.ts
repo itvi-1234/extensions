@@ -79,6 +79,35 @@ function expr(kind: string, args: readonly TypeExpr[] = [], symbolKey = ""): Typ
   return { kind, arguments: args, symbolKey };
 }
 
+/**
+ * Replaces a reference to a definition that has no type of its own (a scalar, `any`, or another
+ * reference) with that definition's expression, following chains. Objects, enums, and collections
+ * keep their named reference.
+ */
+export function resolve(
+  expression: TypeExpr,
+  definitions: ReadonlyMap<string, TypeExpr>,
+  active: readonly string[] = [],
+): TypeExpr {
+  if (expression.kind === "ref") {
+    const key = expression.symbolKey;
+    const definition = definitions.get(key);
+    if (definition === undefined) {
+      return fail("model", "RCT1012", key, "reference to a definition that was not planned");
+    }
+    if (definition.symbolKey === key) return expression;
+    if (active.includes(key)) {
+      return fail("model", "RCT1012", key, "definition refers to itself without a structure");
+    }
+    return resolve(definition, definitions, [...active, key]);
+  }
+  if (expression.arguments.length === 0) return expression;
+  return {
+    ...expression,
+    arguments: expression.arguments.map((item) => resolve(item, definitions, active)),
+  };
+}
+
 export function annotate(expression: TypeExpression, names: ReadonlyMap<string, string>): string {
   const { kind } = expression;
   if (kind in SCALAR_ANNOTATIONS) return SCALAR_ANNOTATIONS[kind]!;
@@ -238,6 +267,7 @@ export function buildPlan(model: Model, target: PackageTarget): EmissionPlan {
   let anyUsed = false;
   const definitionKeys = new Map<string, string>();
   const referencedDefinitions = new Set<string>();
+  const definitionExpressions = new Map<string, TypeExpr>();
   const pendingDefinitions = new Map<string, [any, readonly string[], string]>();
   const ownedFieldRoots = new Set<string>(
     (vocabulary.conditionFields ?? [])
@@ -521,7 +551,10 @@ export function buildPlan(model: Model, target: PackageTarget): EmissionPlan {
     for (const definitionKey of required) {
       const [definition, scope] = pendingDefinitions.get(definitionKey)!;
       pendingDefinitions.delete(definitionKey);
-      registerShape(definition.shape, definitionKey, definition.name, scope);
+      definitionExpressions.set(
+        definitionKey,
+        registerShape(definition.shape, definitionKey, definition.name, scope),
+      );
     }
   }
 
@@ -530,14 +563,17 @@ export function buildPlan(model: Model, target: PackageTarget): EmissionPlan {
   for (const key of [...rawTypes.keys()].sort()) {
     const raw = rawTypes.get(key)!;
     const fields: FieldPlan[] = raw.fields.map(
-      ([fieldKey, coordinate, sourceName, typeExpr, required]) => ({
-        coordinate,
-        sourceName,
-        name: names.get(fieldKey)!,
-        typeExpr,
-        annotation: annotate(typeExpr, names),
-        required,
-      }),
+      ([fieldKey, coordinate, sourceName, planned, required]) => {
+        const typeExpr = resolve(planned, definitionExpressions);
+        return {
+          coordinate,
+          sourceName,
+          name: names.get(fieldKey)!,
+          typeExpr,
+          annotation: annotate(typeExpr, names),
+          required,
+        };
+      },
     );
     fields.sort(
       (a, b) =>
@@ -545,13 +581,14 @@ export function buildPlan(model: Model, target: PackageTarget): EmissionPlan {
         (a.name < b.name ? -1 : a.name > b.name ? 1 : 0) ||
         (a.coordinate < b.coordinate ? -1 : a.coordinate > b.coordinate ? 1 : 0),
     );
-    const annotation = raw.expression ? annotate(raw.expression, names) : "";
+    const expression = raw.expression ? resolve(raw.expression, definitionExpressions) : null;
+    const annotation = expression ? annotate(expression, names) : "";
     types.push({
       coordinate: location(raw.shape),
       name: names.get(key)!,
       kind: raw.kind,
       fields,
-      expression: raw.expression,
+      expression,
       annotation,
       members: raw.members.map(([memberKey, value]) => [names.get(memberKey)!, value] as const),
       marker: raw.marker
