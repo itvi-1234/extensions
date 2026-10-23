@@ -1,0 +1,86 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://runtimeconditions.io/schemas/typescript-package-target/v1alpha1
+title: Runtime Conditions TypeScript package target
+type: object
+additionalProperties: false
+required:
+  - apiVersion
+  - kind
+  - packageKey
+  - rootExtension
+  - packageName
+  - version
+  - sourceDirectory
+  - minimumNodeVersion
+  - publicationMode
+  - repositoryUrl
+properties:
+  apiVersion:
+    const: runtimeconditions.io/typescript-package-target/v1alpha1
+  kind:
+    const: RuntimeConditionsTypeScriptPackageTarget
+  packageKey:
+    type: string
+    pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+  rootExtension:
+    type: string
+    minLength: 1
+  packageName:
+    description: The npm package name, which is also the module specifier consumers import.
+    type: string
+    maxLength: 214
+    pattern: '^(?:@[a-z0-9][a-z0-9-]*/)?[a-z0-9][a-z0-9-]*$'
+  version:
+    type: string
+    pattern: '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(?:alpha|beta|rc)\.(0|[1-9][0-9]*))?$'
+  sourceDirectory:
+    type: string
+    pattern: '^bindings/[a-z0-9]+(?:-[a-z0-9]+)*/typescript$'
+  minimumNodeVersion:
+    type: string
+    pattern: '^(?:2[0-9]|[3-9][0-9]|[1-9][0-9]{2,})\.(?:0|[1-9][0-9]*)$'
+  publicationMode:
+    enum: [github-tag, registry]
+  registryId:
+    type: string
+    minLength: 1
+  repositoryUrl:
+    type: string
+    pattern: '^https://[^\s]+$'
+  emitterSha256:
+    description: Required when emitting package resources; supplied by the tooling caller.
+    type: string
+    pattern: '^[0-9a-f]{64}$'
+  dependencies:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [extension, packageName, version]
+      properties:
+        extension:
+          type: string
+          minLength: 1
+        packageName:
+          type: string
+          maxLength: 214
+          pattern: '^(?:@[a-z0-9][a-z0-9-]*/)?[a-z0-9][a-z0-9-]*$'
+        version:
+          type: string
+          pattern: '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-(?:alpha|beta|rc)\.(0|[1-9][0-9]*))?$'
+        versionRange:
+          description: >-
+            An npm version range for this dependency. When absent, the generated
+            package depends on `^<version>`.
+          type: string
+          minLength: 1
+allOf:
+  - if:
+      properties:
+        publicationMode:
+          const: registry
+    then:
+      required: [registryId]
+    else:
+      not:
+        required: [registryId]

@@ -1,0 +1,32 @@
+{
+  "//": "{{header}}",
+  "name": "{{name}}",
+  "version": "{{version}}",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "runtimeconditions", "runtimeconditions.file-manifest.yaml"],
+  "engines": {
+    "node": ">={{minimumNodeVersion}}"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+{{repositoryUrl}}",
+    "directory": "{{sourceDirectory}}"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build"
+  },
+  "dependencies": "{{dependencies}}",
+  "devDependencies": {
+    "typescript": "{{typescriptVersion}}"
+  }
+}

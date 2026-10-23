@@ -1,0 +1,10 @@
+apiVersion: runtimeconditions.io/typescript-package-target/v1alpha1
+kind: RuntimeConditionsTypeScriptPackageTarget
+packageKey: conformance-owned-kind-interface
+rootExtension: https://runtimeconditions.io/conformance/owned-kind-interface:1.0.0
+packageName: '@runtimeconditions/conformance-owned-kind-interface'
+version: 1.0.0
+sourceDirectory: bindings/conformance-owned-kind-interface/typescript
+minimumNodeVersion: '20.0'
+publicationMode: github-tag
+repositoryUrl: https://github.com/runtimeconditions/extensions
