@@ -41,6 +41,14 @@ packages:
         languageVersion: 3.12.10
         publicationMode: registry
         registryId: pypi
+      typescript:
+        coordinate: '@runtimeconditions/common-integrations'
+        name: '@runtimeconditions/common-integrations'
+        version: 0.1.0
+        sourceDirectory: bindings/common-integrations/typescript
+        languageVersion: 20.19.6
+        publicationMode: registry
+        registryId: npm
   env-configuration:
     rootExtension: https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
     coreProfileSchemaVersion: 0.2.0
@@ -60,6 +68,14 @@ packages:
         languageVersion: 3.12.10
         publicationMode: registry
         registryId: pypi
+      typescript:
+        coordinate: '@runtimeconditions/env-configuration'
+        name: '@runtimeconditions/env-configuration'
+        version: 0.1.0
+        sourceDirectory: bindings/env-configuration/typescript
+        languageVersion: 20.19.6
+        publicationMode: registry
+        registryId: npm
   google-analytics:
     rootExtension: https://runtimeconditions.io/extensions/google/analytics/0.1.0/runtimeconditions.extension.yaml
     coreProfileSchemaVersion: 0.2.0

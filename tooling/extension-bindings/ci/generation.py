@@ -10,7 +10,7 @@ from pathlib import Path
 
 import yaml
 
-LANGUAGES = {"go": "Go", "python": "Python"}
+LANGUAGES = {"go": "Go", "python": "Python", "typescript": "TypeScript"}
 
 Target = tuple[str, str, str]
 
@@ -34,11 +34,19 @@ def exact_version(targets: list[Target], language: str) -> str:
     return versions.pop() if versions else ""
 
 
+def join_labels(labels: list[str]) -> str:
+    if len(labels) < 3:
+        return " and ".join(labels)
+    return ", ".join(labels[:-1]) + " and " + labels[-1]
+
+
 def describe(targets: list[Target]) -> str:
-    return " and ".join(
-        label
-        for language, label in LANGUAGES.items()
-        if of_language(targets, language)
+    return join_labels(
+        [
+            label
+            for language, label in LANGUAGES.items()
+            if of_language(targets, language)
+        ]
     )
 
 
@@ -79,7 +87,7 @@ def select_targets(
     )
     if not keys or len(set(keys)) != len(keys):
         raise ValueError("select at least one binding target without duplicates")
-    enabled = " and ".join(LANGUAGES[language] for language in languages)
+    enabled = join_labels([LANGUAGES[language] for language in languages])
     for key in keys:
         if key not in targets:
             raise ValueError(

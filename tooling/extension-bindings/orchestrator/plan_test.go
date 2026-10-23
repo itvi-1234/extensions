@@ -204,3 +204,25 @@ func TestCatalogRejectsUnsafeModuleCoordinate(t *testing.T) {
 		t.Fatal("unsafe module coordinate accepted")
 	}
 }
+
+func TestDefaultSelectionLeavesLanguagesWithoutANativeAdapterToTheirOwnScripts(t *testing.T) {
+	p, _ := testProject(t, "go")
+	set := p.Catalog.Packages["new-channel"]
+	set.Languages["typescript"] = LanguageTarget{Coordinate: "@example/new-channel", Name: "@example/new-channel", Version: "0.7.0", SourceDirectory: "bindings/new-channel/typescript", LanguageVersion: "20.19.6", PublicationMode: "github-tag"}
+	plan, err := p.SelectTargets(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, target := range plan.Targets {
+		if target.Language == "typescript" {
+			t.Fatalf("default selection included %s", target.Key)
+		}
+	}
+	if len(plan.Targets) != 1 {
+		t.Fatalf("default selection %v", plan.Targets)
+	}
+	plan, err = p.SelectTargets([]string{"new-channel:typescript"})
+	if err != nil || len(plan.Targets) != 1 || plan.Targets[0].Language != "typescript" {
+		t.Fatalf("explicit selection %v %v", plan.Targets, err)
+	}
+}

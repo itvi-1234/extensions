@@ -2,7 +2,7 @@ name: Prepare binding tools
 description: Select targets, install the exact compilers and prerequisites, and build the shared generator
 inputs:
   targets:
-    description: Comma-separated package-key:go or package-key:python targets, or all
+    description: Comma-separated package-key:go, package-key:python, or package-key:typescript targets, or all
     required: true
   publication:
     description: Include the committed package dependency closure for publication
@@ -17,6 +17,12 @@ outputs:
   has-python:
     description: Whether a Python target is selected
     value: ${{ steps.configure.outputs.has-python }}
+  typescript-version:
+    description: Exact catalog Node.js version, empty when no TypeScript target is selected
+    value: ${{ steps.configure.outputs.typescript-version }}
+  has-typescript:
+    description: Whether a TypeScript target is selected
+    value: ${{ steps.configure.outputs.has-typescript }}
   source-commit:
     description: Checked-out source commit
     value: ${{ steps.configure.outputs.source-commit }}
@@ -53,6 +59,7 @@ runs:
           python tooling/extension-bindings/ci/generation.py configure --targets "$INPUT_TARGETS"
           python tooling/extension-bindings/ci/generate-go.py configure --targets "$INPUT_TARGETS"
           python tooling/extension-bindings/ci/generate-python.py configure --targets "$INPUT_TARGETS"
+          python tooling/extension-bindings/ci/generate-typescript.py configure --targets "$INPUT_TARGETS"
         fi
     - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
       with:
@@ -110,6 +117,18 @@ runs:
           printf 'RC_PYTHON_PROFILER_BIN=%s\n' "$tools/python-venv/bin/runtimeconditions-python-profiler"
           printf 'RC_PYTHON_PROFILER_ARTIFACT=%s\n' "$wheel"
         } >> "$GITHUB_ENV"
+    - name: Set up the pinned Node.js
+      if: steps.configure.outputs.has-typescript == 'true'
+      uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+      with:
+        node-version: ${{ steps.configure.outputs.typescript-version }}
+        cache: npm
+        cache-dependency-path: tooling/extension-bindings/emitters/typescript/package-lock.json
+    - name: Build the TypeScript emitter from its pinned dependencies
+      if: steps.configure.outputs.has-typescript == 'true'
+      shell: bash
+      working-directory: tooling/extension-bindings/emitters/typescript
+      run: npm ci --ignore-scripts && npm run build
     - name: Build shared generator
       shell: bash
       run: go -C tooling/extension-bindings/orchestrator build -trimpath -buildvcs=false -o "$RUNNER_TEMP/binding-tools/rc" ./cmd/rc

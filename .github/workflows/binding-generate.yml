@@ -1,4 +1,4 @@
-name: Generate and commit Go and Python bindings
+name: Generate and commit Go, Python and TypeScript bindings
 
 on:
   push:
@@ -10,18 +10,20 @@ on:
       - 'catalog/**'
       - 'bindings/**/go/**'
       - 'bindings/**/python/**'
+      - 'bindings/**/typescript/**'
       - 'tooling/extension-bindings/packages.yaml'
       - 'tooling/extension-bindings/toolchain.lock.yaml'
       - 'tooling/extension-bindings/model/**'
       - 'tooling/extension-bindings/normalizer/**'
       - 'tooling/extension-bindings/emitters/go/**'
       - 'tooling/extension-bindings/emitters/python/**'
+      - 'tooling/extension-bindings/emitters/typescript/**'
       - 'tooling/extension-bindings/orchestrator/**'
       - 'tooling/extension-bindings/ci/**'
   workflow_dispatch:
     inputs:
       targets:
-        description: 'Comma-separated package-key:go or package-key:python targets, or all; empty uses automatic targets'
+        description: 'Comma-separated package-key:go, package-key:python, or package-key:typescript targets, or all; empty uses automatic targets'
         type: string
         default: ''
 
@@ -40,7 +42,7 @@ jobs:
     permissions:
       contents: write
     env:
-      INPUT_TARGETS: ${{ inputs.targets || vars.BINDING_GENERATION_TARGETS || 'common-integrations:go,env-configuration:go,common-integrations:python,env-configuration:python' }}
+      INPUT_TARGETS: ${{ inputs.targets || vars.BINDING_GENERATION_TARGETS || 'common-integrations:go,env-configuration:go,common-integrations:python,env-configuration:python,common-integrations:typescript,env-configuration:typescript' }}
       GOTOOLCHAIN: local
     steps:
       - name: Check out current main
@@ -59,6 +61,7 @@ jobs:
         shell: bash
         env:
           HAS_PYTHON: ${{ steps.tools.outputs.has-python }}
+          HAS_TYPESCRIPT: ${{ steps.tools.outputs.has-typescript }}
         run: |
           set -euo pipefail
           python -m unittest discover -s tooling/extension-bindings/ci -p 'test_*.py'
@@ -71,6 +74,9 @@ jobs:
               tooling/extension-bindings/emitters/python/tests \
               --ignore=tooling/extension-bindings/emitters/python/tests/test_packages.py
           fi
+          if [[ "$HAS_TYPESCRIPT" == true ]]; then
+            npm --prefix tooling/extension-bindings/emitters/typescript test
+          fi
 
       - name: Generate and verify bindings
         env:
@@ -80,6 +86,8 @@ jobs:
           python tooling/extension-bindings/ci/generate-go.py update --targets "$INPUT_TARGETS" \
             --rc "$RC" --core-schema "$CORE_SCHEMA"
           python tooling/extension-bindings/ci/generate-python.py update --targets "$INPUT_TARGETS" \
+            --rc "$RC" --core-schema "$CORE_SCHEMA"
+          python tooling/extension-bindings/ci/generate-typescript.py update --targets "$INPUT_TARGETS" \
             --rc "$RC" --core-schema "$CORE_SCHEMA"
 
       - name: Commit verified generated source to main
