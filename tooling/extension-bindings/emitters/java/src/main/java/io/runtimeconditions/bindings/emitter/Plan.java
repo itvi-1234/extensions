@@ -386,6 +386,17 @@ public final class Plan {
         return List.of(values);
     }
 
+    private static List<String> pendingReferenced(Set<String> referenced, Map<String, Object[]> pending) {
+        List<String> result = new ArrayList<>();
+        for (String item : referenced) {
+            if (pending.containsKey(item)) {
+                result.add(item);
+            }
+        }
+        result.sort(Comparator.naturalOrder());
+        return result;
+    }
+
     public static EmissionPlan build(JsonNode model, PackageTarget target) {
         String root = model.path("rootExtension").path("id").asText();
         String pkg = target.packageKey();
@@ -609,17 +620,10 @@ public final class Plan {
             }
         }
 
-        for (; ; ) {
-            List<String> required = new ArrayList<>();
-            for (String item : builder.referencedDefinitions) {
-                if (pendingDefinitions.containsKey(item)) {
-                    required.add(item);
-                }
-            }
-            required.sort(Comparator.naturalOrder());
-            if (required.isEmpty()) {
-                break;
-            }
+        // Planning a definition can reference more definitions. Each pass removes the definitions it
+        // plans from pendingDefinitions, so the set only shrinks and the loop ends when none is left.
+        List<String> required = pendingReferenced(builder.referencedDefinitions, pendingDefinitions);
+        while (!required.isEmpty()) {
             for (String definitionKey : required) {
                 Object[] pending = pendingDefinitions.remove(definitionKey);
                 JsonNode definition = (JsonNode) pending[0];
@@ -630,6 +634,7 @@ public final class Plan {
                         builder.registerShape(
                                 definition.path("shape"), definitionKey, definition.path("name").asText(), scope, null, null));
             }
+            required = pendingReferenced(builder.referencedDefinitions, pendingDefinitions);
         }
 
         Map<String, String> names = Naming.allocateSymbols(pkg, builder.symbols);
