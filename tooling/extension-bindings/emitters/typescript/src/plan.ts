@@ -543,11 +543,12 @@ export function buildPlan(model: Model, target: PackageTarget): EmissionPlan {
     }
   }
 
-  for (;;) {
-    const required = [...referencedDefinitions]
-      .filter((item) => pendingDefinitions.has(item))
-      .sort();
-    if (required.length === 0) break;
+  const pendingReferenced = (): string[] =>
+    [...referencedDefinitions].filter((item) => pendingDefinitions.has(item)).sort();
+  // Planning a definition can reference more definitions. Each pass removes the definitions it
+  // plans from pendingDefinitions, so the set only shrinks and the loop ends when none is left.
+  let required = pendingReferenced();
+  while (required.length > 0) {
     for (const definitionKey of required) {
       const [definition, scope] = pendingDefinitions.get(definitionKey)!;
       pendingDefinitions.delete(definitionKey);
@@ -556,6 +557,7 @@ export function buildPlan(model: Model, target: PackageTarget): EmissionPlan {
         registerShape(definition.shape, definitionKey, definition.name, scope),
       );
     }
+    required = pendingReferenced();
   }
 
   const names = allocateSymbols(pkg, symbols);
