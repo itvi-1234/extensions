@@ -10,7 +10,7 @@ no claim about production orchestration, publication, or distribution.
 ## Scope and evidence
 
 - Approved criteria: [IMPLEMENTATION.md](IMPLEMENTATION.md), Sections 11–13
-  and Phase 4. The document and its guard remain unchanged.
+  and Phase 4. The document remains unchanged.
 - Shared fixtures: [fixtures/README.md](fixtures/README.md),
   [fixtures/conformance.yaml](fixtures/conformance.yaml), and
   [model/conformance/cases/13-dependency-schema-only/](model/conformance/cases/13-dependency-schema-only/).
@@ -123,5 +123,5 @@ generated binding and conformance source and passes static analysis; its test
 binaries were compiled without execution. Native Go suites execute with the
 current Go toolchain, while Python checks use Python 3.11.16. Production
 orchestration, publication, distribution, and broader platform qualification
-remain outside this acceptance. `spec/`, the implementation standard, and its
-guard remain unchanged.
+remain outside this acceptance. `spec/` and the implementation standard remain
+unchanged.

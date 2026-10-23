@@ -68,7 +68,7 @@ generated source that are still absent.
    Conformance identifiers, vocabulary values, and local repository paths must
    not select implementation behavior.
 10. The final closure work and this report leave `spec/` unchanged. The protected
-    implementation standard and its guard remain unchanged. A Phase 5 agent
+    implementation standard remains unchanged. A Phase 5 agent
     must follow `AGENTS.md` and obtain the exact file-list approval required by
     Section 4 before changing more than five files.
 
