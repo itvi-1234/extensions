@@ -78,7 +78,7 @@ the workflow explicitly dispatches the existing docs build using
 On 2026-10-07, the repository owner explicitly directed Phase 6 to generate and
 commit bindings to `main`, replacing the manual generation and review-PR path.
 That direction supersedes the relevant delivery steps in `IMPLEMENTATION.md`;
-the protected document and its checksum guard remain unchanged. Phase 5's shared
+the protected document remains unchanged. Phase 5's shared
 conformance verification decision remains in effect.
 
 ## Go binding publication

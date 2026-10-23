@@ -35,9 +35,8 @@ Automatic selection can expand after the selected definitions resolve and verify
 Enabling Python later requires a working independently installed profiler artifact
 and corresponding runner provisioning and tests inside this repository.
 
-The protected `IMPLEMENTATION.md`, repository checksum variable, and implementation
-lock workflow are unchanged. Production release toolchain pins and distribution
-remain pending.
+The protected `IMPLEMENTATION.md` is unchanged. Production release toolchain pins and
+distribution remain pending.
 
 ## Local verification
 

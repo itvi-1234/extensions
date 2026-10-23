@@ -38,8 +38,6 @@ inputs, unsupported shapes, package/target mismatches, and output rejection.
 - Generated source and metadata contain no timestamps or temporary output
   paths. Three-run package emission and two-run archive builds are byte-identical
   for the positive fixtures.
-- The protected `IMPLEMENTATION.md` checksum remains
-  `a35761929748cf1f7fa659e518aeae0bd99fc891e38131e5b8df0ebe79b57e61`.
 
 Verification here was run on macOS. The Phase 4 structural manifest and profile
 gates are outside Phase 3; this report does not claim those later gates.

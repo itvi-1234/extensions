@@ -46,7 +46,6 @@ production package catalog and do not create committed generated packages.
 | Transitive additive package composition | Passed |
 | Exact fixed-symbol collision diagnostic | Passed |
 | Normalizer regression suite | Passed |
-| Protected implementation checksum | Verified |
 
 Phase 2 does not generate expected profiles or perform profile semantic
 validation; those gates begin in Phase 4. Production package catalog entries,
