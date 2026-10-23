@@ -1,4 +1,4 @@
-name: Publish TypeScript bindings (placeholder, publishes nothing)
+name: Publish TypeScript bindings
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
         type: string
         default: ''
       dry_run:
-        description: 'Must stay true: the workflow is a placeholder and verifies and publishes nothing'
+        description: 'Build and check the packages without publishing them to npm'
         type: boolean
         default: true
 
@@ -23,26 +23,49 @@ jobs:
   publish:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      # Trusted publishing: npm accepts this workflow's OIDC identity, so no npm token is stored.
+      id-token: write
+    env:
+      INPUT_TARGETS: ${{ inputs.targets }}
+      EXECUTE: ${{ !inputs.dry_run }}
 
     steps:
-      - name: Reject real publication
-        if: ${{ !inputs.dry_run }}
-        run: |
-          echo "::error::npm publication is not implemented. Run with dry_run enabled; nothing was published."
-          exit 1
-      - name: Record that nothing was verified or published
-        env:
-          TARGETS: ${{ inputs.targets }}
-          DRY_RUN: ${{ inputs.dry_run }}
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python for the publication helper
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12.10'
+
+      - name: Install the helper dependency
+        run: python -m pip install --disable-pip-version-check PyYAML==6.0.3
+
+      - name: Set up Node.js for npm trusted publishing
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: '24.11.0'
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+
+      - name: Install the pinned emitter dependencies, which provide the TypeScript compiler
+        working-directory: tooling/extension-bindings/emitters/typescript
+        run: npm ci --ignore-scripts
+
+      - name: Test the publication helper
+        run: python -m unittest discover -s tooling/extension-bindings/ci -p 'test_publish_npm.py'
+
+      - name: Build and check the committed packages, then publish them
+        shell: bash
         run: |
           set -euo pipefail
-          {
-            echo "## Placeholder: nothing was verified or published"
-            echo
-            echo "npm publication is not implemented. This run did not verify, build, or publish any package."
-            echo
-            echo "- targets: \`${TARGETS:-<none>}\`"
-            echo "- dry_run: \`${DRY_RUN}\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-          echo "::notice::Placeholder only. No package was verified or published."
+          args=()
+          if [[ "$EXECUTE" == true ]]; then
+            args+=(--execute)
+          fi
+          python tooling/extension-bindings/ci/publish-npm.py --targets "$INPUT_TARGETS" "${args[@]}"
