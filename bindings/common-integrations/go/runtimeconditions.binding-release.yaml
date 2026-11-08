@@ -25,7 +25,7 @@ provenance:
     orchestrator:
         name: rc
         version: 0.1.0
-        sha256: 9ad12948be33b435ca0c94917cb24854362a2c52474fda5bb49d03345d743729
+        sha256: fc414ae0c39353134f066021cf8965d02fa7846f9c1a1ff59e700c4b3befd174
     profiler:
         name: go-rc-profiler
         version: v0.4.0
