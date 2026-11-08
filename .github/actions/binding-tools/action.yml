@@ -73,8 +73,8 @@ runs:
       env:
         GO_PROFILER_URL: https://github.com/runtimeconditions/go-rc-profiler/releases/download/v0.4.0/go-rc-profiler_v0.4.0_linux_amd64.tar.gz
         GO_PROFILER_SHA256: cccb57f37b476d43423a08d4f2cc94068b40f29a1a1a02072d294de6c98ac2c9
-        CORE_SCHEMA_URL: https://raw.githubusercontent.com/runtimeconditions/spec/65d43a6b97c060f62a3bcc87c98d1707b79cb60b/schema/runtimeconditions.profile.schema.yaml
-        CORE_SCHEMA_SHA256: 342bf20bce479f5012b9fc2c6238dc1fb0935e327ecb0fbca6e647362563c73c
+        CORE_SCHEMA_URL: https://raw.githubusercontent.com/runtimeconditions/spec/317f6802f06eb6dde1514915838017b87c2e9cd4/schema/runtimeconditions.profile.schema.yaml
+        CORE_SCHEMA_SHA256: 96d430c7936fcf7334aa9613f63bb306592e07cf56fe4154af57933d2c1480e6
       run: |
         set -euo pipefail
         mkdir -p "$RUNNER_TEMP/binding-tools"
