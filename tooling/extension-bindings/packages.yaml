@@ -5,7 +5,7 @@ repositoryUrl: https://github.com/runtimeconditions/extensions
 packages:
   aws-s3:
     rootExtension: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
-    coreProfileSchemaVersion: 0.2.0
+    coreProfileSchemaVersion: 0.4.0
     languages:
       go:
         coordinate: runtimeconditions.io/x/aws/s3
@@ -24,12 +24,12 @@ packages:
         registryId: pypi
   common-integrations:
     rootExtension: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
-    coreProfileSchemaVersion: 0.2.0
+    coreProfileSchemaVersion: 0.4.0
     languages:
       go:
         coordinate: runtimeconditions.io/x/rc/common
         name: common
-        version: 0.1.0
+        version: 0.1.1
         sourceDirectory: bindings/common-integrations/go
         languageVersion: 1.25.0
         publicationMode: github-tag
@@ -44,19 +44,19 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/common-integrations'
         name: '@runtimeconditions/common-integrations'
-        version: 0.1.0
+        version: 0.1.1
         sourceDirectory: bindings/common-integrations/typescript
         languageVersion: 20.19.6
         publicationMode: registry
         registryId: npm
   env-configuration:
     rootExtension: https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
-    coreProfileSchemaVersion: 0.2.0
+    coreProfileSchemaVersion: 0.4.0
     languages:
       go:
         coordinate: runtimeconditions.io/x/rc/env
         name: env
-        version: 0.1.0
+        version: 0.1.1
         sourceDirectory: bindings/env-configuration/go
         languageVersion: 1.25.0
         publicationMode: github-tag
@@ -71,14 +71,14 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/env-configuration'
         name: '@runtimeconditions/env-configuration'
-        version: 0.1.0
+        version: 0.1.1
         sourceDirectory: bindings/env-configuration/typescript
         languageVersion: 20.19.6
         publicationMode: registry
         registryId: npm
   google-analytics:
     rootExtension: https://runtimeconditions.io/extensions/google/analytics/0.1.0/runtimeconditions.extension.yaml
-    coreProfileSchemaVersion: 0.2.0
+    coreProfileSchemaVersion: 0.4.0
     languages:
       go:
         coordinate: runtimeconditions.io/x/google/analytics
@@ -97,7 +97,7 @@ packages:
         registryId: pypi
   kubernetes-api:
     rootExtension: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
-    coreProfileSchemaVersion: 0.2.0
+    coreProfileSchemaVersion: 0.4.0
     languages:
       go:
         coordinate: runtimeconditions.io/x/kubernetes/api
@@ -116,7 +116,7 @@ packages:
         registryId: pypi
   nats-service:
     rootExtension: https://runtimeconditions.io/extensions/nats/service/0.1.0/runtimeconditions.extension.yaml
-    coreProfileSchemaVersion: 0.2.0
+    coreProfileSchemaVersion: 0.4.0
     languages:
       go:
         coordinate: runtimeconditions.io/x/nats/service
@@ -135,7 +135,7 @@ packages:
         registryId: pypi
   source-control:
     rootExtension: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
-    coreProfileSchemaVersion: 0.2.0
+    coreProfileSchemaVersion: 0.4.0
     languages:
       go:
         coordinate: runtimeconditions.io/x/rc/source

@@ -10,7 +10,7 @@ dependencyLock:
 kind: RuntimeConditionsBindingRelease
 model:
     apiVersion: runtimeconditions.io/binding-model/v1alpha1
-    semanticSha256: a12e2b48fa7d88471af4d1e30da55ff290f0868294f9de6f9ffad5d7d3c738e6
+    semanticSha256: f93d1280658fb9c27c965b1cc8f5518575cfe5bca7f36ac96dcc06c5b66aacbf
 package:
     coordinate: runtimeconditions-common-integrations
     language: python
@@ -26,7 +26,7 @@ provenance:
     orchestrator:
         name: rc
         version: 0.1.0
-        sha256: fc414ae0c39353134f066021cf8965d02fa7846f9c1a1ff59e700c4b3befd174
+        sha256: 9ad12948be33b435ca0c94917cb24854362a2c52474fda5bb49d03345d743729
     profiler:
         name: python-rc-profiler
         version: 0.4.0
