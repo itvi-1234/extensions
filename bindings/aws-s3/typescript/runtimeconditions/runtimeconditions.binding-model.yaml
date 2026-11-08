@@ -1,0 +1,2755 @@
+apiVersion: runtimeconditions.io/binding-model/v1alpha1
+kind: RuntimeConditionsBindingModel
+metadata:
+    semanticSha256: 0991f59d80107b720a75ec9727eafe65ccea91ca4ec2d74fabbf363e97dfed78
+    normalizer:
+        name: rc-binding-model
+        version: 0.1.0
+        sha256: 0b6a631f55ae70522b11a814326bc7c346118a1b47aa464c6904565d59085ac3
+coreProfileSchema:
+    id: https://runtimeconditions.io/schemas/profile/0.4.0/runtimeconditions.profile.schema.yaml
+    version: 0.4.0
+    semanticSha256: ed447dccefd7507d905b0b6177b1386d8ee96a1d053b731939a9a7ae973d5af1
+rootExtension:
+    id: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+    version: 0.2.0
+    semanticSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+extensions:
+    - id: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+      version: 0.2.0
+      semanticSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+vocabulary:
+    owners:
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"AbortMultipartUpload"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: AbortMultipartUpload
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"CompleteMultipartUpload"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: CompleteMultipartUpload
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"CopyObject"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: CopyObject
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"CreateBucketMetadataConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: CreateBucketMetadataConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"CreateBucketMetadataTableConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: CreateBucketMetadataTableConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"CreateMultipartUpload"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: CreateMultipartUpload
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"CreateSession"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: CreateSession
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucket"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucket
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketAnalyticsConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketAnalyticsConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketCors"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketCors
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketEncryption"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketEncryption
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketIntelligentTieringConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketIntelligentTieringConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketInventoryConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketInventoryConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketLifecycle"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketLifecycle
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketMetadataConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketMetadataConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketMetadataTableConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketMetadataTableConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketMetricsConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketMetricsConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketOwnershipControls"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketOwnershipControls
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketPolicy"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketPolicy
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketReplication"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketReplication
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketTagging"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketTagging
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteBucketWebsite"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteBucketWebsite
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteObject"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteObject
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteObjectAnnotation"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteObjectAnnotation
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteObjectTagging"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteObjectTagging
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeleteObjects"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeleteObjects
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"DeletePublicAccessBlock"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: DeletePublicAccessBlock
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketAbac"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketAbac
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketAccelerateConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketAccelerateConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketAcl"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketAcl
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketAnalyticsConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketAnalyticsConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketCors"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketCors
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketEncryption"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketEncryption
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketIntelligentTieringConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketIntelligentTieringConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketInventoryConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketInventoryConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketLifecycleConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketLifecycleConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketLocation"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketLocation
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketLogging"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketLogging
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketMetadataConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketMetadataConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketMetadataTableConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketMetadataTableConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketMetricsConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketMetricsConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketNotificationConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketNotificationConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketOwnershipControls"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketOwnershipControls
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketPolicy"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketPolicy
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketPolicyStatus"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketPolicyStatus
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketReplication"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketReplication
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketRequestPayment"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketRequestPayment
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketTagging"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketTagging
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketVersioning"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketVersioning
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetBucketWebsite"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetBucketWebsite
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetObject"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetObject
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetObjectAcl"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetObjectAcl
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetObjectAnnotation"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetObjectAnnotation
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetObjectAttributes"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetObjectAttributes
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetObjectLegalHold"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetObjectLegalHold
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetObjectLockConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetObjectLockConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetObjectRetention"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetObjectRetention
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetObjectTagging"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetObjectTagging
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetObjectTorrent"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetObjectTorrent
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"GetPublicAccessBlock"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: GetPublicAccessBlock
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"HeadBucket"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: HeadBucket
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"HeadObject"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: HeadObject
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"ListBucketAnalyticsConfigurations"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: ListBucketAnalyticsConfigurations
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"ListBucketIntelligentTieringConfigurations"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: ListBucketIntelligentTieringConfigurations
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"ListBucketInventoryConfigurations"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: ListBucketInventoryConfigurations
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"ListBucketMetricsConfigurations"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: ListBucketMetricsConfigurations
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"ListMultipartUploads"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: ListMultipartUploads
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"ListObjectAnnotations"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: ListObjectAnnotations
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"ListObjectVersions"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: ListObjectVersions
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"ListObjects"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: ListObjects
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"ListObjectsV2"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: ListObjectsV2
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"ListParts"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: ListParts
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketAbac"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketAbac
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketAccelerateConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketAccelerateConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketAcl"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketAcl
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketAnalyticsConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketAnalyticsConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketCors"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketCors
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketEncryption"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketEncryption
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketIntelligentTieringConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketIntelligentTieringConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketInventoryConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketInventoryConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketLifecycleConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketLifecycleConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketLogging"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketLogging
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketMetricsConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketMetricsConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketNotificationConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketNotificationConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketOwnershipControls"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketOwnershipControls
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketPolicy"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketPolicy
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketReplication"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketReplication
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketRequestPayment"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketRequestPayment
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketTagging"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketTagging
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketVersioning"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketVersioning
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutBucketWebsite"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutBucketWebsite
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutObject"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutObject
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutObjectAcl"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutObjectAcl
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutObjectAnnotation"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutObjectAnnotation
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutObjectLegalHold"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutObjectLegalHold
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutObjectLockConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutObjectLockConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutObjectRetention"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutObjectRetention
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutObjectTagging"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutObjectTagging
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"PutPublicAccessBlock"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: PutPublicAccessBlock
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"RenameObject"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: RenameObject
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"RestoreObject"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: RestoreObject
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"SelectObjectContent"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: SelectObjectContent
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"UpdateBucketMetadataAnnotationTableConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: UpdateBucketMetadataAnnotationTableConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"UpdateBucketMetadataInventoryTableConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: UpdateBucketMetadataInventoryTableConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"UpdateBucketMetadataJournalTableConfiguration"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: UpdateBucketMetadataJournalTableConfiguration
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"UpdateObjectEncryption"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: UpdateObjectEncryption
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"UploadPart"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: UploadPart
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name:"UploadPartCopy"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          value: UploadPartCopy
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].role:"destination"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].role
+          value: destination
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].role:"source"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].role
+          value: source
+        - coordinate: field-domain:aws.s3:object_lambda:interface.operations[].name:"WriteGetObjectResponse"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: object_lambda
+          path: interface.operations[].name
+          value: WriteGetObjectResponse
+        - coordinate: field-domain:aws.s3:service:interface.operations[].name:"CreateBucket"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: service
+          path: interface.operations[].name
+          value: CreateBucket
+        - coordinate: field-domain:aws.s3:service:interface.operations[].name:"ListBuckets"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: service
+          path: interface.operations[].name
+          value: ListBuckets
+        - coordinate: field-domain:aws.s3:service:interface.operations[].name:"ListDirectoryBuckets"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: service
+          path: interface.operations[].name
+          value: ListDirectoryBuckets
+        - coordinate: interface-field:aws.s3:bucket:bucketName
+          category: interface-field
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.bucketName
+        - coordinate: interface-field:aws.s3:bucket:operations
+          category: interface-field
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations
+        - coordinate: interface-field:aws.s3:object_lambda:operations
+          category: interface-field
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: object_lambda
+          path: interface.operations
+        - coordinate: interface-field:aws.s3:service:operations
+          category: interface-field
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: service
+          path: interface.operations
+        - coordinate: interface:aws.s3:bucket
+          category: interface
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+        - coordinate: interface:aws.s3:object_lambda
+          category: interface
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: object_lambda
+        - coordinate: interface:aws.s3:service
+          category: interface
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: service
+        - coordinate: kind:aws.s3
+          category: kind
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+    ownedDeclarations:
+        - coordinate: kind:aws.s3
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: kind:aws.s3
+    interfaces:
+        - coordinate: interface:aws.s3:bucket
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          type: bucket
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: interface:aws.s3:bucket
+        - coordinate: interface:aws.s3:object_lambda
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          type: object_lambda
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: interface:aws.s3:object_lambda
+        - coordinate: interface:aws.s3:service
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          type: service
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: interface:aws.s3:service
+    interfaceFields:
+        - coordinate: interface-field:aws.s3:bucket:bucketName
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.bucketName
+          segments:
+            - name: interface
+            - name: bucketName
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: interface-field:aws.s3:bucket:bucketName
+        - coordinate: interface-field:aws.s3:bucket:operations
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations
+          segments:
+            - name: interface
+            - name: operations
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: interface-field:aws.s3:bucket:operations
+        - coordinate: interface-field:aws.s3:object_lambda:operations
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: object_lambda
+          path: interface.operations
+          segments:
+            - name: interface
+            - name: operations
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: interface-field:aws.s3:object_lambda:operations
+        - coordinate: interface-field:aws.s3:service:operations
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: service
+          path: interface.operations
+          segments:
+            - name: interface
+            - name: operations
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: interface-field:aws.s3:service:operations
+    valueDomains:
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].name
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].name
+          segments:
+            - name: interface
+            - name: operations
+              array: true
+            - name: name
+          values:
+            - value: AbortMultipartUpload
+            - value: CompleteMultipartUpload
+            - value: CopyObject
+            - value: CreateBucketMetadataConfiguration
+            - value: CreateBucketMetadataTableConfiguration
+            - value: CreateMultipartUpload
+            - value: CreateSession
+            - value: DeleteBucket
+            - value: DeleteBucketAnalyticsConfiguration
+            - value: DeleteBucketCors
+            - value: DeleteBucketEncryption
+            - value: DeleteBucketIntelligentTieringConfiguration
+            - value: DeleteBucketInventoryConfiguration
+            - value: DeleteBucketLifecycle
+            - value: DeleteBucketMetadataConfiguration
+            - value: DeleteBucketMetadataTableConfiguration
+            - value: DeleteBucketMetricsConfiguration
+            - value: DeleteBucketOwnershipControls
+            - value: DeleteBucketPolicy
+            - value: DeleteBucketReplication
+            - value: DeleteBucketTagging
+            - value: DeleteBucketWebsite
+            - value: DeleteObject
+            - value: DeleteObjectAnnotation
+            - value: DeleteObjectTagging
+            - value: DeleteObjects
+            - value: DeletePublicAccessBlock
+            - value: GetBucketAbac
+            - value: GetBucketAccelerateConfiguration
+            - value: GetBucketAcl
+            - value: GetBucketAnalyticsConfiguration
+            - value: GetBucketCors
+            - value: GetBucketEncryption
+            - value: GetBucketIntelligentTieringConfiguration
+            - value: GetBucketInventoryConfiguration
+            - value: GetBucketLifecycleConfiguration
+            - value: GetBucketLocation
+            - value: GetBucketLogging
+            - value: GetBucketMetadataConfiguration
+            - value: GetBucketMetadataTableConfiguration
+            - value: GetBucketMetricsConfiguration
+            - value: GetBucketNotificationConfiguration
+            - value: GetBucketOwnershipControls
+            - value: GetBucketPolicy
+            - value: GetBucketPolicyStatus
+            - value: GetBucketReplication
+            - value: GetBucketRequestPayment
+            - value: GetBucketTagging
+            - value: GetBucketVersioning
+            - value: GetBucketWebsite
+            - value: GetObject
+            - value: GetObjectAcl
+            - value: GetObjectAnnotation
+            - value: GetObjectAttributes
+            - value: GetObjectLegalHold
+            - value: GetObjectLockConfiguration
+            - value: GetObjectRetention
+            - value: GetObjectTagging
+            - value: GetObjectTorrent
+            - value: GetPublicAccessBlock
+            - value: HeadBucket
+            - value: HeadObject
+            - value: ListBucketAnalyticsConfigurations
+            - value: ListBucketIntelligentTieringConfigurations
+            - value: ListBucketInventoryConfigurations
+            - value: ListBucketMetricsConfigurations
+            - value: ListMultipartUploads
+            - value: ListObjectAnnotations
+            - value: ListObjectVersions
+            - value: ListObjects
+            - value: ListObjectsV2
+            - value: ListParts
+            - value: PutBucketAbac
+            - value: PutBucketAccelerateConfiguration
+            - value: PutBucketAcl
+            - value: PutBucketAnalyticsConfiguration
+            - value: PutBucketCors
+            - value: PutBucketEncryption
+            - value: PutBucketIntelligentTieringConfiguration
+            - value: PutBucketInventoryConfiguration
+            - value: PutBucketLifecycleConfiguration
+            - value: PutBucketLogging
+            - value: PutBucketMetricsConfiguration
+            - value: PutBucketNotificationConfiguration
+            - value: PutBucketOwnershipControls
+            - value: PutBucketPolicy
+            - value: PutBucketReplication
+            - value: PutBucketRequestPayment
+            - value: PutBucketTagging
+            - value: PutBucketVersioning
+            - value: PutBucketWebsite
+            - value: PutObject
+            - value: PutObjectAcl
+            - value: PutObjectAnnotation
+            - value: PutObjectLegalHold
+            - value: PutObjectLockConfiguration
+            - value: PutObjectRetention
+            - value: PutObjectTagging
+            - value: PutPublicAccessBlock
+            - value: RenameObject
+            - value: RestoreObject
+            - value: SelectObjectContent
+            - value: UpdateBucketMetadataAnnotationTableConfiguration
+            - value: UpdateBucketMetadataInventoryTableConfiguration
+            - value: UpdateBucketMetadataJournalTableConfiguration
+            - value: UpdateObjectEncryption
+            - value: UploadPart
+            - value: UploadPartCopy
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: field-domain:aws.s3:bucket:interface.operations[].name
+        - coordinate: field-domain:aws.s3:bucket:interface.operations[].role
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: bucket
+          path: interface.operations[].role
+          segments:
+            - name: interface
+            - name: operations
+              array: true
+            - name: role
+          values:
+            - value: destination
+            - value: source
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: field-domain:aws.s3:bucket:interface.operations[].role
+        - coordinate: field-domain:aws.s3:object_lambda:interface.operations[].name
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: object_lambda
+          path: interface.operations[].name
+          segments:
+            - name: interface
+            - name: operations
+              array: true
+            - name: name
+          values:
+            - value: WriteGetObjectResponse
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: field-domain:aws.s3:object_lambda:interface.operations[].name
+        - coordinate: field-domain:aws.s3:service:interface.operations[].name
+          owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          kind: aws.s3
+          interfaceType: service
+          path: interface.operations[].name
+          segments:
+            - name: interface
+            - name: operations
+              array: true
+            - name: name
+          values:
+            - value: CreateBucket
+            - value: ListBuckets
+            - value: ListDirectoryBuckets
+          provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: field-domain:aws.s3:service:interface.operations[].name
+scopes:
+    - coordinate: aws.s3:bucket
+      kind: aws.s3
+      interfaceType: bucket
+      applicableSchemas:
+        - https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+      projection:
+        kind: object
+        required:
+            - interface
+        properties:
+            - name: interface
+              required: true
+              shape:
+                kind: object
+                required:
+                    - operations
+                properties:
+                    - name: bucketName
+                      shape:
+                        kind: scalar
+                        scalar: string
+                        constraints:
+                            minLength: 1
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                            jsonPointer: /properties/interface/properties/bucketName
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                        jsonPointer: /properties/interface/properties/bucketName
+                    - name: operations
+                      required: true
+                      shape:
+                        kind: array
+                        items:
+                            kind: object
+                            required:
+                                - name
+                            properties:
+                                - name: name
+                                  required: true
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: AbortMultipartUpload
+                                        - value: CompleteMultipartUpload
+                                        - value: CopyObject
+                                        - value: CreateBucketMetadataConfiguration
+                                        - value: CreateBucketMetadataTableConfiguration
+                                        - value: CreateMultipartUpload
+                                        - value: CreateSession
+                                        - value: DeleteBucket
+                                        - value: DeleteBucketAnalyticsConfiguration
+                                        - value: DeleteBucketCors
+                                        - value: DeleteBucketEncryption
+                                        - value: DeleteBucketIntelligentTieringConfiguration
+                                        - value: DeleteBucketInventoryConfiguration
+                                        - value: DeleteBucketLifecycle
+                                        - value: DeleteBucketMetadataConfiguration
+                                        - value: DeleteBucketMetadataTableConfiguration
+                                        - value: DeleteBucketMetricsConfiguration
+                                        - value: DeleteBucketOwnershipControls
+                                        - value: DeleteBucketPolicy
+                                        - value: DeleteBucketReplication
+                                        - value: DeleteBucketTagging
+                                        - value: DeleteBucketWebsite
+                                        - value: DeleteObject
+                                        - value: DeleteObjectAnnotation
+                                        - value: DeleteObjectTagging
+                                        - value: DeleteObjects
+                                        - value: DeletePublicAccessBlock
+                                        - value: GetBucketAbac
+                                        - value: GetBucketAccelerateConfiguration
+                                        - value: GetBucketAcl
+                                        - value: GetBucketAnalyticsConfiguration
+                                        - value: GetBucketCors
+                                        - value: GetBucketEncryption
+                                        - value: GetBucketIntelligentTieringConfiguration
+                                        - value: GetBucketInventoryConfiguration
+                                        - value: GetBucketLifecycleConfiguration
+                                        - value: GetBucketLocation
+                                        - value: GetBucketLogging
+                                        - value: GetBucketMetadataConfiguration
+                                        - value: GetBucketMetadataTableConfiguration
+                                        - value: GetBucketMetricsConfiguration
+                                        - value: GetBucketNotificationConfiguration
+                                        - value: GetBucketOwnershipControls
+                                        - value: GetBucketPolicy
+                                        - value: GetBucketPolicyStatus
+                                        - value: GetBucketReplication
+                                        - value: GetBucketRequestPayment
+                                        - value: GetBucketTagging
+                                        - value: GetBucketVersioning
+                                        - value: GetBucketWebsite
+                                        - value: GetObject
+                                        - value: GetObjectAcl
+                                        - value: GetObjectAnnotation
+                                        - value: GetObjectAttributes
+                                        - value: GetObjectLegalHold
+                                        - value: GetObjectLockConfiguration
+                                        - value: GetObjectRetention
+                                        - value: GetObjectTagging
+                                        - value: GetObjectTorrent
+                                        - value: GetPublicAccessBlock
+                                        - value: HeadBucket
+                                        - value: HeadObject
+                                        - value: ListBucketAnalyticsConfigurations
+                                        - value: ListBucketIntelligentTieringConfigurations
+                                        - value: ListBucketInventoryConfigurations
+                                        - value: ListBucketMetricsConfigurations
+                                        - value: ListMultipartUploads
+                                        - value: ListObjectAnnotations
+                                        - value: ListObjectVersions
+                                        - value: ListObjects
+                                        - value: ListObjectsV2
+                                        - value: ListParts
+                                        - value: PutBucketAbac
+                                        - value: PutBucketAccelerateConfiguration
+                                        - value: PutBucketAcl
+                                        - value: PutBucketAnalyticsConfiguration
+                                        - value: PutBucketCors
+                                        - value: PutBucketEncryption
+                                        - value: PutBucketIntelligentTieringConfiguration
+                                        - value: PutBucketInventoryConfiguration
+                                        - value: PutBucketLifecycleConfiguration
+                                        - value: PutBucketLogging
+                                        - value: PutBucketMetricsConfiguration
+                                        - value: PutBucketNotificationConfiguration
+                                        - value: PutBucketOwnershipControls
+                                        - value: PutBucketPolicy
+                                        - value: PutBucketReplication
+                                        - value: PutBucketRequestPayment
+                                        - value: PutBucketTagging
+                                        - value: PutBucketVersioning
+                                        - value: PutBucketWebsite
+                                        - value: PutObject
+                                        - value: PutObjectAcl
+                                        - value: PutObjectAnnotation
+                                        - value: PutObjectLegalHold
+                                        - value: PutObjectLockConfiguration
+                                        - value: PutObjectRetention
+                                        - value: PutObjectTagging
+                                        - value: PutPublicAccessBlock
+                                        - value: RenameObject
+                                        - value: RestoreObject
+                                        - value: SelectObjectContent
+                                        - value: UpdateBucketMetadataAnnotationTableConfiguration
+                                        - value: UpdateBucketMetadataInventoryTableConfiguration
+                                        - value: UpdateBucketMetadataJournalTableConfiguration
+                                        - value: UpdateObjectEncryption
+                                        - value: UploadPart
+                                        - value: UploadPartCopy
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                                - name: role
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: destination
+                                        - value: source
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/107/properties/role
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/2/properties/role
+                            provenance:
+                                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                                jsonPointer: /properties/interface/properties/operations/items
+                        constraints:
+                            minItems: 1
+                            uniqueItems: true
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                            jsonPointer: /properties/interface/properties/operations
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                        jsonPointer: /properties/interface/properties/operations
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                    jsonPointer: /properties/interface
+              provenance:
+                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                jsonPointer: /properties/interface
+        provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+    - coordinate: aws.s3:object_lambda
+      kind: aws.s3
+      interfaceType: object_lambda
+      applicableSchemas:
+        - https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+      projection:
+        kind: object
+        required:
+            - interface
+        properties:
+            - name: interface
+              required: true
+              shape:
+                kind: object
+                required:
+                    - operations
+                properties:
+                    - name: operations
+                      required: true
+                      shape:
+                        kind: array
+                        items:
+                            kind: object
+                            required:
+                                - name
+                            properties:
+                                - name: name
+                                  required: true
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: WriteGetObjectResponse
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                            provenance:
+                                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                                jsonPointer: /properties/interface/properties/operations/items
+                        constraints:
+                            minItems: 1
+                            uniqueItems: true
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                            jsonPointer: /properties/interface/properties/operations
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                        jsonPointer: /properties/interface/properties/operations
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                    jsonPointer: /properties/interface
+              provenance:
+                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                jsonPointer: /properties/interface
+        provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+    - coordinate: aws.s3:service
+      kind: aws.s3
+      interfaceType: service
+      applicableSchemas:
+        - https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+      projection:
+        kind: object
+        required:
+            - interface
+        properties:
+            - name: interface
+              required: true
+              shape:
+                kind: object
+                required:
+                    - operations
+                properties:
+                    - name: operations
+                      required: true
+                      shape:
+                        kind: array
+                        items:
+                            kind: object
+                            required:
+                                - name
+                            properties:
+                                - name: name
+                                  required: true
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: CreateBucket
+                                        - value: ListBuckets
+                                        - value: ListDirectoryBuckets
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                            provenance:
+                                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                                jsonPointer: /properties/interface/properties/operations/items
+                        constraints:
+                            minItems: 1
+                            uniqueItems: true
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                            jsonPointer: /properties/interface/properties/operations
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                        jsonPointer: /properties/interface/properties/operations
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                    jsonPointer: /properties/interface
+              provenance:
+                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                jsonPointer: /properties/interface
+        provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+schemas:
+    - coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+      owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+      id: aws-s3-bucket-interface
+      kind: aws.s3
+      interfaceType: bucket
+      exact:
+        $schema: https://json-schema.org/draft/2020-12/schema
+        additionalProperties: true
+        properties:
+            interface:
+                additionalProperties: true
+                properties:
+                    bucketName:
+                        minLength: 1
+                        type: string
+                    operations:
+                        items:
+                            oneOf:
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: AbortMultipartUpload
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: CompleteMultipartUpload
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: CopyObject
+                                    role:
+                                        enum:
+                                            - destination
+                                            - source
+                                  required:
+                                    - name
+                                    - role
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: CreateBucketMetadataConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: CreateBucketMetadataTableConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: CreateMultipartUpload
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: CreateSession
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucket
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketAnalyticsConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketCors
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketEncryption
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketIntelligentTieringConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketInventoryConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketLifecycle
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketMetadataConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketMetadataTableConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketMetricsConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketOwnershipControls
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketPolicy
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketReplication
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketTagging
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteBucketWebsite
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteObject
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteObjectAnnotation
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteObjectTagging
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeleteObjects
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: DeletePublicAccessBlock
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketAbac
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketAccelerateConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketAcl
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketAnalyticsConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketCors
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketEncryption
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketIntelligentTieringConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketInventoryConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketLifecycleConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketLocation
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketLogging
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketMetadataConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketMetadataTableConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketMetricsConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketNotificationConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketOwnershipControls
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketPolicy
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketPolicyStatus
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketReplication
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketRequestPayment
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketTagging
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketVersioning
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetBucketWebsite
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetObject
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetObjectAcl
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetObjectAnnotation
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetObjectAttributes
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetObjectLegalHold
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetObjectLockConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetObjectRetention
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetObjectTagging
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetObjectTorrent
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: GetPublicAccessBlock
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: HeadBucket
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: HeadObject
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListBucketAnalyticsConfigurations
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListBucketIntelligentTieringConfigurations
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListBucketInventoryConfigurations
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListBucketMetricsConfigurations
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListMultipartUploads
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListObjectAnnotations
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListObjectVersions
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListObjects
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListObjectsV2
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListParts
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketAbac
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketAccelerateConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketAcl
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketAnalyticsConfiguration
+                                    role:
+                                        enum:
+                                            - destination
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketCors
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketEncryption
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketIntelligentTieringConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketInventoryConfiguration
+                                    role:
+                                        enum:
+                                            - destination
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketLifecycleConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketLogging
+                                    role:
+                                        enum:
+                                            - destination
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketMetricsConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketNotificationConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketOwnershipControls
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketPolicy
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketReplication
+                                    role:
+                                        enum:
+                                            - destination
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketRequestPayment
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketTagging
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketVersioning
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutBucketWebsite
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutObject
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutObjectAcl
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutObjectAnnotation
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutObjectLegalHold
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutObjectLockConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutObjectRetention
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutObjectTagging
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: PutPublicAccessBlock
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: RenameObject
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: RestoreObject
+                                    role:
+                                        enum:
+                                            - destination
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: SelectObjectContent
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: UpdateBucketMetadataAnnotationTableConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: UpdateBucketMetadataInventoryTableConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: UpdateBucketMetadataJournalTableConfiguration
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: UpdateObjectEncryption
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: UploadPart
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: UploadPartCopy
+                                    role:
+                                        enum:
+                                            - destination
+                                            - source
+                                  required:
+                                    - name
+                                    - role
+                                  type: object
+                        minItems: 1
+                        type: array
+                        uniqueItems: true
+                    type:
+                        const: bucket
+                required:
+                    - operations
+                    - type
+                type: object
+            kind:
+                const: aws.s3
+        required:
+            - interface
+            - kind
+        type: object
+      projection:
+        kind: object
+        required:
+            - interface
+        properties:
+            - name: interface
+              required: true
+              shape:
+                kind: object
+                required:
+                    - operations
+                properties:
+                    - name: bucketName
+                      shape:
+                        kind: scalar
+                        scalar: string
+                        constraints:
+                            minLength: 1
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                            jsonPointer: /properties/interface/properties/bucketName
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                        jsonPointer: /properties/interface/properties/bucketName
+                    - name: operations
+                      required: true
+                      shape:
+                        kind: array
+                        items:
+                            kind: object
+                            required:
+                                - name
+                            properties:
+                                - name: name
+                                  required: true
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: AbortMultipartUpload
+                                        - value: CompleteMultipartUpload
+                                        - value: CopyObject
+                                        - value: CreateBucketMetadataConfiguration
+                                        - value: CreateBucketMetadataTableConfiguration
+                                        - value: CreateMultipartUpload
+                                        - value: CreateSession
+                                        - value: DeleteBucket
+                                        - value: DeleteBucketAnalyticsConfiguration
+                                        - value: DeleteBucketCors
+                                        - value: DeleteBucketEncryption
+                                        - value: DeleteBucketIntelligentTieringConfiguration
+                                        - value: DeleteBucketInventoryConfiguration
+                                        - value: DeleteBucketLifecycle
+                                        - value: DeleteBucketMetadataConfiguration
+                                        - value: DeleteBucketMetadataTableConfiguration
+                                        - value: DeleteBucketMetricsConfiguration
+                                        - value: DeleteBucketOwnershipControls
+                                        - value: DeleteBucketPolicy
+                                        - value: DeleteBucketReplication
+                                        - value: DeleteBucketTagging
+                                        - value: DeleteBucketWebsite
+                                        - value: DeleteObject
+                                        - value: DeleteObjectAnnotation
+                                        - value: DeleteObjectTagging
+                                        - value: DeleteObjects
+                                        - value: DeletePublicAccessBlock
+                                        - value: GetBucketAbac
+                                        - value: GetBucketAccelerateConfiguration
+                                        - value: GetBucketAcl
+                                        - value: GetBucketAnalyticsConfiguration
+                                        - value: GetBucketCors
+                                        - value: GetBucketEncryption
+                                        - value: GetBucketIntelligentTieringConfiguration
+                                        - value: GetBucketInventoryConfiguration
+                                        - value: GetBucketLifecycleConfiguration
+                                        - value: GetBucketLocation
+                                        - value: GetBucketLogging
+                                        - value: GetBucketMetadataConfiguration
+                                        - value: GetBucketMetadataTableConfiguration
+                                        - value: GetBucketMetricsConfiguration
+                                        - value: GetBucketNotificationConfiguration
+                                        - value: GetBucketOwnershipControls
+                                        - value: GetBucketPolicy
+                                        - value: GetBucketPolicyStatus
+                                        - value: GetBucketReplication
+                                        - value: GetBucketRequestPayment
+                                        - value: GetBucketTagging
+                                        - value: GetBucketVersioning
+                                        - value: GetBucketWebsite
+                                        - value: GetObject
+                                        - value: GetObjectAcl
+                                        - value: GetObjectAnnotation
+                                        - value: GetObjectAttributes
+                                        - value: GetObjectLegalHold
+                                        - value: GetObjectLockConfiguration
+                                        - value: GetObjectRetention
+                                        - value: GetObjectTagging
+                                        - value: GetObjectTorrent
+                                        - value: GetPublicAccessBlock
+                                        - value: HeadBucket
+                                        - value: HeadObject
+                                        - value: ListBucketAnalyticsConfigurations
+                                        - value: ListBucketIntelligentTieringConfigurations
+                                        - value: ListBucketInventoryConfigurations
+                                        - value: ListBucketMetricsConfigurations
+                                        - value: ListMultipartUploads
+                                        - value: ListObjectAnnotations
+                                        - value: ListObjectVersions
+                                        - value: ListObjects
+                                        - value: ListObjectsV2
+                                        - value: ListParts
+                                        - value: PutBucketAbac
+                                        - value: PutBucketAccelerateConfiguration
+                                        - value: PutBucketAcl
+                                        - value: PutBucketAnalyticsConfiguration
+                                        - value: PutBucketCors
+                                        - value: PutBucketEncryption
+                                        - value: PutBucketIntelligentTieringConfiguration
+                                        - value: PutBucketInventoryConfiguration
+                                        - value: PutBucketLifecycleConfiguration
+                                        - value: PutBucketLogging
+                                        - value: PutBucketMetricsConfiguration
+                                        - value: PutBucketNotificationConfiguration
+                                        - value: PutBucketOwnershipControls
+                                        - value: PutBucketPolicy
+                                        - value: PutBucketReplication
+                                        - value: PutBucketRequestPayment
+                                        - value: PutBucketTagging
+                                        - value: PutBucketVersioning
+                                        - value: PutBucketWebsite
+                                        - value: PutObject
+                                        - value: PutObjectAcl
+                                        - value: PutObjectAnnotation
+                                        - value: PutObjectLegalHold
+                                        - value: PutObjectLockConfiguration
+                                        - value: PutObjectRetention
+                                        - value: PutObjectTagging
+                                        - value: PutPublicAccessBlock
+                                        - value: RenameObject
+                                        - value: RestoreObject
+                                        - value: SelectObjectContent
+                                        - value: UpdateBucketMetadataAnnotationTableConfiguration
+                                        - value: UpdateBucketMetadataInventoryTableConfiguration
+                                        - value: UpdateBucketMetadataJournalTableConfiguration
+                                        - value: UpdateObjectEncryption
+                                        - value: UploadPart
+                                        - value: UploadPartCopy
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                                - name: role
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: destination
+                                        - value: source
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/107/properties/role
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/2/properties/role
+                            provenance:
+                                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                                jsonPointer: /properties/interface/properties/operations/items
+                        constraints:
+                            minItems: 1
+                            uniqueItems: true
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                            jsonPointer: /properties/interface/properties/operations
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                        jsonPointer: /properties/interface/properties/operations
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                    jsonPointer: /properties/interface
+              provenance:
+                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+                jsonPointer: /properties/interface
+        provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+      provenance:
+        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-bucket-interface
+    - coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+      owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+      id: aws-s3-object-lambda-interface
+      kind: aws.s3
+      interfaceType: object_lambda
+      exact:
+        $schema: https://json-schema.org/draft/2020-12/schema
+        additionalProperties: true
+        properties:
+            interface:
+                additionalProperties: true
+                properties:
+                    operations:
+                        items:
+                            oneOf:
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: WriteGetObjectResponse
+                                  required:
+                                    - name
+                                  type: object
+                        minItems: 1
+                        type: array
+                        uniqueItems: true
+                    type:
+                        const: object_lambda
+                required:
+                    - operations
+                    - type
+                type: object
+            kind:
+                const: aws.s3
+        required:
+            - interface
+            - kind
+        type: object
+      projection:
+        kind: object
+        required:
+            - interface
+        properties:
+            - name: interface
+              required: true
+              shape:
+                kind: object
+                required:
+                    - operations
+                properties:
+                    - name: operations
+                      required: true
+                      shape:
+                        kind: array
+                        items:
+                            kind: object
+                            required:
+                                - name
+                            properties:
+                                - name: name
+                                  required: true
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: WriteGetObjectResponse
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                            provenance:
+                                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                                jsonPointer: /properties/interface/properties/operations/items
+                        constraints:
+                            minItems: 1
+                            uniqueItems: true
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                            jsonPointer: /properties/interface/properties/operations
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                        jsonPointer: /properties/interface/properties/operations
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                    jsonPointer: /properties/interface
+              provenance:
+                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+                jsonPointer: /properties/interface
+        provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+      provenance:
+        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-object-lambda-interface
+    - coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+      owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+      id: aws-s3-service-interface
+      kind: aws.s3
+      interfaceType: service
+      exact:
+        $schema: https://json-schema.org/draft/2020-12/schema
+        additionalProperties: true
+        properties:
+            interface:
+                additionalProperties: true
+                properties:
+                    operations:
+                        items:
+                            oneOf:
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: CreateBucket
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListBuckets
+                                  required:
+                                    - name
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    name:
+                                        const: ListDirectoryBuckets
+                                  required:
+                                    - name
+                                  type: object
+                        minItems: 1
+                        type: array
+                        uniqueItems: true
+                    type:
+                        const: service
+                required:
+                    - operations
+                    - type
+                type: object
+            kind:
+                const: aws.s3
+        required:
+            - interface
+            - kind
+        type: object
+      projection:
+        kind: object
+        required:
+            - interface
+        properties:
+            - name: interface
+              required: true
+              shape:
+                kind: object
+                required:
+                    - operations
+                properties:
+                    - name: operations
+                      required: true
+                      shape:
+                        kind: array
+                        items:
+                            kind: object
+                            required:
+                                - name
+                            properties:
+                                - name: name
+                                  required: true
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: CreateBucket
+                                        - value: ListBuckets
+                                        - value: ListDirectoryBuckets
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/name
+                            provenance:
+                                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                                jsonPointer: /properties/interface/properties/operations/items
+                        constraints:
+                            minItems: 1
+                            uniqueItems: true
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                            jsonPointer: /properties/interface/properties/operations
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                        jsonPointer: /properties/interface/properties/operations
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                    extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                    coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                    jsonPointer: /properties/interface
+              provenance:
+                owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+                extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+                coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+                jsonPointer: /properties/interface
+        provenance:
+            owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+            extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+            coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
+      provenance:
+        owner: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+        extensionSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+        coordinate: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml#schema:aws-s3-service-interface
