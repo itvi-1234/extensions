@@ -22,6 +22,14 @@ packages:
         languageVersion: 3.12.10
         publicationMode: registry
         registryId: pypi
+      typescript:
+        coordinate: '@runtimeconditions/aws-s3'
+        name: '@runtimeconditions/aws-s3'
+        version: 0.2.0
+        sourceDirectory: bindings/aws-s3/typescript
+        languageVersion: 20.19.6
+        publicationMode: registry
+        registryId: npm
   common-integrations:
     rootExtension: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
     coreProfileSchemaVersion: 0.4.0
