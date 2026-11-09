@@ -319,6 +319,7 @@ def _assert_installed(snapshot: list[dict], specs: list[tuple[dict, object]]) ->
         assert installed["conformance"] is False
         manifest = yaml.safe_load(installed["manifest"])
         assert manifest["extension"]["id"] == model["rootExtension"]["id"]
+        assert manifest["extension"]["version"] == model["rootExtension"]["version"]
         assert (
             manifest["extension"]["semanticSha256"]
             == model["rootExtension"]["semanticSha256"]

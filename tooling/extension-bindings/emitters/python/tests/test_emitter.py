@@ -814,6 +814,7 @@ def test_package_metadata_and_manifest_are_deterministic(case: str) -> None:
     assert manifest["model"]["semanticSha256"] == model["metadata"]["semanticSha256"]
     assert manifest["extension"] == {
         "id": model["rootExtension"]["id"],
+        "version": model["rootExtension"]["version"],
         "semanticSha256": model["rootExtension"]["semanticSha256"],
     }
     assert manifest["package"] == {

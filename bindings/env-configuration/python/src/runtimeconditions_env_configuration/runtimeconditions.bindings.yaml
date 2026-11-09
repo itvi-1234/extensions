@@ -3,13 +3,14 @@ apiVersion: runtimeconditions.io/bindings/v1alpha2
 kind: RuntimeConditionsBindingManifest
 generated:
   nonEditable: true
-  emitter: runtimeconditions-binding-emitter@sha256:d84391391bfed31dc59a94ff17cd7beecc388dccef5619064b6991f2272af50d
+  emitter: runtimeconditions-binding-emitter@sha256:59ff69f7659a0691559ef1dcab8c2b9e181085e8922b46f6eb81d4623952632c
   version: 0.1.0
 model:
   apiVersion: runtimeconditions.io/binding-model/v1alpha1
   semanticSha256: 94b3df3073294c54ad047a1309531f32d4556ca5be3a06cad87a1867f143502a
 extension:
   id: https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+  version: v1alpha1
   semanticSha256: c6bd5fec1cc31b2b828cb97da2f56773862a70ef04e94dac7652f87a0af7435b
 package:
   language: python
