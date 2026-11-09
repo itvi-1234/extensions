@@ -55,10 +55,10 @@ type Toolchain struct {
 	Kind       string `json:"kind" yaml:"kind"`
 	Status     string `json:"status" yaml:"status"`
 	Tools      struct {
-		Normalizer   Tool            `json:"normalizer" yaml:"normalizer"`
-		Orchestrator Tool            `json:"orchestrator" yaml:"orchestrator"`
-		Emitters     map[string]Tool `json:"emitters" yaml:"emitters"`
-		Profilers    map[string]Tool `json:"profilers" yaml:"profilers"`
+		Normalizer   Tool                        `json:"normalizer" yaml:"normalizer"`
+		Orchestrator Tool                        `json:"orchestrator" yaml:"orchestrator"`
+		Emitters     map[string]Tool             `json:"emitters" yaml:"emitters"`
+		Profilers    map[string]ProfilerIdentity `json:"profilers" yaml:"profilers"`
 	} `json:"tools" yaml:"tools"`
 	Languages map[string]LanguageToolchain `json:"languages" yaml:"languages"`
 	Python    struct {
@@ -178,8 +178,12 @@ func DiscoverProject(cwd, packagesPath, toolchainPath, toolingDirectory string) 
 				return nil, fmt.Errorf("%s:%s: name is required by the %s native emitter", key, language, language)
 			}
 			if p.Toolchain.Status == "released" {
-				if p.Toolchain.Tools.Emitters[language].SHA256 == "" || p.Toolchain.Tools.Profilers[language].SHA256 == "" {
+				profiler, present := p.Toolchain.Tools.Profilers[language]
+				if p.Toolchain.Tools.Emitters[language].SHA256 == "" || !present {
 					return nil, fmt.Errorf("%s: released lock lacks emitter or profiler", language)
+				}
+				if err := profiler.Validate(); err != nil {
+					return nil, fmt.Errorf("%s: invalid released profiler lock: %w", language, err)
 				}
 				native, ok := p.Toolchain.Languages[language]
 				if !ok || native.LanguageVersion != target.LanguageVersion {

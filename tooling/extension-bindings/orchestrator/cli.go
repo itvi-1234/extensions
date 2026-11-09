@@ -23,6 +23,9 @@ type Options struct {
 	Output, Input, Report, ClosureOutput, DependencyLockOutput, DependencyLock                        string
 	CoreSchema, Go, Python, GoEmitter, Normalizer, GoProfiler, PythonProfiler, PythonProfilerArtifact string
 	Targets, ExtensionRoots, Overrides, CatalogRoots                                                  repeated
+	// LinkedGoProfiler opts into library identity; GoProfiler must be empty.
+	// The caller supplies verified build metadata. Standalone defaults are retained.
+	LinkedGoProfiler *ProfilerIdentity
 }
 
 var supportedOperations = map[string]bool{"resolve": true, "normalize": true, "generate": true, "verify": true, "package": true, "plan-release": true, "check": true, "update": true}

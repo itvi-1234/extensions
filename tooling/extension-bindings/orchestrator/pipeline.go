@@ -65,6 +65,24 @@ func NewPipeline(ctx context.Context, p *Project, o Options) (*Pipeline, error) 
 	if p.Toolchain.Status == "released" && len(o.Overrides) > 0 {
 		return nil, fmt.Errorf("released generation forbids extension overrides")
 	}
+	if o.LinkedGoProfiler != nil {
+		if o.GoProfiler != "" {
+			return nil, fmt.Errorf("select either a linked Go profiler identity or a standalone Go profiler executable")
+		}
+		identity := *o.LinkedGoProfiler
+		if identity.Kind != linkedGoProfilerKind {
+			return nil, fmt.Errorf("LinkedGoProfiler requires a linked Go module identity")
+		}
+		if err := identity.Validate(); err != nil {
+			return nil, err
+		}
+		if expected, pinned := p.Toolchain.Tools.Profilers["go"]; pinned {
+			if err := expected.Match(identity); err != nil {
+				return nil, fmt.Errorf("go-profiler: %w", err)
+			}
+		}
+		o.LinkedGoProfiler = &identity // Snapshot the caller's supplied identity.
+	}
 	pipeline := &Pipeline{Context: ctx, Project: p, Options: o, tools: map[string]string{}, identities: map[string]Tool{}, cores: map[string]map[string]any{}, HTTPClient: &http.Client{Timeout: 60 * time.Second, CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return fmt.Errorf("redirects are forbidden") }}}
 	for _, path := range []string{o.WorkDir, o.Cache} {
 		if path != "" {
@@ -186,7 +204,14 @@ func (p *Pipeline) tool(key string) (string, Tool, error) {
 		expected = p.Project.Toolchain.Tools.Emitters["go"]
 	case "go-profiler":
 		path = p.Options.GoProfiler
-		expected = p.Project.Toolchain.Tools.Profilers["go"]
+		pin := p.Project.Toolchain.Tools.Profilers["go"]
+		if pin.Kind != "" {
+			return "", Tool{}, fmt.Errorf("go-profiler identity kind differs from lock")
+		}
+		if path == "" {
+			return "", Tool{}, fmt.Errorf("standalone Go profiler path required; supply --go-profiler or a linked identity")
+		}
+		expected = Tool{Name: pin.Name, Version: pin.Version, SHA256: pin.SHA256, ArtifactURL: pin.ArtifactURL}
 	case "orchestrator":
 		path, _ = os.Executable()
 		expected = p.Project.Toolchain.Tools.Orchestrator
@@ -314,14 +339,45 @@ func (p *Pipeline) pythonEmitterIdentity() (Tool, error) {
 	p.identities["python-emitter"] = identity
 	return identity, nil
 }
-func (p *Pipeline) profiler(language string) (Tool, error) {
-	if language == "go" {
-		_, identity, err := p.tool("go-profiler")
-		return identity, err
+func (p *Pipeline) profiler(language string) (ProfilerIdentity, error) {
+	var artifact Tool
+	var err error
+	switch language {
+	case "go":
+		if p.Options.LinkedGoProfiler != nil {
+			return p.matchProfilerLock(language, *p.Options.LinkedGoProfiler)
+		}
+		_, artifact, err = p.tool("go-profiler")
+	case "python":
+		artifact, err = p.pythonProfiler()
+	default:
+		return ProfilerIdentity{}, fmt.Errorf("unsupported native adapter %s", language)
 	}
-	if language != "python" {
-		return Tool{}, fmt.Errorf("unsupported native adapter %s", language)
+	if err != nil {
+		return ProfilerIdentity{}, err
 	}
+	identity, err := NewStandaloneProfilerIdentity(artifact)
+	if err != nil {
+		return ProfilerIdentity{}, err
+	}
+	return p.matchProfilerLock(language, identity)
+}
+
+func (p *Pipeline) matchProfilerLock(language string, identity ProfilerIdentity) (ProfilerIdentity, error) {
+	if err := identity.Validate(); err != nil {
+		return ProfilerIdentity{}, err
+	}
+	if expected, pinned := p.Project.Toolchain.Tools.Profilers[language]; pinned {
+		if err := expected.Match(identity); err != nil {
+			return ProfilerIdentity{}, fmt.Errorf("%s profiler: %w", language, err)
+		}
+	} else if p.Project.Toolchain.Status == "released" {
+		return ProfilerIdentity{}, fmt.Errorf("%s: released lock lacks profiler", language)
+	}
+	return identity, nil
+}
+
+func (p *Pipeline) pythonProfiler() (Tool, error) {
 	if identity, ok := p.identities["python-profiler"]; ok {
 		return identity, nil
 	}
@@ -343,10 +399,6 @@ func (p *Pipeline) profiler(language string) (Tool, error) {
 		return Tool{}, err
 	}
 	identity := Tool{Name: "python-rc-profiler", Version: actual.Version, SHA256: actual.SHA256}
-	expected := p.Project.Toolchain.Tools.Profilers[language]
-	if expected.SHA256 != "" && (expected.SHA256 != identity.SHA256 || expected.Version != identity.Version) {
-		return Tool{}, fmt.Errorf("Python profiler identity differs from lock")
-	}
 	p.identities["python-profiler"] = identity
 	return identity, nil
 }
