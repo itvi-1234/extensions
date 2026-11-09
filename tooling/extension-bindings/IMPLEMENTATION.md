@@ -19,8 +19,8 @@ publication are outside the enabled Go workflows.
 
 The binding implementation remains in `extensions`. The downstream common `rc`
 executable belongs to `rc-cli` and will expose this implementation through a
-thin adapter. Language-specific profilers remain independently implemented and
-released programs.
+thin library adapter. Language-specific profilers remain independently
+implemented and released; the Go profiler also exposes a library API.
 
 The following requirements apply throughout the pipeline:
 
@@ -716,9 +716,22 @@ rc bindings check
 rc bindings update
 ```
 
-The executable is built from `orchestrator/cmd/rc`. The reusable command
-boundary is `orchestrator.Run(context.Context, []string, io.Writer, io.Writer)`;
-it accepts the `bindings` command group and returns errors to its caller.
+The standalone executable is built from `orchestrator/cmd/rc` and remains
+supported independently of the common CLI. Its argument parser is
+`orchestrator.Run(context.Context, []string, io.Writer, io.Writer)`.
+It accepts the `bindings` command group and delegates to the library boundary:
+
+```go
+orchestrator.Execute(ctx, cwd, operation, options, stdout, stderr)
+```
+
+`Execute` accepts a context, an absolute working directory, an operation name,
+typed `Options`, and non-nil output writers. It parses no command arguments and
+does not change the process working directory. Initialize options using
+`orchestrator.DefaultOptions()` to obtain the standalone native-tool defaults
+from the current environment, then apply explicit overrides. Explicit empty
+values are preserved. Relative input, output, override, and executable paths
+resolve against the supplied directory; bare tool names retain PATH lookup.
 The executable supplies process arguments and streams and chooses the exit code.
 
 | Command | Behavior and output |
@@ -792,21 +805,31 @@ NOT maintain a second binding generator or duplicate compatibility rules.
 
 ### 13.2 Binding adapter and distribution
 
-The reusable Go `orchestrator.Run` boundary and standalone command interface
-provide integration boundaries. An adapter may invoke a versioned Go API or an
-explicitly selected standalone tooling artifact, while preserving the command
-contract defined here.
+The common CLI MUST import the Go orchestrator and call `Execute` with typed
+options from native Cobra commands. It MUST NOT rebuild an argument vector for
+`Run` or dispatch to a separate `rc-bindings` executable. Generated SDKs under
+`bindings/` are workload dependencies; the generator library lives under
+`tooling/extension-bindings/orchestrator`.
 
-For an in-process adapter, the orchestrator, normalizer, and Go emitter modules
-must be available as a resolvable, versioned dependency set. Relative `replace`
-directives used for development inside `extensions` do not supply dependencies
-to a downstream module. The schema bundle and required emitter resources must
-also be located through an explicit installed tooling path.
+The orchestrator, normalizer, and Go emitter modules must be available as a
+resolvable, versioned dependency set. Relative `replace` directives used for
+development inside `extensions` do not supply dependencies to a downstream
+module. Installed schema and emitter resources must work outside a source
+checkout. The common CLI integration will call exported Go normalization and
+emission functions directly; Python tooling remains optional for Python targets.
 
-For a subprocess adapter, invoke the selected binding tool with an argument
-vector, preserve the caller's directory and streams, and propagate cancellation
-and failure. Select its executable by an explicit managed path; dispatch MUST
-NOT recursively resolve the common `rc` command as its own backend.
+Standalone generation in `extensions` MUST remain functional. Its entry point,
+native-tool options, and ability to select an independently installed Go
+profiler executable MUST remain supported. Extracting `Execute` preserves the
+existing executable-based tooling and artifact identities. Direct Go tool
+execution and linked identities are subsequent integration work.
+
+Linked profiler support MUST be explicit and optional. Its identity must record
+the actual linked module version and dependency checksum. Metadata schemas,
+lock validation, and profiler schema consumers must support that identity before
+new metadata is emitted. An executable SHA-256 and a module checksum identify
+different artifacts; a linked identity MUST NOT satisfy an executable lock.
+Explicit standalone profiler selection MUST retain executable identity checks.
 
 The CLI integration must retain actual executing-tool provenance and all lock
 checks. A separately installed CLI version is not a substitute for an emitter,
@@ -828,13 +851,15 @@ rc profile go generate <Go-profiler arguments>
 rc profile python <Python-profiler arguments>
 ```
 
-The common CLI's default installation includes the independently packaged Go
-profiler. Other languages are optional profiler add-ons. Each profiler owns its
-source parser, language runtime requirements, flags, and semantic validation.
+The common CLI links the independently versioned Go profiler as a Go module.
+Native Cobra commands bind typed options and invoke its exported functions;
+default and explicit Go routes share the same command constructors. Go help and
+flags use Cobra, including `--dir` and `--out`. Other languages are optional
+profiler add-ons with their own source parsers and runtime requirements.
 
-After selecting the profiler, the CLI forwards its argument vector without
-translating language-specific options. Backend help and output remain owned by
-the profiler. Launcher diagnostics must not contaminate profile data on stdout.
+Optional profiler commands forward their argument vectors without translating
+language-specific options. Their backend help and output remain owned by the
+profiler. Launcher diagnostics must not contaminate profile data on stdout.
 
 Interactive discovery may use managed installations, explicit configuration,
 and `PATH`, subject to protocol compatibility checks. Binding verification and
