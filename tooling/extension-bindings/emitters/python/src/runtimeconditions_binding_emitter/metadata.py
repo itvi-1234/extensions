@@ -339,6 +339,7 @@ def _manifest(plan: EmissionPlan, model: dict[str, Any]) -> str:
         },
         "extension": {
             "id": model["rootExtension"]["id"],
+            "version": model["rootExtension"]["version"],
             "semanticSha256": model["rootExtension"]["semanticSha256"],
         },
         "package": {

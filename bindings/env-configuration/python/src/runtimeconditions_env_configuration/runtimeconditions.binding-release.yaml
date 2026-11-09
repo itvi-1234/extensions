@@ -31,7 +31,7 @@ package:
 packageDependencies:
     - artifact:
         kind: python-wheel
-        sha256: 105c9081799a5db97f5261b3ba3a4d9f65523b2331751bb6da3bdfcea3c2a620
+        sha256: 67e561bd7295c966892e1d74a747c2fb0c17bd0941e6a0fee64b9b0f5a1a67ea
       compatibleVersionRange:
         minimumInclusive: 0.1.0
         nextBreakingExclusive: 0.2.0

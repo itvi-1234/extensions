@@ -51,6 +51,7 @@ properties:
     required: [id, semanticSha256]
     properties:
       id: {$ref: '#/$defs/extensionIdentifier'}
+      version: {type: string, minLength: 1}
       semanticSha256: {$ref: '#/$defs/sha256'}
   package:
     description: >-
