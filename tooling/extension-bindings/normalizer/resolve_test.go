@@ -348,7 +348,7 @@ func TestResolverBackendsProduceOneSemanticModel(t *testing.T) {
 	writeFixture(t, cache, sourceDigest+".yaml", data)
 	schemas := testSchemas(t)
 
-	httpsLocator := id
+	httpsLocator := "https://artifacts.example.test/definitions/backend.yaml"
 
 	configs := map[string]ResolverConfig{
 		"override": {Schemas: schemas, Overrides: map[string]string{id: path}},
@@ -435,6 +435,132 @@ func TestDevelopmentHTTPSRecordsLockAndExplicitCache(t *testing.T) {
 	}
 	if _, err = resolver.Resolve(context.Background(), id); err == nil {
 		t.Fatal("locked HTTPS accepted changed bytes")
+	}
+}
+
+type mappedHTTPTransport struct {
+	documents map[string][]byte
+	requests  []string
+}
+
+func (transport *mappedHTTPTransport) RoundTrip(request *http.Request) (*http.Response, error) {
+	locator := request.URL.String()
+	transport.requests = append(transport.requests, locator)
+	data, exists := transport.documents[locator]
+	if !exists {
+		return nil, fmt.Errorf("unexpected retrieval URL %q", locator)
+	}
+	return (staticHTTPTransport{data: data}).RoundTrip(request)
+}
+
+func TestLockedHTTPSCanonicalIDsSurviveNormalization(t *testing.T) {
+	const rootID = "https://runtimeconditions.io/extensions/env-configuration:v1alpha1"
+	const dependencyID = "https://runtimeconditions.io/extensions/common-integrations:v1alpha1"
+	const rootURL = "https://artifacts.example.test/canonical/env/definition.yaml"
+	const dependencyURL = "https://artifacts.example.test/canonical/common/definition.yaml"
+	root := bytes.Replace(fixtureExtension(rootID, []string{dependencyID}, kindSpec("fixture.env")), []byte("version: 1.0.0"), []byte("version: v1alpha1"), 1)
+	dependency := bytes.Replace(fixtureExtension(dependencyID, nil, kindSpec("fixture.common")), []byte("  version: 1.0.0\n"), nil, 1)
+	transport := &mappedHTTPTransport{documents: map[string][]byte{rootURL: root, dependencyURL: dependency}}
+	config := ResolverConfig{
+		Schemas: testSchemas(t), Network: true, HTTPClient: &http.Client{Transport: transport},
+		Locks: map[string]LockEntry{
+			rootID:       {SourceSHA256: SHA256Hex(root), SourceBackend: "https", Locator: rootURL},
+			dependencyID: {SourceSHA256: SHA256Hex(dependency), SourceBackend: "https", Locator: dependencyURL},
+		},
+	}
+	resolver, err := NewResolver(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	closure, err := resolver.Resolve(context.Background(), rootID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Join(transport.requests, "\n"); got != rootURL+"\n"+dependencyURL {
+		t.Fatalf("retrieved URLs = %q", got)
+	}
+	if closure.Root != rootID || closure.ByID[rootID].Definition.Metadata.ID != rootID || closure.ByID[dependencyID].Definition.Metadata.ID != dependencyID {
+		t.Fatal("retrieval URLs replaced canonical closure identifiers")
+	}
+	lock := BuildDependencyLock(closure)
+	model, err := Normalize(closure, lock, config.Schemas, testNormalizeConfig())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if model.RootExtension.ID != rootID || model.RootExtension.Version != "v1alpha1" || len(model.Extensions) != 2 || len(lock.Extensions) != 2 {
+		t.Fatal("canonical root or extension inventory changed during normalization")
+	}
+	for i, id := range []string{dependencyID, rootID} {
+		if model.Extensions[i].ID != id || lock.Extensions[i].ID != id || lock.Extensions[i].SourceLocator != config.Locks[id].Locator {
+			t.Fatalf("model or lock lost identity/location separation for %s", id)
+		}
+	}
+	if model.Extensions[0].Version != "" || len(model.DependencyEdges) != 1 || model.DependencyEdges[0] != (DependencyEdge{From: rootID, To: dependencyID}) {
+		t.Fatal("dependency identity, omitted version, or dependency edge changed")
+	}
+	owners := map[string]string{"fixture.env": rootID, "fixture.common": dependencyID}
+	if len(model.Vocabulary.Owners) != len(owners) {
+		t.Fatal("normalized vocabulary owner inventory changed")
+	}
+	for _, owner := range model.Vocabulary.Owners {
+		if owner.Owner != owners[owner.Kind] {
+			t.Fatalf("vocabulary owner changed to %q", owner.Owner)
+		}
+	}
+}
+
+func TestLockedHTTPSMappedDefinitionValidation(t *testing.T) {
+	const id = "https://runtimeconditions.io/extensions/example:1.0.0"
+	const locator = "https://artifacts.example.test/example/definition.yaml"
+	for _, test := range []struct {
+		name, definitionID, sourceDigest, semanticDigest, code string
+	}{
+		{"identity mismatch", "https://runtimeconditions.io/extensions/other:1.0.0", "", "", "RCB1220"},
+		{"source digest mismatch", id, strings.Repeat("0", 64), "", "RCB1212"},
+		{"semantic digest mismatch", id, "", strings.Repeat("f", 64), "RCB1213"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			data := fixtureExtension(test.definitionID, nil, kindSpec("fixture.example"))
+			digest := test.sourceDigest
+			if digest == "" {
+				digest = SHA256Hex(data)
+			}
+			transport := &mappedHTTPTransport{documents: map[string][]byte{locator: data}}
+			resolver, err := NewResolver(ResolverConfig{
+				Schemas: testSchemas(t), Network: true, HTTPClient: &http.Client{Transport: transport},
+				Locks: map[string]LockEntry{id: {SourceSHA256: digest, SemanticSHA256: test.semanticDigest, Locator: locator}},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = resolver.Resolve(context.Background(), id)
+			if err == nil || diagnosticCode(t, err) != test.code {
+				t.Fatalf("expected %s, got %v", test.code, err)
+			}
+			if len(transport.requests) != 1 || transport.requests[0] != locator {
+				t.Fatalf("retrieved URLs = %v", transport.requests)
+			}
+		})
+	}
+}
+
+func TestLockedHTTPSRejectsInvalidRetrievalURLs(t *testing.T) {
+	const id = "https://runtimeconditions.io/extensions/example:1.0.0"
+	for _, locator := range []string{"http://artifacts.example.test/definition.yaml", "file:///definition.yaml", "https:///missing-host.yaml", "https://user:password@artifacts.example.test/definition.yaml", "https://artifacts.example.test/%invalid"} {
+		t.Run(locator, func(t *testing.T) {
+			transport := &countingTransport{}
+			resolver, err := NewResolver(ResolverConfig{
+				Schemas: testSchemas(t), Network: true, HTTPClient: &http.Client{Transport: transport},
+				Locks: map[string]LockEntry{id: {SourceSHA256: strings.Repeat("a", 64), Locator: locator}},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = resolver.Resolve(context.Background(), id)
+			if err == nil || diagnosticCode(t, err) != "RCB1207" || transport.requests.Load() != 0 {
+				t.Fatalf("invalid retrieval URL reached transport or lacked RCB1207: %v", err)
+			}
+		})
 	}
 }
 

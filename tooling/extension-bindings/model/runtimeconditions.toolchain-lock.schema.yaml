@@ -4,8 +4,10 @@ title: Runtime Conditions toolchain lock
 description: >-
   Development may use workspace tools. A released lock pins normalizer,
   orchestrator, emitters and independently installed profilers by version and
-  artifact SHA-256. Consumers must check that each selected language has both
-  an emitter and a profiler and that the actual artifacts match their digests.
+  artifact SHA-256. Go profiler pins may instead identify a linked module by
+  exact version and dependency checksum. Consumers must check that each selected
+  language has an emitter and profiler and that the selected identity form,
+  version and checksum match the lock without substituting another artifact kind.
 type: object
 additionalProperties: false
 required: [apiVersion, kind, status]
@@ -22,7 +24,7 @@ properties:
       normalizer: {$ref: '#/$defs/toolIdentity'}
       orchestrator: {$ref: '#/$defs/toolIdentity'}
       emitters: {$ref: '#/$defs/languageTools'}
-      profilers: {$ref: '#/$defs/languageTools'}
+      profilers: {$ref: '#/$defs/profilerTools'}
   languages:
     type: object
     propertyNames:
@@ -64,6 +66,33 @@ $defs:
         description: Optional retrieval URL for the exact checksummed released artifact.
         type: string
         pattern: '^https://[^\s]+$'
+  profilerIdentity:
+    oneOf:
+      - {$ref: '#/$defs/toolIdentity'}
+      - {$ref: '#/$defs/linkedGoProfilerIdentity'}
+  linkedGoProfilerIdentity:
+    description: Exact linked Go profiler dependency, distinct from an executable digest.
+    type: object
+    additionalProperties: false
+    required: [kind, name, version, module, moduleSum]
+    properties:
+      kind: {const: go-module}
+      name: {const: go-rc-profiler}
+      version:
+        type: string
+        pattern: '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(\+incompatible)?$'
+      module: {const: github.com/runtimeconditions/go-rc-profiler}
+      moduleSum:
+        type: string
+        pattern: '^h1:[A-Za-z0-9+/]{42}[AEIMQUYcgkosw048]=$'
+  profilerTools:
+    type: object
+    minProperties: 1
+    propertyNames:
+      pattern: '^[a-z][a-z0-9-]*$'
+    properties:
+      go: {$ref: '#/$defs/profilerIdentity'}
+    additionalProperties: {$ref: '#/$defs/toolIdentity'}
   languageTools:
     type: object
     minProperties: 1
