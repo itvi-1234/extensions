@@ -1,29 +1,43 @@
-"""Build a static site tree so every catalog extension is reachable at its
-own `metadata.id` URL.
+"""Publish canonical extension definitions, their lookup index, and Go discovery.
 
-Each extension's id is the URL it's meant to be resolved at, e.g.
-https://runtimeconditions.io/extensions/aws-s3/0.1.0/runtimeconditions.extension.yaml.
-This copies each extension.yaml to the output directory at the path portion
-of that URL, so publishing the output directory as a static site (GitHub
-Pages or otherwise) makes every id resolvable by itself - no separate
-mapping to keep in sync. Generated Go modules also receive discovery pages
-at their public module coordinates from the package catalog.
+Only complete <location>:<version> extension references are supported. Definition
+bytes are published unchanged beneath release paths; extensions/index.yaml maps
+their exact identities to retrieval URLs and source checksums.
 """
 
 from __future__ import annotations
 
 import argparse
-import shutil
+import re
 import sys
+from hashlib import sha256
 from pathlib import Path
 from html import escape
-from urllib.parse import urlparse
+from urllib.parse import quote
+
+import yaml
 
 from go_bindings import GoBinding, load_bindings, validate_source
 from serialization import read_document
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXPECTED_HOST = "runtimeconditions.io"
+CANONICAL_REFERENCE = re.compile(
+    rf"https://{re.escape(EXPECTED_HOST)}/extensions/"
+    r"([A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)?):([^/?#\s]+)"
+)
+
+
+def canonical_parts(reference: str) -> tuple[str, str]:
+    match = CANONICAL_REFERENCE.fullmatch(reference) if isinstance(reference, str) else None
+    if match is None:
+        raise ValueError(f"expected canonical extension reference <location>:<version>, got {reference!r}")
+    location, version = match.groups()
+    if location.startswith("rc/"):
+        raise ValueError("canonical providerless references must omit the internal rc namespace")
+    if version in {".", ".."} or "\\" in version or any(ord(char) < 32 or ord(char) == 127 for char in version):
+        raise ValueError(f"invalid canonical extension version in {reference!r}")
+    return location, version
 
 
 def build_go_pages(output_dir: Path, root: Path) -> None:
@@ -96,31 +110,69 @@ def build(output_dir: Path, root: Path = REPO_ROOT) -> int:
         return 1
 
     errors = []
+    entries = {}
+    outputs = {}
     for extension_path in extension_paths:
-        doc = read_document(extension_path)
-        extension_id = doc.get("metadata", {}).get("id", "")
-        parsed = urlparse(extension_id)
         relative = extension_path.relative_to(root)
+        try:
+            doc = read_document(extension_path)
+            metadata = doc.get("metadata")
+            if doc.get("kind") != "RuntimeConditionsExtensionDefinition" or not isinstance(metadata, dict):
+                raise ValueError("expected extension definition with metadata object")
+            extension_id = metadata.get("id")
+            location, version = canonical_parts(extension_id)
+            if "version" in metadata and metadata["version"] != version:
+                raise ValueError("metadata.version must exactly match the canonical reference version")
+            spec = doc.get("spec", {})
+            if not isinstance(spec, dict) or not isinstance(spec.get("dependencies", []), list):
+                raise ValueError("expected spec object with a dependencies array when present")
+            for dependency in spec.get("dependencies", []):
+                canonical_parts(dependency)
+            destination = Path("extensions", *location.split("/"), "releases", version, "runtimeconditions.extension.yaml")
+            if extension_id in entries:
+                raise ValueError(f"duplicate extension id {extension_id!r}")
+            if destination in outputs:
+                raise ValueError(f"conflicting output path {destination}")
+            source = extension_path.read_bytes()
+            outputs[destination] = source
+            entries[extension_id] = {
+                "id": extension_id,
+                "url": f"https://{EXPECTED_HOST}/" + quote(destination.as_posix(), safe="/"),
+                "sourceSha256": sha256(source).hexdigest(),
+            }
+        except (ValueError, OSError) as error:
+            errors.append(f"{relative}: {error}")
 
-        if parsed.scheme != "https" or parsed.netloc != EXPECTED_HOST:
-            errors.append(f"{relative}: metadata.id {extension_id!r} is not an https://{EXPECTED_HOST}/... URL")
-            continue
-
-        destination = output_dir / parsed.path.lstrip("/")
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(extension_path, destination)
-        print(f"{relative} -> {parsed.path}")
+    index = {
+        "apiVersion": "runtimeconditions.io/extension-index/v1alpha1",
+        "kind": "RuntimeConditionsExtensionIndex",
+        "extensions": [entries[identifier] for identifier in sorted(entries)],
+    }
+    outputs[Path("extensions/index.yaml")] = yaml.safe_dump(
+        index, sort_keys=False, allow_unicode=True, width=4096
+    ).encode("utf-8")
+    for relative, source in outputs.items():
+        destination = output_dir / relative
+        if (not destination.resolve().is_relative_to(output_dir.resolve())
+                or any(parent.exists() and not parent.is_dir() for parent in destination.parents)
+                or destination.exists() and (not destination.is_file() or destination.read_bytes() != source)):
+            errors.append(f"conflicting output path {relative}")
 
     if errors:
         for error in errors:
             print(error, file=sys.stderr)
-        print(f"\n{len(errors)} extension(s) have an id that can't be published this way.", file=sys.stderr)
+        print(f"\nExtension publication failed with {len(errors)} error(s).", file=sys.stderr)
         return 1
 
     try:
         build_go_pages(output_dir, root)
+        for relative, source in outputs.items():
+            destination = output_dir / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(source)
+            print(f"extension publication -> /{relative.as_posix()}")
     except (ValueError, KeyError, OSError) as error:
-        print(f"Go binding discovery failed: {error}", file=sys.stderr)
+        print(f"Site assembly failed: {error}", file=sys.stderr)
         return 1
     return 0
 

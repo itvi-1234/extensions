@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from contextlib import redirect_stderr
+from hashlib import sha256
 from html.parser import HTMLParser
+from io import StringIO
 from pathlib import Path
 import tempfile
 import unittest
@@ -43,9 +46,19 @@ class SiteTests(unittest.TestCase):
         self.write_catalog()
         self.definition = self.root / "catalog/vendor/service/releases/0.1.0/runtimeconditions.extension.yaml"
         self.definition.parent.mkdir(parents=True)
-        self.definition.write_text(yaml.safe_dump({"kind": "RuntimeConditionsExtensionDefinition", "metadata": {
-            "id": "https://runtimeconditions.io/extensions/vendor/service/0.1.0/runtimeconditions.extension.yaml"}}))
+        self.document = {"kind": "RuntimeConditionsExtensionDefinition", "metadata": {
+            "id": "https://runtimeconditions.io/extensions/vendor/service:0.1.0", "version": "0.1.0"}}
+        self.write_definition()
         self.write_source()
+
+    def write_definition(self) -> None:
+        self.definition.write_text(yaml.safe_dump(self.document), encoding="utf-8")
+
+    def assert_rejected(self, message: str) -> None:
+        errors = StringIO()
+        with redirect_stderr(errors):
+            self.assertEqual(build(self.output, self.root), 1)
+        self.assertIn(message, errors.getvalue())
 
     def write_catalog(self) -> None:
         path = self.root / "tooling/extension-bindings/packages.yaml"
@@ -69,8 +82,101 @@ class SiteTests(unittest.TestCase):
         self.assertIn("go get runtimeconditions.io/x/vendor/service@v0.1.0", page)
         self.assertFalse((self.output / "x/vendor/pending").exists())
         self.assertIn("runtimeconditions.io/x/vendor/service", (self.output / "x/index.html").read_text())
-        published = self.output / "extensions/vendor/service/0.1.0/runtimeconditions.extension.yaml"
+        published = self.output / "extensions/vendor/service/releases/0.1.0/runtimeconditions.extension.yaml"
         self.assertEqual(published.read_bytes(), self.definition.read_bytes())
+        index = yaml.safe_load((self.output / "extensions/index.yaml").read_text())
+        self.assertEqual(index, {
+            "apiVersion": "runtimeconditions.io/extension-index/v1alpha1",
+            "kind": "RuntimeConditionsExtensionIndex",
+            "extensions": [{
+                "id": self.document["metadata"]["id"],
+                "url": "https://runtimeconditions.io/extensions/vendor/service/releases/0.1.0/runtimeconditions.extension.yaml",
+                "sourceSha256": sha256(published.read_bytes()).hexdigest(),
+            }],
+        })
+        self.assertFalse((self.output / "extensions/vendor/service:0.1.0").exists())
+        self.assertFalse((self.output / "extensions/vendor/service/0.1.0").exists())
+
+    def test_providerless_and_digest_versions_publish_exact_ids(self) -> None:
+        for version in ("v1alpha1", "sha256:abc123"):
+            with self.subTest(version=version):
+                reference = f"https://runtimeconditions.io/extensions/common-integrations:{version}"
+                self.document["metadata"] = {"id": reference}
+                self.write_definition()
+                output = self.output / version
+                self.assertEqual(build(output, self.root), 0)
+                artifact = output / f"extensions/common-integrations/releases/{version}/runtimeconditions.extension.yaml"
+                self.assertEqual(artifact.read_bytes(), self.definition.read_bytes())
+                entry = yaml.safe_load((output / "extensions/index.yaml").read_text())["extensions"][0]
+                self.assertEqual(entry["id"], reference)
+                encoded = version.replace(":", "%3A")
+                self.assertEqual(entry["url"], f"https://runtimeconditions.io/extensions/common-integrations/releases/{encoded}/runtimeconditions.extension.yaml")
+
+    def test_legacy_and_invalid_references_are_rejected_before_writing(self) -> None:
+        for reference in (
+            "https://runtimeconditions.io/extensions/vendor/service/0.1.0/runtimeconditions.extension.yaml",
+            "https://runtimeconditions.io/extensions/vendor/service",
+            "https://runtimeconditions.io/extensions/vendor/service:",
+            "https://runtimeconditions.io/extensions/rc/service:0.1.0",
+            "https://runtimeconditions.io/extensions/vendor/service:..",
+            "https://runtimeconditions.io/extensions/vendor/../escape:1",
+            "https://runtimeconditions.io/extensions/vendor/service:1?query=value",
+            "https://runtimeconditions.io/extensions/vendor/service:1#fragment",
+            "https://runtimeconditions.io/extensions/vendor/service:1\x00",
+            "http://runtimeconditions.io/extensions/vendor/service:1",
+            "https://other.example/extensions/vendor/service:1",
+            None,
+        ):
+            with self.subTest(reference=reference):
+                self.document["metadata"]["id"] = reference
+                self.write_definition()
+                self.assert_rejected("canonical")
+                self.assertFalse(self.output.exists())
+
+    def test_version_annotation_must_match_canonical_id(self) -> None:
+        for version in ("0.2.0", "", None, 1):
+            with self.subTest(version=version):
+                self.document["metadata"]["version"] = version
+                self.write_definition()
+                self.assert_rejected("metadata.version")
+                self.assertFalse(self.output.exists())
+
+    def test_legacy_dependency_reference_is_rejected(self) -> None:
+        self.document["spec"] = {"dependencies": [
+            "https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml"]}
+        self.write_definition()
+        self.assert_rejected("canonical")
+        self.assertFalse(self.output.exists())
+
+    def test_duplicate_id_is_rejected_before_writing(self) -> None:
+        duplicate = self.root / "catalog/vendor/duplicate/releases/0.1.0/runtimeconditions.extension.yaml"
+        duplicate.parent.mkdir(parents=True)
+        duplicate.write_bytes(self.definition.read_bytes())
+        self.assert_rejected("duplicate extension id")
+        self.assertFalse(self.output.exists())
+
+    def test_conflicting_artifact_path_is_rejected_before_writing(self) -> None:
+        artifact = self.output / "extensions/vendor/service/releases/0.1.0/runtimeconditions.extension.yaml"
+        artifact.parent.mkdir(parents=True)
+        artifact.write_bytes(b"unrelated content\n")
+        self.assert_rejected("conflicting output path")
+        self.assertEqual(artifact.read_bytes(), b"unrelated content\n")
+        self.assertFalse((self.output / "extensions/index.yaml").exists())
+        self.assertFalse((self.output / "x").exists())
+
+    def test_lookup_entries_are_sorted_and_reproducible(self) -> None:
+        additional = self.root / "catalog/rc/common-integrations/common-v1alpha1.yaml"
+        additional.parent.mkdir(parents=True)
+        reference = "https://runtimeconditions.io/extensions/common-integrations:v1alpha1"
+        additional.write_text(yaml.safe_dump({"kind": "RuntimeConditionsExtensionDefinition", "metadata": {"id": reference}}))
+        self.assertEqual(build(self.output, self.root), 0)
+        index = (self.output / "extensions/index.yaml").read_bytes()
+        entries = yaml.safe_load(index)["extensions"]
+        self.assertEqual([entry["id"] for entry in entries], [reference, self.document["metadata"]["id"]])
+        self.assertEqual(entries[0]["sourceSha256"], sha256(additional.read_bytes()).hexdigest())
+        other_output = self.output.parent / "second-site"
+        self.assertEqual(build(other_output, self.root), 0)
+        self.assertEqual((other_output / "extensions/index.yaml").read_bytes(), index)
 
     def test_mismatched_generated_module_fails_site_build(self) -> None:
         (self.root / "bindings/service/go/go.mod").write_text("module github.com/old/module\n")

@@ -1,20 +1,21 @@
-# Extension release and compatibility contract
+# First-party extension release contract
 
 ## Purpose
 
 This contract governs extensions published by Runtime Conditions and the
-first-party tools that produce and consume them. It does not add requirements
-to the core profile specification or restrict third-party extension identifiers.
+first-party tools that produce and consume them. It defines the reference forms
+supported by that tooling; the core profile specification remains unchanged.
 
 An extension release is an immutable semantic vocabulary artifact. Its Runtime Conditions `apiVersion` identifies the document schema understood by validators; it does not identify the extension's semantic release.
 
-The canonical identity rules below are the agreed target for an incremental
-tooling migration. Existing definitions and released binding packages still use
-artifact URLs as identifiers. Recording this contract does not migrate those
-artifacts; the rollout gates below apply before new identities are published.
+The canonical identity rules below are the target for an incremental tooling
+migration. Inputs that still use artifact URLs as identifiers must be migrated.
+First-party tooling MUST reject unsupported reference forms rather than retain
+legacy acceptance, aliases, automatic conversion, or fallback behavior.
 
 ## Identity and versioning
 
+- First-party tooling MUST accept and emit only complete `<location>:<version>` extension references. Unversioned identifiers and artifact-URL extension references MUST be rejected.
 - A first-party extension release MUST use a complete, explicitly versioned identifier of the form `https://runtimeconditions.io/extensions/<name>:<version>` or `https://runtimeconditions.io/extensions/<provider>/<name>:<version>`.
 - The complete identifier MUST appear unchanged in the definition's `metadata.id`, profile extension declarations and selectors, dependency references, normalized model identity and ownership fields, and binding or SDK manifest identity fields.
 - A generator MUST copy that identifier verbatim. It MUST NOT reconstruct it from a retrieval URL, a native package version, or a separate version annotation.
@@ -88,18 +89,52 @@ retrieved first-party definition's `metadata.id` MUST match the requested
 identifier exactly. Missing mappings, unavailable artifacts, identity mismatches,
 and inconsistent version annotations MUST fail resolution.
 
-The familiar artifact layout is
-`https://runtimeconditions.io/extensions/<name>/<version>/runtimeconditions.extension.yaml`
+The first-party publisher accepts only the canonical identifier forms in this
+contract. A providerless identifier omits the catalog's internal `rc` namespace.
+The artifact layout is
+`https://runtimeconditions.io/extensions/<name>/releases/<version>/runtimeconditions.extension.yaml`
 or
-`https://runtimeconditions.io/extensions/<provider>/<name>/<version>/runtimeconditions.extension.yaml`.
-An existing URL that already identifies a published legacy definition MUST NOT
-be overwritten with a definition declaring the new canonical identifier. The
-migration must allocate a separate retrieval location in that case and record
-its mapping explicitly.
+`https://runtimeconditions.io/extensions/<provider>/<name>/releases/<version>/runtimeconditions.extension.yaml`.
+Each version occupies one URL path segment and is percent-encoded there when
+necessary. Its exact spelling in the canonical identifier remains unchanged.
 
-Support for other retrieval backends remains an implementation capability. This
-first-party identity convention does not impose a path rewrite on third-party
-identifiers.
+For example, the identifier
+`https://runtimeconditions.io/extensions/common-integrations:v1alpha1` maps to
+`https://runtimeconditions.io/extensions/common-integrations/releases/v1alpha1/runtimeconditions.extension.yaml`.
+The publisher copies the definition bytes unchanged. It does not create artifact
+URL identities, legacy routes, or aliases. Definition IDs and dependency
+references must be canonical; an optional `metadata.version` must match the
+version in the definition ID.
+
+### Generated lookup index
+
+The publisher writes `https://runtimeconditions.io/extensions/index.yaml`:
+
+```yaml
+apiVersion: runtimeconditions.io/extension-index/v1alpha1
+kind: RuntimeConditionsExtensionIndex
+extensions:
+  - id: https://runtimeconditions.io/extensions/common-integrations:v1alpha1
+    url: https://runtimeconditions.io/extensions/common-integrations/releases/v1alpha1/runtimeconditions.extension.yaml
+    sourceSha256: <SHA-256 of the exact published YAML bytes>
+```
+
+Entries are sorted by their exact `id` strings. Each canonical ID appears once;
+`url` is its retrieval location and `sourceSha256` is the lowercase hexadecimal
+SHA-256 of its published bytes. This generated first-party lookup contract does
+not extend the core profile format. Consumers must explicitly integrate the
+lookup entries into their retrieval mappings or dependency locks; writing the
+index does not change consumer discovery behavior by itself.
+
+The publisher MUST reject unsupported IDs or dependency reference forms,
+inconsistent version annotations, duplicate IDs, and conflicting output paths
+before writing artifacts. Canonical definitions and the lookup index are the
+only extension publication outputs. Existing Go package discovery pages remain
+a separate publication output.
+
+Support for other retrieval backends remains an implementation capability.
+First-party tools must keep the complete versioned reference as the identity
+regardless of how the artifact is retrieved.
 
 ## Incremental migration gates
 
@@ -107,30 +142,35 @@ Each implementation increment must identify its files and validation before
 editing. Consumer support must precede changes to published definition identities.
 
 1. **Record the tooling contract.** Establish the complete canonical identifier,
-   optional version annotation, retrieval mapping, and legacy-artifact rules in
+   optional version annotation, retrieval mapping, and strict rejection rules in
    this document. This step changes documentation only.
 2. **Prepare consumers with synthetic fixtures.** Audit the shared resolver,
    binding normalizer and emitters, site publishing, and language profilers.
    Verify that canonical identifiers survive resolution, ownership checks, and
    profile generation unchanged, including when a version annotation is present
-   or absent. Existing released URL identifiers must continue to work. Keep
+   or absent. Verify that artifact-URL extension references are rejected. Keep
    cross-repository compatibility checks outside the shared binding-tooling suite.
-3. **Migrate the common/env dependency pair.** Select retrieval locations that
-   preserve published legacy artifacts. Update the definitions, dependency edge,
-   catalog entries, generated metadata, and native package versions in bounded
+3. **Migrate the common/env dependency pair.** Replace artifact-URL identities
+   with canonical references and use the canonical publication layout. Update
+   the definitions, dependency edge, catalog entries, generated metadata, and native package versions in bounded
    increments. Regenerate bindings through the tooling; do not hand-edit generated
    identities or digests. Verify installed consumers before publication.
 4. **Update the CLI integration.** After compatible profiler and binding releases
    are available, update the required dependency pins and fixtures. Require the
-   installed CLI to emit the canonical references exactly, while retaining
-   coverage for workloads using the previous binding releases.
+   installed CLI to emit the canonical references exactly and reject inputs
+   that still expose artifact-URL extension references.
 5. **Expand one dependency group at a time.** Apply the same checks to remaining
    extensions, SDK mappings, language bindings, profilers, demos, and adapters.
    Each group must resolve, generate, and validate before the next group moves.
 
-For each migrated group, record the previous and canonical identifiers, retrieval
+For each migrated group, record the canonical identifiers, retrieval
 locations, affected dependency edges, artifact digests, package versions, and
 consumer release requirements. A new definition identity changes its semantic
 digest even when its vocabulary is unchanged; dependent models and bindings must
 be regenerated. Publication continues through the existing release verification
 and dry-run process.
+
+Incremental implementation does not authorize compatibility branches. The
+current catalog cannot pass strict site assembly until its definitions and
+dependency references have been migrated. Complete that migration and the
+required consumer updates before deploying the resulting site.
