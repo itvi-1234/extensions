@@ -9,6 +9,13 @@ GitHub Actions generates and commits Go and Python bindings to `main`, then a
 separate manual workflow publishes verified Go module tags and release assets.
 Registry publication of Python bindings remains later work.
 
+The first-party identity contract and migration gates are in
+[`EXTENSION_RELEASES.md`](../../EXTENSION_RELEASES.md). The target contract uses
+the complete versioned `metadata.id` unchanged throughout resolution, models,
+manifests, and generated profiles. Its migration is incremental; existing
+definitions and released bindings still use artifact URL identities. The core
+profile specification is unchanged by this tooling convention.
+
 ## Automatic Go and Python binding generation
 
 `.github/workflows/binding-generate.yml` runs on relevant `main` changes to the
@@ -378,12 +385,12 @@ go run ./cmd/rc-binding-model \
   --dependency-lock-output <new-lock-path>
 ```
 
-Output paths must not already exist. HTTPS retrieval requires a dependency lock
-with an exact source digest and the URL derived from the requested identifier:
-`https://<domain>/extensions/<provider>/<service>/<version>/runtimeconditions.extension.yaml`.
-Providerless identities use provider `rc` for retrieval while retaining their
-declared identity. HTTPS redirects are rejected; `file:` and `oci:` retrieval
-are unsupported. A previously written lock is supplied with `--dependency-lock`.
+Output paths must not already exist. HTTPS retrieval records the artifact URL
+and exact source digest in the dependency lock. Canonical identity support and
+its retrieval mappings must pass the migration gates in
+[`EXTENSION_RELEASES.md`](../../EXTENSION_RELEASES.md) before catalog identities
+change. An artifact URL used for transport must not replace the requested
+identifier. A previously written lock is supplied with `--dependency-lock`.
 
 The extension cache is content-addressed. Each extension entry must be named
 `<lowercase-sha256>`, `<lowercase-sha256>.yaml`, or
