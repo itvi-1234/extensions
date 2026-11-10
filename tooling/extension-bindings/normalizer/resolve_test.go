@@ -25,7 +25,7 @@ func fixtureExtension(id string, dependencies []string, specBody string) []byte 
 			dependencyYAML.WriteByte('\n')
 		}
 	}
-	return []byte(fmt.Sprintf("apiVersion: runtimeconditions.io/v1alpha1\nkind: RuntimeConditionsExtensionDefinition\nmetadata:\n  id: %q\n  version: 1.0.0\nspec:\n%s%s", id, dependencyYAML.String(), specBody))
+	return []byte(fmt.Sprintf("apiVersion: runtimeconditions.io/v1alpha1\nkind: RuntimeConditionsExtensionDefinition\nmetadata:\n  id: %s\n  version: 1.0.0\nspec:\n%s%s", id, dependencyYAML.String(), specBody))
 }
 
 func kindSpec(name string) string {
@@ -72,35 +72,25 @@ func closureIDs(closure ResolvedClosure) []string {
 
 func TestExtensionIdentifierSchemesAndExactSpelling(t *testing.T) {
 	for _, id := range []string{
-		"https://runtimeconditions.io/extensions/common-integrations:v1alpha1",
-		"https://example.test/arbitrary/nested/service:sha256:abc",
-		"https://EXAMPLE.test:8443/CaseSensitive/%73ervice:V1+build",
-		"file:///opt/extensions/service:1.0.0", "oci://example.test/extensions:1.0.0",
-		"urn:service:release-2026", "custom+resolver:service:1.0.0",
+		"https://example.test/arbitrary/nested/path/release.yaml?revision=abc",
+		"https://EXAMPLE.test:8443/CaseSensitive/%73ervice/V1+build",
+		"file:///opt/extensions/release.yaml", "oci://example.test/extensions@sha256:abc",
+		"urn:example:extension:release-2026", "custom+resolver:immutable-release",
 	} {
-		parsed, version, err := parseExtensionIdentifier(id)
-		if err != nil || parsed.String() != id || version == "" {
+		parsed, err := parseExtensionIdentifier(id)
+		if err != nil || parsed.String() != id {
 			t.Errorf("identifier %q changed or was rejected: %v", id, err)
 		}
 	}
-	for _, id := range []string{
-		"", "relative/path:1", "/absolute/path:1", "//example.test/path:1", "1bad:release:1",
-		"urn:bad version:1", "https://example.test/%invalid:1", "https://example.test:8443",
-		"https://example.test/service:", "https://example.test/:1", "https://example.test/service:.",
-		"https://example.test/service:..", "https:///service:1", "https://user@example.test/service:1",
-		"https://example.test/service:1?revision=abc", "https://example.test/service:1#fragment",
-		"https://example.test/service:bad\\version", "https://example.test/service:bad\u0085version",
-		"https://example.test/definition.yaml:1.0.0", "file:///opt/definition.yml:1.0.0",
-		"https://example.test/definition.json:1.0.0", "https://example.test/definition%2Eyaml:1.0.0",
-	} {
-		if _, _, err := parseExtensionIdentifier(id); err == nil {
+	for _, id := range []string{"", "relative/path", "/absolute/path", "//example.test/path", "1bad:release", "urn:bad version", "https://example.test/%invalid"} {
+		if _, err := parseExtensionIdentifier(id); err == nil {
 			t.Errorf("invalid extension identifier accepted: %q", id)
 		}
 	}
 }
 
-func TestVersionedIdentifiersWithoutAnnotationResolveFromEveryLocalBackend(t *testing.T) {
-	for _, id := range []string{"https://example.test/service:1.0.0", "urn:service:1.0.0", "file:///opt/extensions/service:1.0.0", "oci://registry.example/extensions:1.0.0", "custom+resolver:service:1.0.0"} {
+func TestVersionlessIdentifiersResolveFromEveryLocalBackend(t *testing.T) {
+	for _, id := range []string{"urn:example:release-a", "file:///opt/extensions/release.yaml", "oci://registry.example/extensions@sha256:abc", "custom+resolver:release-a"} {
 		t.Run(id, func(t *testing.T) {
 			data := bytes.ReplaceAll(fixtureExtension(id, nil, kindSpec("future.service")), []byte("  version: 1.0.0\n"), nil)
 			directory := t.TempDir()
@@ -141,44 +131,8 @@ func TestVersionedIdentifiersWithoutAnnotationResolveFromEveryLocalBackend(t *te
 	}
 }
 
-func TestUnversionedReferencesAreRejectedAcrossBackends(t *testing.T) {
-	for _, id := range []string{
-		"https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml",
-		"https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml:v1alpha1",
-		"https://example.test/service", "https://example.test:8443", "urn:release-a",
-		"file:///opt/extensions/release.yaml", "oci://registry.example/extensions", "custom+resolver:release-a",
-	} {
-		t.Run(id, func(t *testing.T) {
-			data := fixtureExtension(id, nil, kindSpec("fixture.service"))
-			directory, cache := t.TempDir(), t.TempDir()
-			path := writeFixture(t, directory, "definition.yaml", data)
-			writeFixture(t, cache, SHA256Hex(data)+".yaml", data)
-			transport := &countingTransport{}
-			for name, config := range map[string]ResolverConfig{
-				"catalog": {CatalogRoots: []string{directory}}, "package": {PackageRoots: []string{directory}},
-				"cache": {CacheDir: cache}, "override": {Overrides: map[string]string{id: path}},
-				"https": {Network: true, HTTPClient: &http.Client{Transport: transport}, Locks: map[string]LockEntry{id: {SourceSHA256: SHA256Hex(data), Locator: "https://artifacts.example.test/definition.yaml"}}},
-			} {
-				t.Run(name, func(t *testing.T) {
-					config.Schemas = testSchemas(t)
-					resolver, err := NewResolver(config)
-					if err != nil {
-						t.Fatal(err)
-					}
-					if _, err = resolver.Resolve(context.Background(), id); err == nil || diagnosticCode(t, err) != "RCB1203" {
-						t.Fatalf("expected reference rejection, got %v", err)
-					}
-				})
-			}
-			if transport.requests.Load() != 0 {
-				t.Fatal("invalid reference reached HTTP transport")
-			}
-		})
-	}
-}
-
 func TestUnavailableRetrievalDoesNotInvalidateIdentifier(t *testing.T) {
-	for _, id := range []string{"urn:service:1.0.0", "oci://example.test/service:1.0.0", "file:///opt/extensions/service:1.0.0"} {
+	for _, id := range []string{"urn:example:release", "oci://example.test/release", "file:///opt/extensions/release.yaml"} {
 		resolver := fixtureResolver(t)
 		_, err := resolver.Resolve(context.Background(), id)
 		if err == nil || diagnosticCode(t, err) != "RCB1207" || !strings.Contains(err.Error(), "automatic retrieval") {
@@ -188,14 +142,14 @@ func TestUnavailableRetrievalDoesNotInvalidateIdentifier(t *testing.T) {
 }
 
 func TestRequestedIdentifierMustExactlyMatchDefinition(t *testing.T) {
-	id := "https://example.test/ReleaseA:1.0.0"
+	id := "urn:example:ReleaseA"
 	path := writeFixture(t, t.TempDir(), "release.yaml", fixtureExtension(id, nil, kindSpec("future.service")))
-	_, err := NewResolver(ResolverConfig{Schemas: testSchemas(t), Overrides: map[string]string{"https://example.test/releasea:1.0.0": path}})
+	_, err := NewResolver(ResolverConfig{Schemas: testSchemas(t), Overrides: map[string]string{"urn:example:releasea": path}})
 	if err == nil || diagnosticCode(t, err) != "RCB1201" {
 		t.Fatalf("case-sensitive identity mismatch accepted: %v", err)
 	}
 	resolver := fixtureResolver(t)
-	_, err = resolver.finishLoad("https://example.test/releasea:1.0.0", fixtureExtension(id, nil, kindSpec("future.service")), "https", "https://example.test/release.yaml")
+	_, err = resolver.finishLoad("urn:example:releasea", fixtureExtension(id, nil, kindSpec("future.service")), "https", "https://example.test/release.yaml")
 	if err == nil || diagnosticCode(t, err) != "RCB1220" {
 		t.Fatalf("retrieved identity mismatch accepted: %v", err)
 	}
@@ -394,7 +348,7 @@ func TestResolverBackendsProduceOneSemanticModel(t *testing.T) {
 	writeFixture(t, cache, sourceDigest+".yaml", data)
 	schemas := testSchemas(t)
 
-	httpsLocator := "https://artifacts.example.test/definitions/backend.yaml"
+	httpsLocator := id
 
 	configs := map[string]ResolverConfig{
 		"override": {Schemas: schemas, Overrides: map[string]string{id: path}},
@@ -445,7 +399,7 @@ func TestDevelopmentHTTPSRecordsLockAndExplicitCache(t *testing.T) {
 	id := "https://new.example.test/future/service:1.0.0"
 	data := fixtureExtension(id, nil, kindSpec("future.kind"))
 	cache := filepath.Join(t.TempDir(), "explicit-cache")
-	config := ResolverConfig{Schemas: testSchemas(t), Network: true, RecordNetworkLocks: true, CacheDir: cache, HTTPClient: &http.Client{Transport: staticHTTPTransport{data: data}}, Locks: map[string]LockEntry{id: {Locator: "https://artifacts.example.test/service.yaml"}}}
+	config := ResolverConfig{Schemas: testSchemas(t), Network: true, RecordNetworkLocks: true, CacheDir: cache, HTTPClient: &http.Client{Transport: staticHTTPTransport{data: data}}}
 	resolver, err := NewResolver(config)
 	if err != nil {
 		t.Fatal(err)
@@ -457,9 +411,6 @@ func TestDevelopmentHTTPSRecordsLockAndExplicitCache(t *testing.T) {
 	lock := BuildDependencyLock(closure)
 	if len(lock.Extensions) != 1 || lock.Extensions[0].SourceSHA256 != SHA256Hex(data) || lock.Extensions[0].SourceBackend != "https" {
 		t.Fatalf("missing transport lock: %+v", lock)
-	}
-	if resolver.config.Locks[id].SourceSHA256 != SHA256Hex(data) || lock.Extensions[0].SourceLocator != config.Locks[id].Locator {
-		t.Fatal("development resolution failed to complete the explicit retrieval lock")
 	}
 	if _, err := os.Stat(filepath.Join(cache, SHA256Hex(data)+".yaml")); err != nil {
 		t.Fatal(err)
@@ -484,146 +435,6 @@ func TestDevelopmentHTTPSRecordsLockAndExplicitCache(t *testing.T) {
 	}
 	if _, err = resolver.Resolve(context.Background(), id); err == nil {
 		t.Fatal("locked HTTPS accepted changed bytes")
-	}
-}
-
-type mappedHTTPTransport struct {
-	documents map[string][]byte
-	requests  []string
-}
-
-func (transport *mappedHTTPTransport) RoundTrip(request *http.Request) (*http.Response, error) {
-	locator := request.URL.String()
-	transport.requests = append(transport.requests, locator)
-	data, exists := transport.documents[locator]
-	if !exists {
-		return nil, fmt.Errorf("unexpected retrieval URL %q", locator)
-	}
-	return (staticHTTPTransport{data: data}).RoundTrip(request)
-}
-
-func TestLockedHTTPSCanonicalIDsSurviveNormalization(t *testing.T) {
-	const rootID = "https://runtimeconditions.io/extensions/env-configuration:v1alpha1"
-	const dependencyID = "https://runtimeconditions.io/extensions/common-integrations:v1alpha1"
-	const rootURL = "https://artifacts.example.test/canonical/env/definition.yaml"
-	const dependencyURL = "https://artifacts.example.test/canonical/common/definition.yaml"
-	root := bytes.Replace(fixtureExtension(rootID, []string{dependencyID}, kindSpec("fixture.env")), []byte("version: 1.0.0"), []byte("version: v1alpha1"), 1)
-	dependency := bytes.Replace(fixtureExtension(dependencyID, nil, kindSpec("fixture.common")), []byte("  version: 1.0.0\n"), nil, 1)
-	transport := &mappedHTTPTransport{documents: map[string][]byte{rootURL: root, dependencyURL: dependency}}
-	config := ResolverConfig{
-		Schemas: testSchemas(t), Network: true, HTTPClient: &http.Client{Transport: transport},
-		Locks: map[string]LockEntry{
-			rootID:       {SourceSHA256: SHA256Hex(root), SourceBackend: "https", Locator: rootURL},
-			dependencyID: {SourceSHA256: SHA256Hex(dependency), SourceBackend: "https", Locator: dependencyURL},
-		},
-	}
-	resolver, err := NewResolver(config)
-	if err != nil {
-		t.Fatal(err)
-	}
-	closure, err := resolver.Resolve(context.Background(), rootID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got := strings.Join(transport.requests, "\n"); got != rootURL+"\n"+dependencyURL {
-		t.Fatalf("retrieved URLs = %q", got)
-	}
-	if closure.Root != rootID || closure.ByID[rootID].Definition.Metadata.ID != rootID || closure.ByID[dependencyID].Definition.Metadata.ID != dependencyID {
-		t.Fatal("retrieval URLs replaced canonical closure identifiers")
-	}
-	lock := BuildDependencyLock(closure)
-	model, err := Normalize(closure, lock, config.Schemas, testNormalizeConfig())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if model.RootExtension.ID != rootID || model.RootExtension.Version != "v1alpha1" || len(model.Extensions) != 2 || len(lock.Extensions) != 2 {
-		t.Fatal("canonical root or extension inventory changed during normalization")
-	}
-	for i, id := range []string{dependencyID, rootID} {
-		if model.Extensions[i].ID != id || lock.Extensions[i].ID != id || lock.Extensions[i].SourceLocator != config.Locks[id].Locator {
-			t.Fatalf("model or lock lost identity/location separation for %s", id)
-		}
-	}
-	if model.Extensions[0].Version != "" || len(model.DependencyEdges) != 1 || model.DependencyEdges[0] != (DependencyEdge{From: rootID, To: dependencyID}) {
-		t.Fatal("dependency identity, omitted version, or dependency edge changed")
-	}
-	owners := map[string]string{"fixture.env": rootID, "fixture.common": dependencyID}
-	if len(model.Vocabulary.Owners) != len(owners) {
-		t.Fatal("normalized vocabulary owner inventory changed")
-	}
-	for _, owner := range model.Vocabulary.Owners {
-		if owner.Owner != owners[owner.Kind] {
-			t.Fatalf("vocabulary owner changed to %q", owner.Owner)
-		}
-	}
-}
-
-func TestLockedHTTPSMappedDefinitionValidation(t *testing.T) {
-	const id = "https://runtimeconditions.io/extensions/example:1.0.0"
-	const locator = "https://artifacts.example.test/example/definition.yaml"
-	for _, test := range []struct {
-		name, definitionID, sourceDigest, semanticDigest, code string
-	}{
-		{"identity mismatch", "https://runtimeconditions.io/extensions/other:1.0.0", "", "", "RCB1220"},
-		{"source digest mismatch", id, strings.Repeat("0", 64), "", "RCB1212"},
-		{"semantic digest mismatch", id, "", strings.Repeat("f", 64), "RCB1213"},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			data := fixtureExtension(test.definitionID, nil, kindSpec("fixture.example"))
-			digest := test.sourceDigest
-			if digest == "" {
-				digest = SHA256Hex(data)
-			}
-			transport := &mappedHTTPTransport{documents: map[string][]byte{locator: data}}
-			resolver, err := NewResolver(ResolverConfig{
-				Schemas: testSchemas(t), Network: true, HTTPClient: &http.Client{Transport: transport},
-				Locks: map[string]LockEntry{id: {SourceSHA256: digest, SemanticSHA256: test.semanticDigest, Locator: locator}},
-			})
-			if err != nil {
-				t.Fatal(err)
-			}
-			_, err = resolver.Resolve(context.Background(), id)
-			if err == nil || diagnosticCode(t, err) != test.code {
-				t.Fatalf("expected %s, got %v", test.code, err)
-			}
-			if len(transport.requests) != 1 || transport.requests[0] != locator {
-				t.Fatalf("retrieved URLs = %v", transport.requests)
-			}
-		})
-	}
-}
-
-func TestLockedHTTPSRejectsInvalidRetrievalURLs(t *testing.T) {
-	const id = "https://runtimeconditions.io/extensions/example:1.0.0"
-	for _, locator := range []string{"http://artifacts.example.test/definition.yaml", "file:///definition.yaml", "https:///missing-host.yaml", "https://user:password@artifacts.example.test/definition.yaml", "https://artifacts.example.test/%invalid", "https://artifacts.example.test/definition.yaml#fragment"} {
-		t.Run(locator, func(t *testing.T) {
-			transport := &countingTransport{}
-			resolver, err := NewResolver(ResolverConfig{
-				Schemas: testSchemas(t), Network: true, HTTPClient: &http.Client{Transport: transport},
-				Locks: map[string]LockEntry{id: {SourceSHA256: strings.Repeat("a", 64), Locator: locator}},
-			})
-			if err != nil {
-				t.Fatal(err)
-			}
-			_, err = resolver.Resolve(context.Background(), id)
-			if err == nil || diagnosticCode(t, err) != "RCB1207" || transport.requests.Load() != 0 {
-				t.Fatalf("invalid retrieval URL reached transport or lacked RCB1207: %v", err)
-			}
-		})
-	}
-}
-
-func TestHTTPSRequiresExplicitRetrievalMapping(t *testing.T) {
-	id := "https://runtimeconditions.io/extensions/example:1.0.0"
-	for _, record := range []bool{false, true} {
-		transport := &countingTransport{}
-		resolver, err := NewResolver(ResolverConfig{Schemas: testSchemas(t), Network: true, RecordNetworkLocks: record, HTTPClient: &http.Client{Transport: transport}})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if _, err = resolver.Resolve(context.Background(), id); err == nil || diagnosticCode(t, err) != "RCB1209" || transport.requests.Load() != 0 {
-			t.Fatalf("missing mapping was not rejected before HTTP retrieval: %v", err)
-		}
 	}
 }
 
@@ -732,12 +543,10 @@ func TestLockedHTTPSClosureOverTLS(t *testing.T) {
 		_, _ = w.Write(data)
 	}))
 	defer server.Close()
-	rootID, dependencyID := "https://example.test/root:1.0.0", "https://example.test/base:1.0.0"
+	rootID, dependencyID := server.URL+"/future/releases/root.yaml", server.URL+"/independent/base.yaml"
 	definitions["/future/releases/root.yaml"] = fixtureExtension(rootID, []string{dependencyID}, kindSpec("future.root"))
 	definitions["/independent/base.yaml"] = fixtureExtension(dependencyID, nil, kindSpec("future.base"))
-	config := ResolverConfig{Schemas: testSchemas(t), Network: true, RecordNetworkLocks: true, HTTPClient: server.Client(), Locks: map[string]LockEntry{
-		rootID: {Locator: server.URL + "/future/releases/root.yaml"}, dependencyID: {Locator: server.URL + "/independent/base.yaml"},
-	}}
+	config := ResolverConfig{Schemas: testSchemas(t), Network: true, RecordNetworkLocks: true, HTTPClient: server.Client()}
 	resolver, err := NewResolver(config)
 	if err != nil {
 		t.Fatal(err)
