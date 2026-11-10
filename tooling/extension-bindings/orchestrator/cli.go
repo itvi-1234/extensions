@@ -26,6 +26,9 @@ type Options struct {
 	// LinkedGoProfiler opts into library identity; GoProfiler must be empty.
 	// The caller supplies verified build metadata. Standalone defaults are retained.
 	LinkedGoProfiler *ProfilerIdentity
+	// UseGoLibraries calls the linked normalizer and Go emitter directly.
+	// Normalizer and GoEmitter must be empty; provenance hashes the host executable.
+	UseGoLibraries bool
 }
 
 var supportedOperations = map[string]bool{"resolve": true, "normalize": true, "generate": true, "verify": true, "package": true, "plan-release": true, "check": true, "update": true}

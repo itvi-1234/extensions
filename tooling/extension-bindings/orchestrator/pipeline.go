@@ -62,6 +62,9 @@ type Build struct {
 }
 
 func NewPipeline(ctx context.Context, p *Project, o Options) (*Pipeline, error) {
+	if o.UseGoLibraries && (o.Normalizer != "" || o.GoEmitter != "") {
+		return nil, fmt.Errorf("Go library mode conflicts with standalone normalizer or Go emitter selection")
+	}
 	if p.Toolchain.Status == "released" && len(o.Overrides) > 0 {
 		return nil, fmt.Errorf("released generation forbids extension overrides")
 	}
@@ -84,6 +87,20 @@ func NewPipeline(ctx context.Context, p *Project, o Options) (*Pipeline, error) 
 		o.LinkedGoProfiler = &identity // Snapshot the caller's supplied identity.
 	}
 	pipeline := &Pipeline{Context: ctx, Project: p, Options: o, tools: map[string]string{}, identities: map[string]Tool{}, cores: map[string]map[string]any{}, HTTPClient: &http.Client{Timeout: 60 * time.Second, CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return fmt.Errorf("redirects are forbidden") }}}
+	if o.UseGoLibraries {
+		keys := []string{"normalizer"}
+		for _, set := range p.Catalog.Packages {
+			if _, usesGo := set.Languages["go"]; usesGo {
+				keys = append(keys, "go-emitter")
+				break
+			}
+		}
+		for _, key := range keys {
+			if _, _, err := pipeline.goLibraryTool(key); err != nil {
+				return nil, err
+			}
+		}
+	}
 	for _, path := range []string{o.WorkDir, o.Cache} {
 		if path != "" {
 			if err := rejectSymlinkPath(path); err != nil {
@@ -190,6 +207,9 @@ func (p *Pipeline) python(args ...string) ([]byte, error) {
 	return p.run(p.Project.Root, p.pythonEnv(), p.Options.Python, append(flags, args...)...)
 }
 func (p *Pipeline) tool(key string) (string, Tool, error) {
+	if p.Options.UseGoLibraries && (key == "normalizer" || key == "go-emitter") {
+		return p.goLibraryTool(key)
+	}
 	if path, ok := p.tools[key]; ok {
 		return path, p.identities[key], nil
 	}
@@ -578,6 +598,9 @@ func (p *Pipeline) Normalize(doc *Document) error {
 	if doc.Model.APIVersion != "" {
 		return nil
 	}
+	if p.Options.UseGoLibraries {
+		return p.normalizeGoLibrary(doc)
+	}
 	_, core, err := p.core(doc.CoreVersion)
 	if err != nil {
 		return err
@@ -785,6 +808,9 @@ func (p *Pipeline) emitterInputs(bt *BuiltTarget) (string, string, error) {
 	return modelPath, targetPath, nil
 }
 func (p *Pipeline) emit(bt *BuiltTarget) error {
+	if p.Options.UseGoLibraries && bt.Target.Language == "go" {
+		return p.emitGoLibrary(bt)
+	}
 	modelPath, targetPath, err := p.emitterInputs(bt)
 	if err != nil {
 		return err

@@ -110,11 +110,15 @@ func (s *Schemas) ValidateExtension(data map[string]any, definition ExtensionDef
 	if definition.Kind != ExtensionKind {
 		return diagnostic("structural", "RCB1104", definition.Metadata.ID, "/kind", "document is not a RuntimeConditionsExtensionDefinition")
 	}
-	if _, err := parseExtensionIdentifier(definition.Metadata.ID); err != nil {
+	_, version, err := parseExtensionIdentifier(definition.Metadata.ID)
+	if err != nil {
 		return diagnostic("structural", "RCB1105", definition.Metadata.ID, "/metadata/id", err.Error())
 	}
+	if definition.Metadata.Version != "" && definition.Metadata.Version != version {
+		return diagnostic("structural", "RCB1106", definition.Metadata.ID, "/metadata/version", "metadata.version must exactly match the version in metadata.id")
+	}
 	for index, dependency := range definition.Spec.Dependencies {
-		if _, err := parseExtensionIdentifier(dependency); err != nil {
+		if _, _, err := parseExtensionIdentifier(dependency); err != nil {
 			return diagnostic("extension-dependency", "RCB1110", definition.Metadata.ID, fmt.Sprintf("/spec/dependencies/%d", index), err.Error())
 		}
 	}

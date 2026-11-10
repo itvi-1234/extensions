@@ -339,7 +339,7 @@ func backendRank(backend string) int {
 }
 
 func (r *Resolver) Resolve(ctx context.Context, rootID string) (ResolvedClosure, error) {
-	if _, err := parseExtensionIdentifier(rootID); err != nil {
+	if _, _, err := parseExtensionIdentifier(rootID); err != nil {
 		return ResolvedClosure{}, diagnostic("unknown-extension", "RCB1203", rootID, "", err.Error())
 	}
 	state := visitState{activeIndex: map[string]int{}, complete: map[string]bool{}}
@@ -451,7 +451,7 @@ func (r *Resolver) visit(ctx context.Context, id string, state *visitState) erro
 }
 
 func (r *Resolver) load(ctx context.Context, id string) (ResolvedDocument, error) {
-	parsed, err := parseExtensionIdentifier(id)
+	parsed, _, err := parseExtensionIdentifier(id)
 	if err != nil {
 		return ResolvedDocument{}, diagnostic("unknown-extension", "RCB1207", id, "", err.Error())
 	}
@@ -467,30 +467,53 @@ func (r *Resolver) load(ctx context.Context, id string) (ResolvedDocument, error
 		return r.finishLoad(id, data, candidate.backend, candidate.locator)
 	}
 	if strings.EqualFold(parsed.Scheme, "https") {
-		if parsed.Hostname() == "" || parsed.User != nil {
-			return ResolvedDocument{}, diagnostic("unknown-extension", "RCB1207", id, "", "HTTPS retrieval requires a host and forbids credentials")
-		}
-		return r.loadHTTPS(ctx, id, id)
+		return r.loadHTTPS(ctx, id, r.config.Locks[id].Locator)
 	}
 	return ResolvedDocument{}, diagnostic("unknown-extension", "RCB1207", id, "", fmt.Sprintf("automatic retrieval for scheme %q is unavailable; supply the exact identifier through a catalog, package, cache, or override", parsed.Scheme))
 }
 
-// parseExtensionIdentifier validates identity without selecting a retrieval
-// backend or imposing a provider/service/version layout. The exact spelling is
-// retained throughout resolution, model provenance, and dependency locks.
-func parseExtensionIdentifier(id string) (*url.URL, error) {
+// parseExtensionIdentifier requires <location>:<version>. The separator is the
+// first literal colon in the final path component (or opaque URI body), excluding
+// scheme and authority colons. Version labels may themselves contain colons.
+// The complete reference retains its exact spelling throughout resolution.
+func parseExtensionIdentifier(id string) (*url.URL, string, error) {
 	parsed, err := url.Parse(id)
-	if err != nil || !parsed.IsAbs() || strings.ContainsFunc(id, func(r rune) bool {
-		return unicode.IsSpace(r) || r < 0x20 || r == 0x7f
+	if err != nil || !parsed.IsAbs() || strings.ContainsAny(id, "?#\\") || strings.ContainsFunc(id, func(r rune) bool {
+		return unicode.IsSpace(r) || unicode.IsControl(r)
 	}) {
-		return nil, fmt.Errorf("extension identifier must be a non-empty absolute URI with a scheme")
+		return nil, "", fmt.Errorf("extension reference must be an absolute <location>:<version> URI without whitespace, query, or fragment")
 	}
-	return parsed, nil
+	component := parsed.Opaque
+	if component == "" {
+		path := parsed.EscapedPath()
+		component = path[strings.LastIndex(path, "/")+1:]
+	}
+	location, version, versioned := strings.Cut(component, ":")
+	if !versioned || location == "" || version == "" || version == "." || version == ".." || strings.Contains(version, "/") {
+		return nil, "", fmt.Errorf("extension reference must include a non-empty location and explicit version as <location>:<version>")
+	}
+	name, err := url.PathUnescape(location)
+	if err != nil || strings.HasSuffix(strings.ToLower(name), ".yaml") || strings.HasSuffix(strings.ToLower(name), ".yml") || strings.HasSuffix(strings.ToLower(name), ".json") {
+		return nil, "", fmt.Errorf("extension reference location must identify an extension, not a definition artifact URL")
+	}
+	if parsed.User != nil || (strings.EqualFold(parsed.Scheme, "https") && (parsed.Hostname() == "" || parsed.Opaque != "")) {
+		return nil, "", fmt.Errorf("extension reference forbids credentials and HTTPS references require a host")
+	}
+	return parsed, version, nil
 }
 
 func (r *Resolver) loadHTTPS(ctx context.Context, id, locator string) (ResolvedDocument, error) {
 	if !r.config.Network {
 		return ResolvedDocument{}, diagnostic("unknown-extension", "RCB1208", id, "", "network resolution is disabled")
+	}
+	if locator == "" {
+		return ResolvedDocument{}, diagnostic("extension-dependency", "RCB1209", id, "", "HTTPS resolution requires an explicit retrieval locator")
+	}
+	parsed, err := url.Parse(locator)
+	if err != nil || !strings.EqualFold(parsed.Scheme, "https") || parsed.Hostname() == "" || parsed.User != nil || strings.ContainsAny(locator, "#\\") || strings.ContainsFunc(locator, func(r rune) bool {
+		return unicode.IsSpace(r) || unicode.IsControl(r)
+	}) {
+		return ResolvedDocument{}, diagnostic("unknown-extension", "RCB1207", id, "", "retrieval locator must be an HTTPS URL with a host and without credentials or a fragment")
 	}
 	lock, locked := r.config.Locks[id]
 	if (!locked || lock.SourceSHA256 == "" || lock.Locator == "") && !r.config.RecordNetworkLocks {
@@ -518,7 +541,7 @@ func (r *Resolver) loadHTTPS(ctx context.Context, id, locator string) (ResolvedD
 	if err != nil {
 		return ResolvedDocument{}, err
 	}
-	if locked && SHA256Hex(data) != lock.SourceSHA256 {
+	if locked && lock.SourceSHA256 != "" && SHA256Hex(data) != lock.SourceSHA256 {
 		return ResolvedDocument{}, diagnostic("extension-dependency", "RCB1212", id, "", "HTTPS content does not match the dependency lock")
 	}
 	document, err := r.finishLoad(id, data, "https", response.Request.URL.String())
@@ -528,11 +551,11 @@ func (r *Resolver) loadHTTPS(ctx context.Context, id, locator string) (ResolvedD
 	if lock.SemanticSHA256 != "" && document.SemanticSHA256 != lock.SemanticSHA256 {
 		return ResolvedDocument{}, diagnostic("extension-dependency", "RCB1213", id, "", "HTTPS semantic digest does not match the dependency lock")
 	}
-	if !locked {
+	if !locked || lock.SourceSHA256 == "" {
 		if r.config.Locks == nil {
 			r.config.Locks = map[string]LockEntry{}
 		}
-		r.config.Locks[id] = LockEntry{SourceSHA256: document.SourceSHA256, SemanticSHA256: document.SemanticSHA256, Locator: locator}
+		r.config.Locks[id] = LockEntry{SourceSHA256: document.SourceSHA256, SemanticSHA256: document.SemanticSHA256, SourceBackend: "https", Locator: locator}
 	}
 	if r.config.CacheDir != "" {
 		if err := os.MkdirAll(r.config.CacheDir, 0755); err != nil {

@@ -820,9 +820,26 @@ emission functions directly; Python tooling remains optional for Python targets.
 
 Standalone generation in `extensions` MUST remain functional. Its entry point,
 native-tool options, and ability to select an independently installed Go
-profiler executable MUST remain supported. Extracting `Execute` preserves the
-existing executable-based tooling and artifact identities. Direct Go tool
-execution and linked identities are subsequent integration work.
+profiler executable MUST remain supported. `Execute` preserves the existing
+executable-based tooling and artifact identities as the default mode.
+
+Library callers may set `Options.UseGoLibraries` to call `normalizer.Normalize`
+and `goemitter.Emit` directly. `Normalizer` and `GoEmitter` must then be empty;
+conflicting executable selections fail instead of being ignored. This option
+does not change profiler selection: callers may use `LinkedGoProfiler` or retain
+a standalone `GoProfiler` executable. Python emission remains external.
+
+In library mode, normalizer and Go emitter identities retain their component
+names and versions, with the SHA-256 of the actual host executable (`rc` when
+integrated). No module checksum is substituted for an executable digest.
+Rebuilding the host changes those identities and the normalized model digest.
+Artifact locks must pin that host digest with the applicable component name and
+version; a lock for a separately built normalizer or emitter fails. These checks
+run before generation creates work files. Verification and regeneration use
+the selected execution mode and retain the existing schema and identity checks.
+Cancellation is checked around direct calls; the component APIs cannot interrupt
+an active normalization or emission call. Schema resources are still required
+through tooling discovery; packaging them for the common CLI is separate work.
 
 Linked profiler support MUST be explicit and optional. Its identity must record
 the actual linked module version and dependency checksum. Metadata schemas,
