@@ -185,7 +185,7 @@ kind: RuntimeConditionsPackageCatalog
 repositoryUrl: https://github.com/runtimeconditions/extensions
 packages:
   common-integrations:
-    rootExtension: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+    rootExtension: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
     coreProfileSchemaVersion: 0.2.0
     languages:
       go:
@@ -268,11 +268,11 @@ For example:
 apiVersion: runtimeconditions.io/v1alpha1
 kind: RuntimeConditionsExtensionDefinition
 metadata:
-  id: https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+  id: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
   version: v1alpha1
 spec:
   dependencies:
-    - https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+    - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
 ```
 
 The extension ID and public Go module coordinate serve different purposes. The

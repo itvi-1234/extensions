@@ -31,7 +31,7 @@ packages:
         publicationMode: registry
         registryId: npm
   common-integrations:
-    rootExtension: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+    rootExtension: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
     coreProfileSchemaVersion: 0.4.0
     languages:
       go:
@@ -58,7 +58,7 @@ packages:
         publicationMode: registry
         registryId: npm
   env-configuration:
-    rootExtension: https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+    rootExtension: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
     coreProfileSchemaVersion: 0.4.0
     languages:
       go:

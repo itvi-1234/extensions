@@ -21,7 +21,7 @@ class RealModelsTest {
     private static final Path COMMON = TOOLING.resolve("../../bindings/common-integrations/go/runtimeconditions.binding-model.yaml").normalize();
     private static final Path ENV = TOOLING.resolve("../../bindings/env-configuration/go/runtimeconditions.binding-model.yaml").normalize();
     private static final String COMMON_ID =
-            "https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml";
+            "https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml";
 
     private static PackageTarget target(String key, String javaPackage, ObjectNode model, List<Dependency> dependencies) {
         PackageTarget base = developmentTarget();
