@@ -1,24 +1,24 @@
 apiVersion: runtimeconditions.io/binding-release/v1alpha1
 dependencyLock:
     extensions:
-        - id: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+        - id: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
           version: v1alpha1
-          sourceSha256: ef0d9e71d0d5d481c367002cecd2d3eef15475a40493f231521d778492a216ed
-          semanticSha256: 0952ff5e52486a87e64808a09e8aa28d124a00efdeb9e174c4153d644879d54c
+          sourceSha256: 077d29fab2b60ebed51b4c82b1d89ef4a0f98fadb98f54940f6db6863ec2c4ef
+          semanticSha256: f29ee3118c9602244eb82694c94767ed4e8c98d009b33cf2d59a2b67f1182444
           sourceBackend: catalog
           sourceLocator: catalog:rc/common-integrations/common-integrations-v1alpha1.yaml
-        - id: https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+        - id: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
           version: v1alpha1
-          sourceSha256: 645e5de82fcfc22c1e3b3bf06534c0cf13baed12b4994548a1f9a9be53a9e7f4
-          semanticSha256: c6bd5fec1cc31b2b828cb97da2f56773862a70ef04e94dac7652f87a0af7435b
+          sourceSha256: f2673ee6c3c7436b15ed765f8c74bc47b291e52acfd584484095d5722324796f
+          semanticSha256: 216fa4ab216cca00898d49a0d055410db9e385e9961f8627f7bc0b31ff88c9cc
           sourceBackend: catalog
           sourceLocator: catalog:rc/env-configuration/env-configuration-v1alpha1.yaml
           dependencies:
-            - https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+            - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
 kind: RuntimeConditionsBindingRelease
 model:
     apiVersion: runtimeconditions.io/binding-model/v1alpha1
-    semanticSha256: 94b3df3073294c54ad047a1309531f32d4556ca5be3a06cad87a1867f143502a
+    semanticSha256: 87653f355ae131d3b12a3bb25bbffbee9ffa076188ce6aa6e9cdaacac57e922d
 package:
     coordinate: runtimeconditions-env-configuration
     language: python
@@ -31,12 +31,12 @@ package:
 packageDependencies:
     - artifact:
         kind: python-wheel
-        sha256: 79d3b5fd73c141d0943cf853c6adba468adce3ba646d32e0332fc1e9b6630a0a
+        sha256: 42a704d7d7411778d4f88283baac787fd5f2b8edd7a79e112a4653cfe4bcb412
       compatibleVersionRange:
         minimumInclusive: 0.1.0
         nextBreakingExclusive: 0.2.0
       coordinate: runtimeconditions-common-integrations
-      extension: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+      extension: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
       name: runtimeconditions_common_integrations
       testedVersion: 0.1.0
 provenance:
@@ -52,6 +52,6 @@ provenance:
     sourceDirectory: bindings/env-configuration/python
     targetReleaseTag: bindings/env-configuration/python/v0.1.0
 rootExtension:
-    id: https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+    id: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
     version: v1alpha1
-    semanticSha256: c6bd5fec1cc31b2b828cb97da2f56773862a70ef04e94dac7652f87a0af7435b
+    semanticSha256: 216fa4ab216cca00898d49a0d055410db9e385e9961f8627f7bc0b31ff88c9cc

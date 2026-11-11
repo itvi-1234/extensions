@@ -19,7 +19,7 @@ const ENV = join(
   "../../bindings/env-configuration/go/runtimeconditions.binding-model.yaml",
 );
 const COMMON_ID =
-  "https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml";
+  "https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml";
 
 test(
   "the committed first-party models emit packages that compile, including recursive maps",

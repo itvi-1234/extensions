@@ -31,7 +31,7 @@ packages:
         publicationMode: registry
         registryId: npm
   common-integrations:
-    rootExtension: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+    rootExtension: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
     coreProfileSchemaVersion: 0.4.0
     languages:
       go:
@@ -52,13 +52,13 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/common-integrations'
         name: '@runtimeconditions/common-integrations'
-        version: 0.1.1
+        version: 0.1.2
         sourceDirectory: bindings/common-integrations/typescript
         languageVersion: 20.19.6
         publicationMode: registry
         registryId: npm
   env-configuration:
-    rootExtension: https://runtimeconditions.io/extensions/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+    rootExtension: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
     coreProfileSchemaVersion: 0.4.0
     languages:
       go:
@@ -79,7 +79,7 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/env-configuration'
         name: '@runtimeconditions/env-configuration'
-        version: 0.1.1
+        version: 0.1.2
         sourceDirectory: bindings/env-configuration/typescript
         languageVersion: 20.19.6
         publicationMode: registry

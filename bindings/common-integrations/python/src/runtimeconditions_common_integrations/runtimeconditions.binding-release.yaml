@@ -1,16 +1,16 @@
 apiVersion: runtimeconditions.io/binding-release/v1alpha1
 dependencyLock:
     extensions:
-        - id: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+        - id: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
           version: v1alpha1
-          sourceSha256: ef0d9e71d0d5d481c367002cecd2d3eef15475a40493f231521d778492a216ed
-          semanticSha256: 0952ff5e52486a87e64808a09e8aa28d124a00efdeb9e174c4153d644879d54c
+          sourceSha256: 077d29fab2b60ebed51b4c82b1d89ef4a0f98fadb98f54940f6db6863ec2c4ef
+          semanticSha256: f29ee3118c9602244eb82694c94767ed4e8c98d009b33cf2d59a2b67f1182444
           sourceBackend: catalog
           sourceLocator: catalog:rc/common-integrations/common-integrations-v1alpha1.yaml
 kind: RuntimeConditionsBindingRelease
 model:
     apiVersion: runtimeconditions.io/binding-model/v1alpha1
-    semanticSha256: f93d1280658fb9c27c965b1cc8f5518575cfe5bca7f36ac96dcc06c5b66aacbf
+    semanticSha256: b6940307fdc87607ea6303c3ef13f6987b826048705ba796cdee6b58296a2bac
 package:
     coordinate: runtimeconditions-common-integrations
     language: python
@@ -34,6 +34,6 @@ provenance:
     sourceDirectory: bindings/common-integrations/python
     targetReleaseTag: bindings/common-integrations/python/v0.1.0
 rootExtension:
-    id: https://runtimeconditions.io/extensions/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+    id: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
     version: v1alpha1
-    semanticSha256: 0952ff5e52486a87e64808a09e8aa28d124a00efdeb9e174c4153d644879d54c
+    semanticSha256: f29ee3118c9602244eb82694c94767ed4e8c98d009b33cf2d59a2b67f1182444
