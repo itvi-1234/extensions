@@ -26,7 +26,7 @@ provenance:
     orchestrator:
         name: rc
         version: 0.1.0
-        sha256: fc414ae0c39353134f066021cf8965d02fa7846f9c1a1ff59e700c4b3befd174
+        sha256: 08044437569c5b03586552b73b93657ca6aded8fc7a9f58fb961a094f3753ad2
     profiler:
         name: python-rc-profiler
         version: 0.4.0
