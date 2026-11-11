@@ -26,18 +26,18 @@ package:
     name: env
     packageKey: env-configuration
     publicationMode: github-tag
-    version: v0.1.1
+    version: v0.2.0
 packageDependencies:
     - artifact:
         kind: go-module-zip
-        sha256: 9cc8818aedb1e74d958124e7b9b33481505d6e63dc957c9268353d97ad43b63b
+        sha256: 9b4992fe80b9cac1a353dbcd0876a66c1cdfc2eec74cc9b82bd3ca5447ca11a8
       compatibleVersionRange:
-        minimumInclusive: v0.1.1
-        nextBreakingExclusive: v0.2.0
+        minimumInclusive: v0.2.0
+        nextBreakingExclusive: v0.3.0
       coordinate: runtimeconditions.io/x/rc/common
       extension: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
       name: common
-      testedVersion: v0.1.1
+      testedVersion: v0.2.0
 provenance:
     mode: production
     orchestrator:
@@ -49,7 +49,7 @@ provenance:
         version: v0.4.0
         sha256: bd5a4ea6c28bfea5f6d91742533866b4e13c223edf73a8a71a4edf1de1b6d98e
     sourceDirectory: bindings/env-configuration/go
-    targetReleaseTag: bindings/env-configuration/go/v0.1.1
+    targetReleaseTag: bindings/env-configuration/go/v0.2.0
 rootExtension:
     id: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
     version: v1alpha1
