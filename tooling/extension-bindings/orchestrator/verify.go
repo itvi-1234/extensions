@@ -203,9 +203,18 @@ func (p *Pipeline) verifyIdentities(bt *BuiltTarget, build *Build) error {
 	if err != nil {
 		return err
 	}
-	declared := mapValue(provenance["profiler"])
-	if declared["name"] != profiler.Name || declared["version"] != profiler.Version || declared["sha256"] != profiler.SHA256 {
-		return fmt.Errorf("profiler provenance differs from installed artifact")
+	data, err := json.Marshal(provenance["profiler"])
+	if err != nil {
+		return err
+	}
+	var declaredProfiler ProfilerIdentity
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&declaredProfiler); err != nil {
+		return fmt.Errorf("invalid profiler provenance: %w", err)
+	}
+	if err := declaredProfiler.Match(profiler); err != nil {
+		return fmt.Errorf("profiler provenance differs from selected profiler: %w", err)
 	}
 	_, tool, err := p.tool("normalizer")
 	if err != nil {
@@ -218,7 +227,7 @@ func (p *Pipeline) verifyIdentities(bt *BuiltTarget, build *Build) error {
 	if err != nil {
 		return err
 	}
-	declared = mapValue(provenance["orchestrator"])
+	declared := mapValue(provenance["orchestrator"])
 	if declared["sha256"] != tool.SHA256 || declared["name"] != tool.Name || declared["version"] != tool.Version {
 		return fmt.Errorf("orchestrator provenance differs from selected artifact")
 	}
