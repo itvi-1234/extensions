@@ -15,7 +15,7 @@ package:
   language: typescript
   coordinate: "@runtimeconditions/env-configuration"
   name: "@runtimeconditions/env-configuration"
-  version: 0.1.1
+  version: 0.1.2
   minimumNodeVersion: "20.19"
 declarations: []
 importedMarkerContracts:
