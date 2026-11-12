@@ -114,7 +114,12 @@ class PublicationTests(unittest.TestCase):
                     prefix = binding.directory + "/" if suffix == ".source.zip" else binding.module + "@v" + binding.version + "/"
                     with zipfile.ZipFile(path, "w") as archive:
                         for source in sorted((self.root / binding.directory).iterdir()):
-                            archive.writestr(prefix + source.name, source.read_bytes())
+                            # A fixed timestamp keeps the archive identical on every build, like the
+                            # orchestrator's deterministic zips. writestr(name, ...) would stamp the
+                            # current time and fail the "existing release asset differs" check
+                            # whenever two builds straddle a two second boundary.
+                            entry = zipfile.ZipInfo(prefix + source.name, date_time=(1980, 1, 1, 0, 0, 0))
+                            archive.writestr(entry, source.read_bytes())
                 else:
                     path.write_text("test resource\n")
                 manifest[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
