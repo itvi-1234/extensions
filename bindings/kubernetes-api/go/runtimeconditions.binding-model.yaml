@@ -1,0 +1,818 @@
+apiVersion: runtimeconditions.io/binding-model/v1alpha1
+kind: RuntimeConditionsBindingModel
+metadata:
+    semanticSha256: 23f95dc54c20be85d617d3ab25c8791d632f0d9aea7ff5ef458283002004e510
+    normalizer:
+        name: rc-binding-model
+        version: 0.1.0
+        sha256: 0b6a631f55ae70522b11a814326bc7c346118a1b47aa464c6904565d59085ac3
+coreProfileSchema:
+    id: https://runtimeconditions.io/schemas/profile/0.4.0/runtimeconditions.profile.schema.yaml
+    version: 0.4.0
+    semanticSha256: ed447dccefd7507d905b0b6177b1386d8ee96a1d053b731939a9a7ae973d5af1
+rootExtension:
+    id: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+    version: 0.1.0
+    semanticSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+extensions:
+    - id: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+      version: 0.1.0
+      semanticSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+vocabulary:
+    owners:
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].method:"delete"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].method
+          value: delete
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].method:"get"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].method
+          value: get
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].method:"head"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].method
+          value: head
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].method:"options"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].method
+          value: options
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].method:"patch"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].method
+          value: patch
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].method:"post"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].method
+          value: post
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].method:"put"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].method
+          value: put
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].method:"trace"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].method
+          value: trace
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].scope:"all_namespaces"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].scope
+          value: all_namespaces
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].scope:"cluster"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].scope
+          value: cluster
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].scope:"namespaced"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].scope
+          value: namespaced
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].verb:"connect"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].verb
+          value: connect
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].verb:"create"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].verb
+          value: create
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].verb:"delete"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].verb
+          value: delete
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].verb:"deletecollection"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].verb
+          value: deletecollection
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].verb:"get"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].verb
+          value: get
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].verb:"list"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].verb
+          value: list
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].verb:"patch"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].verb
+          value: patch
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].verb:"update"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].verb
+          value: update
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].verb:"watch"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].verb
+          value: watch
+        - coordinate: interface-field:kubernetes.api:api:operations
+          category: interface-field
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations
+        - coordinate: interface:kubernetes.api:api
+          category: interface
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+        - coordinate: kind:kubernetes.api
+          category: kind
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+    ownedDeclarations:
+        - coordinate: kind:kubernetes.api
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          provenance:
+            owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+            coordinate: kind:kubernetes.api
+    interfaces:
+        - coordinate: interface:kubernetes.api:api
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          type: api
+          provenance:
+            owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+            coordinate: interface:kubernetes.api:api
+    interfaceFields:
+        - coordinate: interface-field:kubernetes.api:api:operations
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations
+          segments:
+            - name: interface
+            - name: operations
+          provenance:
+            owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+            coordinate: interface-field:kubernetes.api:api:operations
+    valueDomains:
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].method
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].method
+          segments:
+            - name: interface
+            - name: operations
+              array: true
+            - name: method
+          values:
+            - value: delete
+            - value: get
+            - value: head
+            - value: options
+            - value: patch
+            - value: post
+            - value: put
+            - value: trace
+          provenance:
+            owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+            coordinate: field-domain:kubernetes.api:api:interface.operations[].method
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].scope
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].scope
+          segments:
+            - name: interface
+            - name: operations
+              array: true
+            - name: scope
+          values:
+            - value: all_namespaces
+            - value: cluster
+            - value: namespaced
+          provenance:
+            owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+            coordinate: field-domain:kubernetes.api:api:interface.operations[].scope
+        - coordinate: field-domain:kubernetes.api:api:interface.operations[].verb
+          owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          kind: kubernetes.api
+          interfaceType: api
+          path: interface.operations[].verb
+          segments:
+            - name: interface
+            - name: operations
+              array: true
+            - name: verb
+          values:
+            - value: connect
+            - value: create
+            - value: delete
+            - value: deletecollection
+            - value: get
+            - value: list
+            - value: patch
+            - value: update
+            - value: watch
+          provenance:
+            owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+            coordinate: field-domain:kubernetes.api:api:interface.operations[].verb
+scopes:
+    - coordinate: kubernetes.api:api
+      kind: kubernetes.api
+      interfaceType: api
+      applicableSchemas:
+        - https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+      projection:
+        kind: object
+        required:
+            - interface
+        properties:
+            - name: interface
+              required: true
+              shape:
+                kind: object
+                required:
+                    - operations
+                properties:
+                    - name: operations
+                      required: true
+                      shape:
+                        kind: array
+                        items:
+                            kind: object
+                            properties:
+                                - name: apiGroup
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    constraints:
+                                        maxLength: 253
+                                        pattern: ^(?:|[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?)$
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/1/properties/apiGroup
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/apiGroup
+                                - name: apiVersion
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    constraints:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/1/properties/apiVersion
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/apiVersion
+                                - name: method
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: delete
+                                        - value: get
+                                        - value: head
+                                        - value: options
+                                        - value: patch
+                                        - value: post
+                                        - value: put
+                                        - value: trace
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/2/properties/method
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/method
+                                - name: path
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    constraints:
+                                        minLength: 1
+                                        pattern: ^/
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/2/properties/path
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/2/properties/path
+                                - name: resource
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    constraints:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/1/properties/resource
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/resource
+                                - name: scope
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: all_namespaces
+                                        - value: cluster
+                                        - value: namespaced
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/1/properties/scope
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/scope
+                                - name: subresource
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    constraints:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/1/properties/subresource
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/subresource
+                                - name: verb
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: connect
+                                        - value: create
+                                        - value: delete
+                                        - value: deletecollection
+                                        - value: get
+                                        - value: list
+                                        - value: patch
+                                        - value: update
+                                        - value: watch
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/verb
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/verb
+                            provenance:
+                                owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                jsonPointer: /properties/interface/properties/operations/items
+                        constraints:
+                            minItems: 1
+                            uniqueItems: true
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                            extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                            coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                            jsonPointer: /properties/interface/properties/operations
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                        jsonPointer: /properties/interface/properties/operations
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                    jsonPointer: /properties/interface
+              provenance:
+                owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                jsonPointer: /properties/interface
+        provenance:
+            owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+            coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+schemas:
+    - coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+      owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+      id: kubernetes-api-interface
+      kind: kubernetes.api
+      interfaceType: api
+      exact:
+        $schema: https://json-schema.org/draft/2020-12/schema
+        properties:
+            interface:
+                additionalProperties: false
+                properties:
+                    operations:
+                        items:
+                            oneOf:
+                                - additionalProperties: false
+                                  properties:
+                                    apiGroup:
+                                        maxLength: 253
+                                        pattern: ^(?:|[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?)$
+                                        type: string
+                                    apiVersion:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                        type: string
+                                    method:
+                                        enum:
+                                            - delete
+                                            - get
+                                            - head
+                                            - options
+                                            - patch
+                                            - post
+                                            - put
+                                            - trace
+                                    resource:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                        type: string
+                                    scope:
+                                        enum:
+                                            - all_namespaces
+                                            - cluster
+                                            - namespaced
+                                    subresource:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                        type: string
+                                    verb:
+                                        const: connect
+                                  required:
+                                    - apiGroup
+                                    - apiVersion
+                                    - method
+                                    - resource
+                                    - scope
+                                    - verb
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    apiGroup:
+                                        maxLength: 253
+                                        pattern: ^(?:|[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?)$
+                                        type: string
+                                    apiVersion:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                        type: string
+                                    resource:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                        type: string
+                                    scope:
+                                        enum:
+                                            - all_namespaces
+                                            - cluster
+                                            - namespaced
+                                    subresource:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                        type: string
+                                    verb:
+                                        enum:
+                                            - create
+                                            - delete
+                                            - deletecollection
+                                            - get
+                                            - list
+                                            - patch
+                                            - update
+                                            - watch
+                                  required:
+                                    - apiGroup
+                                    - apiVersion
+                                    - resource
+                                    - scope
+                                    - verb
+                                  type: object
+                                - additionalProperties: false
+                                  properties:
+                                    method:
+                                        enum:
+                                            - delete
+                                            - get
+                                            - head
+                                            - options
+                                            - patch
+                                            - post
+                                            - put
+                                            - trace
+                                    path:
+                                        minLength: 1
+                                        pattern: ^/
+                                        type: string
+                                  required:
+                                    - method
+                                    - path
+                                  type: object
+                        minItems: 1
+                        type: array
+                        uniqueItems: true
+                    type:
+                        const: api
+                required:
+                    - operations
+                    - type
+                type: object
+            kind:
+                const: kubernetes.api
+        required:
+            - interface
+            - kind
+        type: object
+      projection:
+        kind: object
+        required:
+            - interface
+        properties:
+            - name: interface
+              required: true
+              shape:
+                kind: object
+                required:
+                    - operations
+                properties:
+                    - name: operations
+                      required: true
+                      shape:
+                        kind: array
+                        items:
+                            kind: object
+                            properties:
+                                - name: apiGroup
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    constraints:
+                                        maxLength: 253
+                                        pattern: ^(?:|[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?)$
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/1/properties/apiGroup
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/apiGroup
+                                - name: apiVersion
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    constraints:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/1/properties/apiVersion
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/apiVersion
+                                - name: method
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: delete
+                                        - value: get
+                                        - value: head
+                                        - value: options
+                                        - value: patch
+                                        - value: post
+                                        - value: put
+                                        - value: trace
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/2/properties/method
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/method
+                                - name: path
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    constraints:
+                                        minLength: 1
+                                        pattern: ^/
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/2/properties/path
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/2/properties/path
+                                - name: resource
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    constraints:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/1/properties/resource
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/resource
+                                - name: scope
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: all_namespaces
+                                        - value: cluster
+                                        - value: namespaced
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/1/properties/scope
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/scope
+                                - name: subresource
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    constraints:
+                                        maxLength: 63
+                                        pattern: ^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/1/properties/subresource
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/subresource
+                                - name: verb
+                                  shape:
+                                    kind: scalar
+                                    scalar: string
+                                    values:
+                                        - value: connect
+                                        - value: create
+                                        - value: delete
+                                        - value: deletecollection
+                                        - value: get
+                                        - value: list
+                                        - value: patch
+                                        - value: update
+                                        - value: watch
+                                    provenance:
+                                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                        jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/verb
+                                  provenance:
+                                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                    jsonPointer: /properties/interface/properties/operations/items/oneOf/0/properties/verb
+                            provenance:
+                                owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                                extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                                coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                                jsonPointer: /properties/interface/properties/operations/items
+                        constraints:
+                            minItems: 1
+                            uniqueItems: true
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                            extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                            coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                            jsonPointer: /properties/interface/properties/operations
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                        jsonPointer: /properties/interface/properties/operations
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                    extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                    coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                    jsonPointer: /properties/interface
+              provenance:
+                owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+                extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+                coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+                jsonPointer: /properties/interface
+        provenance:
+            owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+            coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface
+      provenance:
+        owner: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+        extensionSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+        coordinate: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml#schema:kubernetes-api-interface

@@ -1,0 +1,38 @@
+apiVersion: runtimeconditions.io/binding-release/v1alpha1
+dependencyLock:
+    extensions:
+        - id: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+          version: 0.2.0
+          sourceSha256: 777820d35404d8137ab96e3891d6c6d3c8b491d75accf94c7fdd6e89f6b4ce7b
+          semanticSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5
+          sourceBackend: catalog
+          sourceLocator: catalog:aws/s3/releases/0.2.0/runtimeconditions.extension.yaml
+kind: RuntimeConditionsBindingRelease
+model:
+    apiVersion: runtimeconditions.io/binding-model/v1alpha1
+    semanticSha256: 0991f59d80107b720a75ec9727eafe65ccea91ca4ec2d74fabbf363e97dfed78
+package:
+    coordinate: runtimeconditions.io/x/aws/s3
+    language: go
+    minimumGoVersion: "1.25"
+    name: s3
+    packageKey: aws-s3
+    publicationMode: github-tag
+    version: v0.2.0
+packageDependencies: []
+provenance:
+    mode: production
+    orchestrator:
+        name: rc
+        version: 0.1.0
+        sha256: 08044437569c5b03586552b73b93657ca6aded8fc7a9f58fb961a094f3753ad2
+    profiler:
+        name: go-rc-profiler
+        version: v0.4.0
+        sha256: bd5a4ea6c28bfea5f6d91742533866b4e13c223edf73a8a71a4edf1de1b6d98e
+    sourceDirectory: bindings/aws-s3/go
+    targetReleaseTag: bindings/aws-s3/go/v0.2.0
+rootExtension:
+    id: https://runtimeconditions.io/extensions/aws/s3/0.2.0/runtimeconditions.extension.yaml
+    version: 0.2.0
+    semanticSha256: 086dd413b50e8e8fefd416701040b6cb111ab7ce32c88a12924e7f23bd549bd5

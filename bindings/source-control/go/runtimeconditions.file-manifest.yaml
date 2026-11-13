@@ -1,0 +1,9 @@
+apiVersion: runtimeconditions.io/file-manifest/v1alpha1
+kind: RuntimeConditionsFileManifest
+files:
+    bindings.go: 481efb41ecd57b0f8d711a8a6285005d1fe681a0c60a1c61842daaf723d34efc
+    go.mod: 7ffed52ca09406bf6a356aaafcb2e170020c6a876caffce2fc02fbb2c928cc79
+    runtimeconditions.binding-model.yaml: a70b843ef83436bc5c65cd462aa4eade8f21a5e0d7c58e97ab295ccaa66d1b35
+    runtimeconditions.binding-release.yaml: 26bfcf27e3a9c07c642348d66c814dfebdd07b7cd8565261fbdc6a8fc3badeb2
+    runtimeconditions.bindings.yaml: 49086f13a1e66fa4139add6549370985695a5f76b57af53be1796e336233e714
+    runtimeconditions.extension.yaml: fbb3b7aae22a43d25528a57ebfe691aa4685c719f020eb1c978d599fedfac059

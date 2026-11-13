@@ -1,0 +1,38 @@
+apiVersion: runtimeconditions.io/binding-release/v1alpha1
+dependencyLock:
+    extensions:
+        - id: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          version: 0.1.0
+          sourceSha256: fbb3b7aae22a43d25528a57ebfe691aa4685c719f020eb1c978d599fedfac059
+          semanticSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+          sourceBackend: catalog
+          sourceLocator: catalog:rc/source-control/releases/0.1.0/runtimeconditions.extension.yaml
+kind: RuntimeConditionsBindingRelease
+model:
+    apiVersion: runtimeconditions.io/binding-model/v1alpha1
+    semanticSha256: 28acd4c92bb6548a06354673e17bb126965795ac43f8b00b50f455dc7a30e287
+package:
+    coordinate: runtimeconditions.io/x/rc/source
+    language: go
+    minimumGoVersion: "1.25"
+    name: source
+    packageKey: source-control
+    publicationMode: github-tag
+    version: v0.1.0
+packageDependencies: []
+provenance:
+    mode: production
+    orchestrator:
+        name: rc
+        version: 0.1.0
+        sha256: 08044437569c5b03586552b73b93657ca6aded8fc7a9f58fb961a094f3753ad2
+    profiler:
+        name: go-rc-profiler
+        version: v0.4.0
+        sha256: bd5a4ea6c28bfea5f6d91742533866b4e13c223edf73a8a71a4edf1de1b6d98e
+    sourceDirectory: bindings/source-control/go
+    targetReleaseTag: bindings/source-control/go/v0.1.0
+rootExtension:
+    id: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+    version: 0.1.0
+    semanticSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9

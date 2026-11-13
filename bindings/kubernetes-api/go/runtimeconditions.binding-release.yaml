@@ -1,0 +1,38 @@
+apiVersion: runtimeconditions.io/binding-release/v1alpha1
+dependencyLock:
+    extensions:
+        - id: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+          version: 0.1.0
+          sourceSha256: ebbd6dcd866cbb65dd5ca7114f3872e66c12c6f6a0ef7cdd9e4e847cb4ca71d4
+          semanticSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076
+          sourceBackend: catalog
+          sourceLocator: catalog:kubernetes/api/releases/0.1.0/runtimeconditions.extension.yaml
+kind: RuntimeConditionsBindingRelease
+model:
+    apiVersion: runtimeconditions.io/binding-model/v1alpha1
+    semanticSha256: 23f95dc54c20be85d617d3ab25c8791d632f0d9aea7ff5ef458283002004e510
+package:
+    coordinate: runtimeconditions.io/x/kubernetes/api
+    language: go
+    minimumGoVersion: "1.25"
+    name: api
+    packageKey: kubernetes-api
+    publicationMode: github-tag
+    version: v0.1.0
+packageDependencies: []
+provenance:
+    mode: production
+    orchestrator:
+        name: rc
+        version: 0.1.0
+        sha256: 08044437569c5b03586552b73b93657ca6aded8fc7a9f58fb961a094f3753ad2
+    profiler:
+        name: go-rc-profiler
+        version: v0.4.0
+        sha256: bd5a4ea6c28bfea5f6d91742533866b4e13c223edf73a8a71a4edf1de1b6d98e
+    sourceDirectory: bindings/kubernetes-api/go
+    targetReleaseTag: bindings/kubernetes-api/go/v0.1.0
+rootExtension:
+    id: https://runtimeconditions.io/extensions/kubernetes/api/0.1.0/runtimeconditions.extension.yaml
+    version: 0.1.0
+    semanticSha256: 94e891a75e739f91e61684d8971402c87013ea0fa234d3d2a41c09575fe1b076

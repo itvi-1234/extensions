@@ -1,0 +1,414 @@
+apiVersion: runtimeconditions.io/binding-model/v1alpha1
+kind: RuntimeConditionsBindingModel
+metadata:
+    semanticSha256: 28acd4c92bb6548a06354673e17bb126965795ac43f8b00b50f455dc7a30e287
+    normalizer:
+        name: rc-binding-model
+        version: 0.1.0
+        sha256: 0b6a631f55ae70522b11a814326bc7c346118a1b47aa464c6904565d59085ac3
+coreProfileSchema:
+    id: https://runtimeconditions.io/schemas/profile/0.4.0/runtimeconditions.profile.schema.yaml
+    version: 0.4.0
+    semanticSha256: ed447dccefd7507d905b0b6177b1386d8ee96a1d053b731939a9a7ae973d5af1
+rootExtension:
+    id: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+    version: 0.1.0
+    semanticSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+extensions:
+    - id: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+      version: 0.1.0
+      semanticSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+vocabulary:
+    owners:
+        - coordinate: field-domain:rc.source_control:git:interface.access[]:"clone"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+          path: interface.access[]
+          value: clone
+        - coordinate: field-domain:rc.source_control:git:interface.access[]:"fetch"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+          path: interface.access[]
+          value: fetch
+        - coordinate: field-domain:rc.source_control:git:interface.access[]:"pull"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+          path: interface.access[]
+          value: pull
+        - coordinate: field-domain:rc.source_control:git:interface.access[]:"push"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+          path: interface.access[]
+          value: push
+        - coordinate: field-domain:rc.source_control:git:interface.provider:"github"
+          category: field-value
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+          path: interface.provider
+          value: github
+        - coordinate: interface-field:rc.source_control:git:access
+          category: interface-field
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+          path: interface.access
+        - coordinate: interface-field:rc.source_control:git:provider
+          category: interface-field
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+          path: interface.provider
+        - coordinate: interface:rc.source_control:git
+          category: interface
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+        - coordinate: kind:rc.source_control
+          category: kind
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+    ownedDeclarations:
+        - coordinate: kind:rc.source_control
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          provenance:
+            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+            coordinate: kind:rc.source_control
+    interfaces:
+        - coordinate: interface:rc.source_control:git
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          type: git
+          provenance:
+            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+            coordinate: interface:rc.source_control:git
+    interfaceFields:
+        - coordinate: interface-field:rc.source_control:git:access
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+          path: interface.access
+          segments:
+            - name: interface
+            - name: access
+          provenance:
+            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+            coordinate: interface-field:rc.source_control:git:access
+        - coordinate: interface-field:rc.source_control:git:provider
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+          path: interface.provider
+          segments:
+            - name: interface
+            - name: provider
+          provenance:
+            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+            coordinate: interface-field:rc.source_control:git:provider
+    valueDomains:
+        - coordinate: field-domain:rc.source_control:git:interface.access[]
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+          path: interface.access[]
+          segments:
+            - name: interface
+            - name: access
+              array: true
+          values:
+            - value: clone
+            - value: fetch
+            - value: pull
+            - value: push
+          provenance:
+            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+            coordinate: field-domain:rc.source_control:git:interface.access[]
+        - coordinate: field-domain:rc.source_control:git:interface.provider
+          owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+          kind: rc.source_control
+          interfaceType: git
+          path: interface.provider
+          segments:
+            - name: interface
+            - name: provider
+          values:
+            - value: github
+          provenance:
+            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+            coordinate: field-domain:rc.source_control:git:interface.provider
+scopes:
+    - coordinate: rc.source_control:git
+      kind: rc.source_control
+      interfaceType: git
+      applicableSchemas:
+        - https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+      projection:
+        kind: object
+        required:
+            - interface
+        properties:
+            - name: interface
+              required: true
+              shape:
+                kind: object
+                required:
+                    - access
+                    - provider
+                properties:
+                    - name: access
+                      required: true
+                      shape:
+                        kind: array
+                        items:
+                            kind: scalar
+                            scalar: string
+                            values:
+                                - value: clone
+                                - value: fetch
+                                - value: pull
+                                - value: push
+                            provenance:
+                                owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                                extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                                coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                                jsonPointer: /properties/interface/properties/access/items
+                        constraints:
+                            minItems: 1
+                            uniqueItems: true
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                            coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                            jsonPointer: /properties/interface/properties/access
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                        extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                        coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                        jsonPointer: /properties/interface/properties/access
+                    - name: provider
+                      required: true
+                      shape:
+                        kind: scalar
+                        scalar: string
+                        values:
+                            - value: github
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                            coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                            jsonPointer: /properties/interface/properties/provider
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                        extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                        coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                        jsonPointer: /properties/interface/properties/provider
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                    extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                    coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                    jsonPointer: /properties/interface
+              provenance:
+                owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                jsonPointer: /properties/interface
+            - name: name
+              shape:
+                kind: scalar
+                scalar: string
+                constraints:
+                    minLength: 1
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                    extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                    coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                    jsonPointer: /properties/name
+              provenance:
+                owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                jsonPointer: /properties/name
+            - name: optional
+              shape:
+                kind: scalar
+                scalar: boolean
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                    extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                    coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                    jsonPointer: /properties/optional
+              provenance:
+                owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                jsonPointer: /properties/optional
+        provenance:
+            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+            coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+schemas:
+    - coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+      owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+      id: source-control-git
+      kind: rc.source_control
+      interfaceType: git
+      exact:
+        $schema: https://json-schema.org/draft/2020-12/schema
+        additionalProperties: false
+        properties:
+            interface:
+                additionalProperties: false
+                properties:
+                    access:
+                        items:
+                            enum:
+                                - clone
+                                - fetch
+                                - pull
+                                - push
+                        minItems: 1
+                        type: array
+                        uniqueItems: true
+                    provider:
+                        const: github
+                    type:
+                        const: git
+                required:
+                    - access
+                    - provider
+                    - type
+                type: object
+            kind:
+                const: rc.source_control
+            name:
+                minLength: 1
+                type: string
+            optional:
+                type: boolean
+        required:
+            - interface
+            - kind
+        type: object
+      projection:
+        kind: object
+        required:
+            - interface
+        properties:
+            - name: interface
+              required: true
+              shape:
+                kind: object
+                required:
+                    - access
+                    - provider
+                properties:
+                    - name: access
+                      required: true
+                      shape:
+                        kind: array
+                        items:
+                            kind: scalar
+                            scalar: string
+                            values:
+                                - value: clone
+                                - value: fetch
+                                - value: pull
+                                - value: push
+                            provenance:
+                                owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                                extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                                coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                                jsonPointer: /properties/interface/properties/access/items
+                        constraints:
+                            minItems: 1
+                            uniqueItems: true
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                            coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                            jsonPointer: /properties/interface/properties/access
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                        extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                        coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                        jsonPointer: /properties/interface/properties/access
+                    - name: provider
+                      required: true
+                      shape:
+                        kind: scalar
+                        scalar: string
+                        values:
+                            - value: github
+                        provenance:
+                            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                            coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                            jsonPointer: /properties/interface/properties/provider
+                      provenance:
+                        owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                        extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                        coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                        jsonPointer: /properties/interface/properties/provider
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                    extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                    coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                    jsonPointer: /properties/interface
+              provenance:
+                owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                jsonPointer: /properties/interface
+            - name: name
+              shape:
+                kind: scalar
+                scalar: string
+                constraints:
+                    minLength: 1
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                    extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                    coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                    jsonPointer: /properties/name
+              provenance:
+                owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                jsonPointer: /properties/name
+            - name: optional
+              shape:
+                kind: scalar
+                scalar: boolean
+                provenance:
+                    owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                    extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                    coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                    jsonPointer: /properties/optional
+              provenance:
+                owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+                extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+                coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+                jsonPointer: /properties/optional
+        provenance:
+            owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+            extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+            coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git
+      provenance:
+        owner: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml
+        extensionSha256: ea78a3c4cf769901c91a0e56ce621d9207c8cbef7b6db10db744082f5bcf43d9
+        coordinate: https://runtimeconditions.io/extensions/rc/source-control/0.1.0/runtimeconditions.extension.yaml#schema:source-control-git

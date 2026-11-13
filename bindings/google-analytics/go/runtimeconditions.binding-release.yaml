@@ -1,0 +1,38 @@
+apiVersion: runtimeconditions.io/binding-release/v1alpha1
+dependencyLock:
+    extensions:
+        - id: https://runtimeconditions.io/extensions/google/analytics/0.1.0/runtimeconditions.extension.yaml
+          version: 0.1.0
+          sourceSha256: 3662d3b383cfc5d018b194b9b95faf559bdc17b60d76184f3b1b17674e96deef
+          semanticSha256: 3bace49d7e4b90c759c50ff95b8ad24bf613a6e0c1c37f591187a6963de7a6d9
+          sourceBackend: catalog
+          sourceLocator: catalog:google/analytics/releases/0.1.0/runtimeconditions.extension.yaml
+kind: RuntimeConditionsBindingRelease
+model:
+    apiVersion: runtimeconditions.io/binding-model/v1alpha1
+    semanticSha256: a5d157645fe16f159e92ade062b40dd874752a7ad6f2f90c2d14a2474cb9c38d
+package:
+    coordinate: runtimeconditions.io/x/google/analytics
+    language: go
+    minimumGoVersion: "1.25"
+    name: analytics
+    packageKey: google-analytics
+    publicationMode: github-tag
+    version: v0.1.0
+packageDependencies: []
+provenance:
+    mode: production
+    orchestrator:
+        name: rc
+        version: 0.1.0
+        sha256: 08044437569c5b03586552b73b93657ca6aded8fc7a9f58fb961a094f3753ad2
+    profiler:
+        name: go-rc-profiler
+        version: v0.4.0
+        sha256: bd5a4ea6c28bfea5f6d91742533866b4e13c223edf73a8a71a4edf1de1b6d98e
+    sourceDirectory: bindings/google-analytics/go
+    targetReleaseTag: bindings/google-analytics/go/v0.1.0
+rootExtension:
+    id: https://runtimeconditions.io/extensions/google/analytics/0.1.0/runtimeconditions.extension.yaml
+    version: 0.1.0
+    semanticSha256: 3bace49d7e4b90c759c50ff95b8ad24bf613a6e0c1c37f591187a6963de7a6d9
