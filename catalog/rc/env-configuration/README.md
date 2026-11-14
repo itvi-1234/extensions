@@ -6,7 +6,7 @@
 
 This document defines a first-party Runtime Conditions extension for declaring workload configuration inputs that are provided through environment variables.
 
-The machine-readable extension definition is [env-configuration-v1alpha1.yaml](env-configuration-v1alpha1.yaml).
+The current machine-readable definition is [env-configuration-v1alpha2.yaml](env-configuration-v1alpha2.yaml). The previous [v1alpha1 definition](env-configuration-v1alpha1.yaml) is preserved.
 
 This extension is not part of the core Runtime Conditions Profile vocabulary. Profiles that use this extension MUST declare it in the top-level `extensions` list.
 
@@ -16,13 +16,23 @@ This extension is not part of the core Runtime Conditions Profile vocabulary. Pr
 
 ```yaml
 extensions:
+<<<<<<< HEAD
   - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
   - https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+=======
+  - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
+  - https://runtimeconditions.io/extensions/rc/env-configuration:v1alpha2
+  - https://runtimeconditions.io/extensions/nats/service:0.1.0
+>>>>>>> a7547c2 (adds smtp to common, nats to env)
 ```
 
 This extension defines the Condition field `configuration`.
 
+<<<<<<< HEAD
 This extension depends on `https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml` for the common Condition kinds and interface types referenced by its standard property validation table.
+=======
+This release depends on common-integrations `v1alpha2` and NATS service `0.1.0`. Immutable definition URIs identify those dependencies in the definition and binding metadata; generated profiles use the namespaced `<location>:<version>` references above. Regenerated binding packages therefore depend on both providers' native packages.
+>>>>>>> a7547c2 (adds smtp to common, nats to env)
 
 This extension owns the unqualified Condition field name `configuration` only
 within the common integration scopes listed in this document. Other extensions
@@ -150,12 +160,20 @@ The following standard connection properties are defined by this extension:
 | `database` | Database name, schema name, logical database number, or equivalent datastore selector |
 | `token`    | Bearer token, API token, or equivalent credential |
 | `tls`      | Whether TLS is required or enabled |
+| `tlsMode` | SMTP transport mode; the application interprets `disabled`, `starttls`, or `implicit` |
+| `fromAddress` | Configured SMTP sender address |
+| `toAddress` | Configured SMTP recipient address |
+| `stream` | Actual NATS JetStream stream name |
+| `subject` | Actual NATS subject used by the application; does not add a subject filter to the NATS consume operation |
+| `consumer` | Actual NATS JetStream consumer name |
 
 Allowed properties are validated against the Condition `kind` and `interface.type`.
 
 | Condition | Allowed properties |
 | --------- | ------------------ |
 | `kind: api`, `interface.type: http` | `url`, `baseUrl`, `hostname`, `port`, `scheme`, `username`, `password`, `token`, `tls` |
+| `kind: api`, `interface.type: smtp` | `url`, `hostname`, `port`, `username`, `password`, `tlsMode`, `fromAddress`, `toAddress` |
+| `kind: nats.service`, `interface.type: service` | `url`, `hostname`, `port`, `username`, `password`, `token`, `tls`, `stream`, `subject`, `consumer` |
 | `kind: datastore`, `interface.type: relational` | `url`, `hostname`, `port`, `scheme`, `username`, `password`, `database`, `tls` |
 | `kind: datastore`, `interface.type: document` | `url`, `hostname`, `port`, `scheme`, `username`, `password`, `database`, `tls` |
 | `kind: cache`, `interface.type: key_value` | `url`, `hostname`, `port`, `scheme`, `username`, `password`, `database`, `token`, `tls` |
@@ -168,7 +186,7 @@ Extensions that define additional Condition kinds or interface types MAY define 
 
 A Condition that uses this extension is invalid if:
 
-- `configuration` appears and `https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml` is not declared
+- `configuration` appears and the applicable env-configuration release is not declared
 - `configuration` contains neither `env` nor `alternatives`
 - `configuration` contains both `env` and `alternatives`
 - `configuration.env` is present but empty
@@ -200,8 +218,13 @@ workload:
   version: v1.2.3
 
 extensions:
+<<<<<<< HEAD
   - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
   - https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+=======
+  - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
+  - https://runtimeconditions.io/extensions/rc/env-configuration:v1alpha2
+>>>>>>> a7547c2 (adds smtp to common, nats to env)
 
 conditions:
   - name: todos-api

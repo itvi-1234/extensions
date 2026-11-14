@@ -6,7 +6,7 @@
 
 This document defines a first-party Runtime Conditions extension for common application runtime integrations.
 
-The machine-readable extension definition is [common-integrations-v1alpha1.yaml](common-integrations-v1alpha1.yaml).
+The current machine-readable definition is [common-integrations-v1alpha2.yaml](common-integrations-v1alpha2.yaml). The previous [v1alpha1 definition](common-integrations-v1alpha1.yaml) is preserved.
 
 This extension is not part of the core Runtime Conditions Profile vocabulary. Profiles that use this extension MUST declare it in the top-level `extensions` list.
 
@@ -16,7 +16,11 @@ This extension is not part of the core Runtime Conditions Profile vocabulary. Pr
 
 ```yaml
 extensions:
+<<<<<<< HEAD
   - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+=======
+  - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
+>>>>>>> a7547c2 (adds smtp to common, nats to env)
 ```
 
 This extension defines:
@@ -48,6 +52,21 @@ These kinds are intentionally broad so that multiple interaction models or imple
 # 3. API Interfaces
 
 API interfaces describe callable external services.
+
+## SMTP email submission
+
+The `api` kind supports the `smtp` interface for sending email through a standard SMTP client. Provider selection and connection settings belong to the platform and environment configuration.
+
+```yaml
+kind: api
+interface:
+  type: smtp
+  operations: [send]
+```
+
+`operations` is required and must be a nonempty list without duplicates. This release supports only `send`. It describes mail submission, not inbox access or email receiving. No SMTP provider names or credentials appear in this interface.
+
+NATS integrations continue to use the separate [NATS service extension](../../nats/service/README.md); this extension adds no NATS vocabulary.
 
 ## 3.1 HTTP Interface
 
@@ -240,7 +259,8 @@ If `engine` is provided, it MUST be valid for the declared cache interface type.
 
 A Condition that uses this extension is invalid if:
 
-- `kind` is `api` and `interface.type` is not `http`
+- `kind` is `api` and `interface.type` is neither `http` nor `smtp`
+- `interface.type` is `smtp` and `operations` is missing, empty, contains duplicates, or contains a value other than `send`
 - `kind` is `datastore` and `interface.type` is not `relational` or `document`
 - `kind` is `cache` and `interface.type` is not `key_value`
 - `kind` is `api`, `interface.type` is `http`, and neither `spec` nor `operations` is present
@@ -270,7 +290,7 @@ workload:
   version: v1.2.3
 
 extensions:
-  - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+  - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
 
 conditions:
   - name: primary-db

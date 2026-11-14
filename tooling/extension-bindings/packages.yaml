@@ -31,7 +31,7 @@ packages:
         publicationMode: registry
         registryId: npm
   common-integrations:
-    rootExtension: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+    rootExtension: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha2/runtimeconditions.extension.yaml
     coreProfileSchemaVersion: 0.4.0
     languages:
       go:
@@ -44,7 +44,7 @@ packages:
       python:
         coordinate: runtimeconditions-common-integrations
         name: runtimeconditions_common_integrations
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/common-integrations/python
         languageVersion: 3.12.10
         publicationMode: registry
@@ -58,7 +58,7 @@ packages:
         publicationMode: registry
         registryId: npm
   env-configuration:
-    rootExtension: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
+    rootExtension: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha2/runtimeconditions.extension.yaml
     coreProfileSchemaVersion: 0.4.0
     languages:
       go:
@@ -71,7 +71,7 @@ packages:
       python:
         coordinate: runtimeconditions-env-configuration
         name: runtimeconditions_env_configuration
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/env-configuration/python
         languageVersion: 3.12.10
         publicationMode: registry
@@ -145,14 +145,14 @@ packages:
       go:
         coordinate: runtimeconditions.io/x/nats/service
         name: service
-        version: 0.1.0
+        version: 0.1.1
         sourceDirectory: bindings/nats-service/go
         languageVersion: 1.25.0
         publicationMode: github-tag
       python:
         coordinate: runtimeconditions-nats-service
         name: runtimeconditions_nats_service
-        version: 0.1.0
+        version: 0.1.1
         sourceDirectory: bindings/nats-service/python
         languageVersion: 3.12.10
         publicationMode: registry
@@ -160,7 +160,7 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/nats-service'
         name: '@runtimeconditions/nats-service'
-        version: 0.1.0
+        version: 0.1.1
         sourceDirectory: bindings/nats-service/typescript
         languageVersion: 20.19.6
         publicationMode: registry
