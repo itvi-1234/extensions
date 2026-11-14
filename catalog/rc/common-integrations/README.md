@@ -16,11 +16,7 @@ This extension is not part of the core Runtime Conditions Profile vocabulary. Pr
 
 ```yaml
 extensions:
-<<<<<<< HEAD
-  - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
-=======
   - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
->>>>>>> a7547c2 (adds smtp to common, nats to env)
 ```
 
 This extension defines:

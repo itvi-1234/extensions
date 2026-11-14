@@ -16,17 +16,8 @@ This extension is not part of the core Runtime Conditions Profile vocabulary. Pr
 
 ```yaml
 extensions:
-<<<<<<< HEAD
-  - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
-  - https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
-=======
   - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
   - https://runtimeconditions.io/extensions/rc/env-configuration:v1alpha2
-<<<<<<< HEAD
-  - https://runtimeconditions.io/extensions/nats/service:0.1.0
->>>>>>> a7547c2 (adds smtp to common, nats to env)
-=======
->>>>>>> cb26e7f (moves nats configs to the nats ext)
 ```
 
 This extension defines the Condition field `configuration`.
@@ -213,13 +204,8 @@ workload:
   version: v1.2.3
 
 extensions:
-<<<<<<< HEAD
-  - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
-  - https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
-=======
   - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
   - https://runtimeconditions.io/extensions/rc/env-configuration:v1alpha2
->>>>>>> a7547c2 (adds smtp to common, nats to env)
 
 conditions:
   - name: todos-api
