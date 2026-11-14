@@ -1,24 +1,24 @@
 apiVersion: runtimeconditions.io/binding-release/v1alpha1
 dependencyLock:
     extensions:
-        - id: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
-          version: v1alpha1
-          sourceSha256: 077d29fab2b60ebed51b4c82b1d89ef4a0f98fadb98f54940f6db6863ec2c4ef
-          semanticSha256: f29ee3118c9602244eb82694c94767ed4e8c98d009b33cf2d59a2b67f1182444
+        - id: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha2/runtimeconditions.extension.yaml
+          version: v1alpha2
+          sourceSha256: c3298bde1c5e23a938cbd5ab6334ae5442aec577b9a9cc3b9787904f6499da33
+          semanticSha256: c25ac6b901fe29a73331ca38e58a93fa07ae0204cf8ffc02acfa20bf3ab51844
           sourceBackend: catalog
-          sourceLocator: catalog:rc/common-integrations/common-integrations-v1alpha1.yaml
-        - id: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
-          version: v1alpha1
-          sourceSha256: f2673ee6c3c7436b15ed765f8c74bc47b291e52acfd584484095d5722324796f
-          semanticSha256: 216fa4ab216cca00898d49a0d055410db9e385e9961f8627f7bc0b31ff88c9cc
+          sourceLocator: catalog:rc/common-integrations/common-integrations-v1alpha2.yaml
+        - id: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha2/runtimeconditions.extension.yaml
+          version: v1alpha2
+          sourceSha256: f1a1066fce33bb43362d7d3ac085694503eccef2e05aa0d3d52e514eb5d67353
+          semanticSha256: 510cd8ade4771d78b6d8773019f6bb9d1d1cf7cad99dc7165ae74f138bbcac3a
           sourceBackend: catalog
-          sourceLocator: catalog:rc/env-configuration/env-configuration-v1alpha1.yaml
+          sourceLocator: catalog:rc/env-configuration/env-configuration-v1alpha2.yaml
           dependencies:
-            - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+            - https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha2/runtimeconditions.extension.yaml
 kind: RuntimeConditionsBindingRelease
 model:
     apiVersion: runtimeconditions.io/binding-model/v1alpha1
-    semanticSha256: 87653f355ae131d3b12a3bb25bbffbee9ffa076188ce6aa6e9cdaacac57e922d
+    semanticSha256: 66448d67f77b06b86837af5a220336ec4379a1d3cc4c6675d68b39264f85c57f
 package:
     coordinate: runtimeconditions.io/x/rc/env
     language: go
@@ -30,12 +30,12 @@ package:
 packageDependencies:
     - artifact:
         kind: go-module-zip
-        sha256: 9b4992fe80b9cac1a353dbcd0876a66c1cdfc2eec74cc9b82bd3ca5447ca11a8
+        sha256: f4a678fa618924d13650836b48b6188edf2e8c860ed11ae78dcf8dd62b400414
       compatibleVersionRange:
         minimumInclusive: v0.2.0
         nextBreakingExclusive: v0.3.0
       coordinate: runtimeconditions.io/x/rc/common
-      extension: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml
+      extension: https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha2/runtimeconditions.extension.yaml
       name: common
       testedVersion: v0.2.0
 provenance:
@@ -51,6 +51,6 @@ provenance:
     sourceDirectory: bindings/env-configuration/go
     targetReleaseTag: bindings/env-configuration/go/v0.2.0
 rootExtension:
-    id: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha1/runtimeconditions.extension.yaml
-    version: v1alpha1
-    semanticSha256: 216fa4ab216cca00898d49a0d055410db9e385e9961f8627f7bc0b31ff88c9cc
+    id: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha2/runtimeconditions.extension.yaml
+    version: v1alpha2
+    semanticSha256: 510cd8ade4771d78b6d8773019f6bb9d1d1cf7cad99dc7165ae74f138bbcac3a
