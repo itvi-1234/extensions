@@ -4,8 +4,7 @@ metadata:
   id: https://runtimeconditions.io/extensions/rc/env-configuration/v1alpha2/runtimeconditions.extension.yaml
   version: v1alpha2
 spec:
-  dependencies: ['https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha2/runtimeconditions.extension.yaml',
-    'https://runtimeconditions.io/extensions/nats/service/0.1.0/runtimeconditions.extension.yaml']
+  dependencies: ['https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha2/runtimeconditions.extension.yaml']
   conditionFields:
   - {name: configuration, appliesToKinds: [api], appliesToInterfaceTypes: [http]}
   - name: configuration
@@ -13,7 +12,6 @@ spec:
     appliesToInterfaceTypes: [relational, document]
   - {name: configuration, appliesToKinds: [cache], appliesToInterfaceTypes: [key_value]}
   - {name: configuration, appliesToKinds: [api], appliesToInterfaceTypes: [smtp]}
-  - {name: configuration, appliesToKinds: [nats.service], appliesToInterfaceTypes: [service]}
   fieldValues:
   - field: configuration.env[].property
     targetKind: api
@@ -55,14 +53,6 @@ spec:
     targetKind: api
     targetType: smtp
     values: [url, hostname, port, username, password, tlsMode, fromAddress, toAddress]
-  - field: configuration.env[].property
-    targetKind: nats.service
-    targetType: service
-    values: [url, hostname, port, username, password, token, tls, stream, subject, consumer]
-  - field: configuration.alternatives[].env[].property
-    targetKind: nats.service
-    targetType: service
-    values: [url, hostname, port, username, password, token, tls, stream, subject, consumer]
   schemas:
   - id: configuration-shape
     description: Validates the environment configuration field shape.
@@ -184,25 +174,6 @@ spec:
       additionalProperties: true
       $defs:
         allowedProperty: {enum: [url, hostname, port, username, password, tlsMode, fromAddress, toAddress]}
-        configuration:
-          type: object
-          properties:
-            env: {type: array, items: {$ref: '#/$defs/envInput'}}
-            alternatives:
-              type: array
-              items: {type: object, properties: {env: {type: array, items: {$ref: '#/$defs/envInput'}}}}
-        envInput: {type: object, properties: {property: {$ref: '#/$defs/allowedProperty'}}}
-  - id: configuration-properties-nats-service-service
-    appliesToKind: nats.service
-    appliesToInterfaceType: service
-    description: Validates environment configuration properties for nats.service/service.
-    schema:
-      $schema: https://json-schema.org/draft/2020-12/schema
-      type: object
-      properties: {configuration: {$ref: '#/$defs/configuration'}}
-      additionalProperties: true
-      $defs:
-        allowedProperty: {enum: [url, hostname, port, username, password, token, tls, stream, subject, consumer]}
         configuration:
           type: object
           properties:

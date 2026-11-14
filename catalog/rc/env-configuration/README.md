@@ -22,17 +22,16 @@ extensions:
 =======
   - https://runtimeconditions.io/extensions/rc/common-integrations:v1alpha2
   - https://runtimeconditions.io/extensions/rc/env-configuration:v1alpha2
+<<<<<<< HEAD
   - https://runtimeconditions.io/extensions/nats/service:0.1.0
 >>>>>>> a7547c2 (adds smtp to common, nats to env)
+=======
+>>>>>>> cb26e7f (moves nats configs to the nats ext)
 ```
 
 This extension defines the Condition field `configuration`.
 
-<<<<<<< HEAD
-This extension depends on `https://runtimeconditions.io/extensions/rc/common-integrations/v1alpha1/runtimeconditions.extension.yaml` for the common Condition kinds and interface types referenced by its standard property validation table.
-=======
 This release depends on common-integrations `v1alpha2` and NATS service `0.1.0`. Immutable definition URIs identify those dependencies in the definition and binding metadata; generated profiles use the namespaced `<location>:<version>` references above. Regenerated binding packages therefore depend on both providers' native packages.
->>>>>>> a7547c2 (adds smtp to common, nats to env)
 
 This extension owns the unqualified Condition field name `configuration` only
 within the common integration scopes listed in this document. Other extensions
@@ -163,9 +162,6 @@ The following standard connection properties are defined by this extension:
 | `tlsMode` | SMTP transport mode; the application interprets `disabled`, `starttls`, or `implicit` |
 | `fromAddress` | Configured SMTP sender address |
 | `toAddress` | Configured SMTP recipient address |
-| `stream` | Actual NATS JetStream stream name |
-| `subject` | Actual NATS subject used by the application; does not add a subject filter to the NATS consume operation |
-| `consumer` | Actual NATS JetStream consumer name |
 
 Allowed properties are validated against the Condition `kind` and `interface.type`.
 
@@ -173,7 +169,6 @@ Allowed properties are validated against the Condition `kind` and `interface.typ
 | --------- | ------------------ |
 | `kind: api`, `interface.type: http` | `url`, `baseUrl`, `hostname`, `port`, `scheme`, `username`, `password`, `token`, `tls` |
 | `kind: api`, `interface.type: smtp` | `url`, `hostname`, `port`, `username`, `password`, `tlsMode`, `fromAddress`, `toAddress` |
-| `kind: nats.service`, `interface.type: service` | `url`, `hostname`, `port`, `username`, `password`, `token`, `tls`, `stream`, `subject`, `consumer` |
 | `kind: datastore`, `interface.type: relational` | `url`, `hostname`, `port`, `scheme`, `username`, `password`, `database`, `tls` |
 | `kind: datastore`, `interface.type: document` | `url`, `hostname`, `port`, `scheme`, `username`, `password`, `database`, `tls` |
 | `kind: cache`, `interface.type: key_value` | `url`, `hostname`, `port`, `scheme`, `username`, `password`, `database`, `token`, `tls` |

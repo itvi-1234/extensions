@@ -156,6 +156,51 @@ def operation_schema(operation: dict[str, Any], fields: dict[str, dict[str, Any]
     return {"type": "object", "required": ["resource", "action", *bindings["required"]], "properties": properties, "additionalProperties": False}
 
 
+def environment_configuration_schema(configuration: Any) -> dict[str, Any]:
+    """Describe NATS-owned environment inputs without importing another extension."""
+    if not isinstance(configuration, dict) or set(configuration) != {"envProperties"}:
+        raise ValueError("environmentConfiguration must contain exactly envProperties")
+    properties = configuration["envProperties"]
+    if not isinstance(properties, list) or not properties or not all(isinstance(item, str) and item for item in properties):
+        raise ValueError("environmentConfiguration.envProperties must be a non-empty string list")
+    if len(set(properties)) != len(properties):
+        raise ValueError("environmentConfiguration.envProperties must not contain duplicates")
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {"configuration": {"$ref": "#/$defs/configuration"}},
+        "$defs": {
+            "configuration": {
+                "type": "object",
+                "oneOf": [
+                    {"required": ["env"], "properties": {"env": {"$ref": "#/$defs/envList"}}, "additionalProperties": False},
+                    {
+                        "required": ["alternatives"],
+                        "properties": {"alternatives": {
+                            "type": "array", "minItems": 2,
+                            "items": {"type": "object", "required": ["env"], "properties": {"env": {"$ref": "#/$defs/envList"}}, "additionalProperties": False},
+                        }},
+                        "additionalProperties": False,
+                    },
+                ],
+            },
+            "envList": {"type": "array", "minItems": 1, "uniqueItems": True, "items": {"$ref": "#/$defs/envInput"}},
+            "envInput": {
+                "type": "object", "required": ["property", "name"],
+                "properties": {
+                    "property": {"enum": list(properties)},
+                    "name": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"},
+                    "sensitive": {"type": "boolean"},
+                    "required": {"type": "boolean"},
+                },
+                "additionalProperties": False,
+            },
+        },
+    }
+    Draft202012Validator.check_schema(schema)
+    return schema
+
+
 def build(inventory: dict[str, Any], bridge: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     inventory_identity, shapes, inventory_operations = inventory_contract(inventory)
     extension_config, fields, operations = bridge_contract(bridge, inventory_identity, inventory, shapes, inventory_operations)
@@ -189,6 +234,18 @@ def build(inventory: dict[str, Any], bridge: dict[str, Any]) -> tuple[dict[str, 
         ],
         "schemas": [{"id": "nats-service-interface", "appliesToKind": kind, "appliesToInterfaceType": interface_type, "description": "Validates adapter-actionable NATS connection, subject authorization, and JetStream resource requirements.", "schema": schema}],
     }
+    if "environmentConfiguration" in extension_config:
+        configuration_schema = environment_configuration_schema(extension_config["environmentConfiguration"])
+        properties = list(extension_config["environmentConfiguration"]["envProperties"])
+        spec["conditionFields"] = [{"name": "configuration", "appliesToKinds": [kind], "appliesToInterfaceTypes": [interface_type]}]
+        spec["fieldValues"].extend(
+            {"field": path, "targetKind": kind, "targetType": interface_type, "values": list(properties)}
+            for path in ("configuration.env[].property", "configuration.alternatives[].env[].property")
+        )
+        spec["schemas"].append({
+            "id": "nats-service-configuration", "appliesToKind": kind, "appliesToInterfaceType": interface_type,
+            "description": "Validates NATS-owned environment configuration inputs.", "schema": configuration_schema,
+        })
     digest = semantic_sha256(spec)
     extension = {"apiVersion": "runtimeconditions.io/v1alpha1", "kind": "RuntimeConditionsExtensionDefinition", "metadata": {"id": extension_config["id"], "version": extension_config["version"], "semanticSha256": digest}, "spec": spec}
     semantic_body = {"fields": fields, "operations": operations}
@@ -216,6 +273,8 @@ def main() -> int:
     parser.add_argument("--service-mapping-output", type=Path, required=True)
     args = parser.parse_args()
     extension, service_mapping = build(read_document(args.inventory), read_document(args.bridge))
+    if args.extension_output.exists() and read_document(args.extension_output) != extension:
+        parser.error("refusing to replace an existing extension release; select the new version's output path")
     write_yaml(args.extension_output, extension)
     write_yaml(args.service_mapping_output, service_mapping)
     print(f"extension: {extension['metadata']['id']}")
