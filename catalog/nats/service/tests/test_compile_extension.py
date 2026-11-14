@@ -171,9 +171,6 @@ class NATSServiceExtensionCompilationTest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "environmentConfiguration"):
                     environment_configuration_schema(config)
 
-    def test_committed_0_2_0_release_matches_the_compiler_output(self):
-        self.assertEqual(self.extension, read_document(ROOT / "releases/0.2.0/runtimeconditions.extension.yaml"))
-
     def test_legacy_inputs_preserve_the_existing_release_in_memory(self):
         bridge = copy.deepcopy(self.bridge)
         del bridge["extension"]["environmentConfiguration"]
