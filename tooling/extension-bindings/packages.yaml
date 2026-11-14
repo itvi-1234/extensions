@@ -145,14 +145,14 @@ packages:
       go:
         coordinate: runtimeconditions.io/x/nats/service
         name: service
-        version: 0.1.1
+        version: 0.2.0
         sourceDirectory: bindings/nats-service/go
         languageVersion: 1.25.0
         publicationMode: github-tag
       python:
         coordinate: runtimeconditions-nats-service
         name: runtimeconditions_nats_service
-        version: 0.1.1
+        version: 0.2.0
         sourceDirectory: bindings/nats-service/python
         languageVersion: 3.12.10
         publicationMode: registry
@@ -160,7 +160,7 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/nats-service'
         name: '@runtimeconditions/nats-service'
-        version: 0.1.1
+        version: 0.2.0
         sourceDirectory: bindings/nats-service/typescript
         languageVersion: 20.19.6
         publicationMode: registry
