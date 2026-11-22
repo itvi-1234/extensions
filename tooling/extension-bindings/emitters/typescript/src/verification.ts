@@ -34,6 +34,39 @@ function squash(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
+// Doc comments are documentation, not API. Drop comment trivia before comparing
+// or recording source text, so adding or editing JSDoc never changes the API
+// surface (and so never looks like a breaking change to release planning).
+function withoutComments(text: string): string {
+  // Whitespace before a comment is kept; the comment and the whitespace after it
+  // are dropped, so "{ /** doc */ readonly x" and "</* doc */ T>" read as the
+  // uncommented "{ readonly x" and "<T>".
+  const scanner = ts.createScanner(ts.ScriptTarget.ES2022, false, ts.LanguageVariant.Standard, text);
+  let result = "";
+  let afterComment = false;
+  for (let kind = scanner.scan(); kind !== ts.SyntaxKind.EndOfFileToken; kind = scanner.scan()) {
+    if (kind === ts.SyntaxKind.SingleLineCommentTrivia || kind === ts.SyntaxKind.MultiLineCommentTrivia) {
+      afterComment = true;
+    } else if (kind === ts.SyntaxKind.WhitespaceTrivia || kind === ts.SyntaxKind.NewLineTrivia) {
+      if (!afterComment) {
+        result += scanner.getTokenText();
+      }
+    } else {
+      const token = scanner.getTokenText();
+      if (afterComment && /\w$/.test(result) && /^\w/.test(token)) {
+        result += " ";
+      }
+      result += token;
+      afterComment = false;
+    }
+  }
+  return result;
+}
+
+function nodeText(node: ts.Node): string {
+  return squash(withoutComments(node.getText()));
+}
+
 function isExported(node: ts.Node): boolean {
   return (ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export) !== 0;
 }
@@ -151,11 +184,11 @@ function checkPublicApi(plan: EmissionPlan, directory: string): void {
       "rest parameter is named fields",
     );
     check(
-      squash(parameters[0]!.type!.getText()) === `${declaration.protocol}[]`,
+      nodeText(parameters[0]!.type!) === `${declaration.protocol}[]`,
       "rest parameter type is the protocol array",
     );
     check(
-      fn.type !== undefined && squash(fn.type.getText()) === "Declaration",
+      fn.type !== undefined && nodeText(fn.type) === "Declaration",
       "declaration returns Declaration",
     );
   }
@@ -168,7 +201,7 @@ function checkPublicApi(plan: EmissionPlan, directory: string): void {
   for (const item of plan.types) {
     if (item.kind === "alias") {
       check(
-        squash(aliases.get(item.name)!.type.getText()) === item.annotation,
+        nodeText(aliases.get(item.name)!.type) === item.annotation,
         `alias ${item.name} matches the plan`,
       );
       continue;
@@ -190,7 +223,7 @@ function checkPublicApi(plan: EmissionPlan, directory: string): void {
     const properties = declaration.members.filter(ts.isPropertyDeclaration);
     const actual = properties.map((property) => [
       (property.name as ts.Identifier).text,
-      squash(property.type!.getText()),
+      nodeText(property.type!),
       property.questionToken === undefined,
       property.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ReadonlyKeyword) ===
         true,
@@ -213,7 +246,7 @@ function checkPublicApi(plan: EmissionPlan, directory: string): void {
       `class ${item.name} markers match the plan`,
     );
     const implemented = (declaration.heritageClauses ?? []).flatMap((clause) =>
-      clause.types.map((type) => squash(type.getText())),
+      clause.types.map((type) => nodeText(type)),
     );
     check(
       JSON.stringify(implemented) === JSON.stringify(item.marker ? [item.marker.protocol] : []),
@@ -230,21 +263,21 @@ export function apiSurface(directory: string): string[] {
     if (ts.isClassDeclaration(statement) && statement.name && exports.has(statement.name.text)) {
       const name = statement.name.text;
       const heritage = (statement.heritageClauses ?? []).flatMap((clause) =>
-        clause.types.map((type) => squash(type.getText())),
+        clause.types.map((type) => nodeText(type)),
       );
       result.push(`class|${name}|${heritage.join(",")}`);
       for (const member of statement.members) {
         if (ts.isPropertyDeclaration(member)) {
           result.push(
-            `field|${name}|${(member.name as ts.Identifier).text}|${squash(member.type!.getText())}|${member.questionToken ? "optional" : "required"}`,
+            `field|${name}|${(member.name as ts.Identifier).text}|${nodeText(member.type!)}|${member.questionToken ? "optional" : "required"}`,
           );
         } else if (ts.isConstructorDeclaration(member)) {
           result.push(
-            `constructor|${name}|${member.parameters.map((parameter) => squash(parameter.getText())).join(",")}`,
+            `constructor|${name}|${member.parameters.map((parameter) => nodeText(parameter)).join(",")}`,
           );
         } else if (ts.isMethodDeclaration(member)) {
           result.push(
-            `method|${name}|${(member.name as ts.Identifier).text}|${member.parameters.map((parameter) => squash(parameter.getText())).join(",")}|${member.type ? squash(member.type.getText()) : ""}`,
+            `method|${name}|${(member.name as ts.Identifier).text}|${member.parameters.map((parameter) => nodeText(parameter)).join(",")}|${member.type ? nodeText(member.type) : ""}`,
           );
         }
       }
@@ -253,14 +286,14 @@ export function apiSurface(directory: string): string[] {
       for (const member of statement.members) {
         if (ts.isMethodSignature(member)) {
           result.push(
-            `method|${statement.name.text}|${(member.name as ts.Identifier).text}|${member.parameters.map((parameter) => squash(parameter.getText())).join(",")}|${member.type ? squash(member.type.getText()) : ""}`,
+            `method|${statement.name.text}|${(member.name as ts.Identifier).text}|${member.parameters.map((parameter) => nodeText(parameter)).join(",")}|${member.type ? nodeText(member.type) : ""}`,
           );
         }
       }
     } else if (ts.isEnumDeclaration(statement) && exports.has(statement.name.text)) {
       result.push(`enum|${statement.name.text}`);
       for (const member of statement.members) {
-        result.push(`member|${statement.name.text}|${squash(member.getText())}`);
+        result.push(`member|${statement.name.text}|${nodeText(member)}`);
       }
     } else if (
       ts.isFunctionDeclaration(statement) &&
@@ -268,10 +301,10 @@ export function apiSurface(directory: string): string[] {
       exports.has(statement.name.text)
     ) {
       result.push(
-        `function|${statement.name.text}|${statement.parameters.map((parameter) => squash(parameter.getText())).join(",")}|${statement.type ? squash(statement.type.getText()) : ""}`,
+        `function|${statement.name.text}|${statement.parameters.map((parameter) => nodeText(parameter)).join(",")}|${statement.type ? nodeText(statement.type) : ""}`,
       );
     } else if (ts.isTypeAliasDeclaration(statement) && exports.has(statement.name.text)) {
-      result.push(`alias|${statement.name.text}|${squash(statement.type.getText())}`);
+      result.push(`alias|${statement.name.text}|${nodeText(statement.type)}`);
     } else if (
       ts.isImportDeclaration(statement) &&
       statement.importClause?.namedBindings &&
