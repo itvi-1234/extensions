@@ -6,7 +6,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.runtimeconditions.bindings</groupId>
   <artifactId>runtimeconditions-file-system</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <packaging>jar</packaging>
   <name>runtimeconditions-file-system</name>
   <description>Use this extension when your workload needs a folder from the file system to be there when it starts, for example a folder for its data, a folder for temporary files, or a folder of configuration files.</description>

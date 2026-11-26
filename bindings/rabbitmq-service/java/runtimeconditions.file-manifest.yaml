@@ -1,8 +1,8 @@
 apiVersion: runtimeconditions.io/file-manifest/v1alpha1
 kind: RuntimeConditionsFileManifest
 files:
-    README.md: ec6d7b19d4ea4c55fc5acd6c873ba4eedca76fbe146dad4800fd6ed6f38e9675
-    pom.xml: b2fe3ad62fb749435111b31a8bf529468994411daa39207952617bf59c703203
+    README.md: dca62e692165d998ba5a912e51847a094856780cc94ba0e2ea42d630eb9255e7
+    pom.xml: 5f5cc3faa65e2d43229b39201744123446396f4feb0e1c615e1be6b7aee97444
     src/main/java/io/runtimeconditions/bindings/rabbitmqservice/Action.java: e90937dcaca949c917c56fe15d4b87f084d53d0469ab7af640fee6824f3d1bb4
     src/main/java/io/runtimeconditions/bindings/rabbitmqservice/Amqp091.java: f1ff9888f2257e7727f8b0b1db47565720d371aed888adbfd8475f059c225c4f
     src/main/java/io/runtimeconditions/bindings/rabbitmqservice/Bindings.java: f1f57a5d826ae161dc0403b1ac24ffd67fa3e9f7908ff02c0569970c76e52a83
@@ -12,6 +12,6 @@ files:
     src/main/java/io/runtimeconditions/bindings/rabbitmqservice/RabbitmqServiceField.java: 0ffd90520b382dcdf88e4f58c3ec55a219fa990c2c3324312af6041609bd648b
     src/main/java/io/runtimeconditions/bindings/rabbitmqservice/Resource.java: c2fd8f86fdddd9a8eeba4eed74f7b44d21b88615f5d00f423ee2f2ce79f40ce0
     src/main/resources/runtimeconditions/runtimeconditions.binding-model.yaml: 9cfbaf3188aabf15076434d2731da1885a26098a2945b581c3b0c441c89c199e
-    src/main/resources/runtimeconditions/runtimeconditions.bindings.yaml: df70108a54555962ee672be72ffa768decd46f347f7f188bd9549aa726f70dfc
+    src/main/resources/runtimeconditions/runtimeconditions.bindings.yaml: 4b5a214e5e9cebc7ebd68a527f4391e47718aaa555f01db8bc5bec018ec7ef8d
     src/main/resources/runtimeconditions/runtimeconditions.extension.yaml: e339f653c2c30f9f61ebd318da692b9487c2ae7afad6540e9d8ba1a9d3e989de
-    src/main/resources/runtimeconditions/runtimeconditions.file-manifest.yaml: c76b38633b7aa4fbd571960a4bfe94804c0ba33cdbd22776bcbfbe137eb65cfc
+    src/main/resources/runtimeconditions/runtimeconditions.file-manifest.yaml: 6b7b267eb4ae02f74dbd6b772ce5f0aba2343e053decb9321fbdfc3713f5be30

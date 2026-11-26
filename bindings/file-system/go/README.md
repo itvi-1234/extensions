@@ -14,7 +14,7 @@ The Condition does not say what kind of storage to use. A network file system, a
 a local disk can all give the same folder. The platform chooses.
 
 ```sh
-go get runtimeconditions.io/x/rc/filesystem@v0.1.0
+go get runtimeconditions.io/x/rc/filesystem@v0.2.0
 ```
 
 Runtime Conditions extension: https://runtimeconditions.io/extensions/rc/file-system/0.2.0/runtimeconditions.extension.yaml

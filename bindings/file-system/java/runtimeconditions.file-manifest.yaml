@@ -1,8 +1,8 @@
 apiVersion: runtimeconditions.io/file-manifest/v1alpha1
 kind: RuntimeConditionsFileManifest
 files:
-    README.md: 8bffe810ca5bb648c059984ab4536aae667dba6fc580ac308b0e66d41b2ace1d
-    pom.xml: ea58f9dfd555eba972f7e7c3b8aab70e963e933e8189de0025e54f80aa573bee
+    README.md: 9994951c3a6b829288668a81489c42899863991843a4149087e27964cc49b277
+    pom.xml: db18611e81d8794437e052f2fb2eeb86ec1fe5a17e555d1f11ae72addf5c30a8
     src/main/java/io/runtimeconditions/bindings/filesystem/Access.java: 7c77c78b186f396e630f950e6ca8ca1582c893d2451025acf50676ad7e085a48
     src/main/java/io/runtimeconditions/bindings/filesystem/Bindings.java: 9ffb0ef92f8e23159eef0977e589d53fabc370fb53c3f1e5abb505842e4de5ef
     src/main/java/io/runtimeconditions/bindings/filesystem/Declaration.java: 96e79247a4c52ac0ac90031bf5af599c86abe9d5e9dd2aeabca69657a41df057
@@ -15,6 +15,6 @@ files:
     src/main/java/io/runtimeconditions/bindings/filesystem/RcFileSystemField.java: 438d21fe00cc29ddfe28b0a46cc1b2bbf524adb35918cdb2d37578930b7e4199
     src/main/java/io/runtimeconditions/bindings/filesystem/Sharing.java: 54ce63e128b64ecaf23025a8fa6a2aa22b9424cf6ea3ac1793d86547555d955a
     src/main/resources/runtimeconditions/runtimeconditions.binding-model.yaml: 6a72c3965661251744fd8ef72c793b5c05148f98656a833eb25b8f9c40949399
-    src/main/resources/runtimeconditions/runtimeconditions.bindings.yaml: daffde80eda6f2f5b523357e5bd7437716af57b99ea6c208da44c3ae9f919c0f
+    src/main/resources/runtimeconditions/runtimeconditions.bindings.yaml: 1881baeeccc5e8af5521ef3c450160d4a6b0a257e40278eec1eea6823090b4c6
     src/main/resources/runtimeconditions/runtimeconditions.extension.yaml: db5659d187c46f1ce6f0ce3920053ae76f9beadda8b2c8c456d3af6692c98e47
-    src/main/resources/runtimeconditions/runtimeconditions.file-manifest.yaml: 66bc1cf9179815b159380a0e8ec882390270b0930f869c03d963d06d40f8f080
+    src/main/resources/runtimeconditions/runtimeconditions.file-manifest.yaml: 1a6407bb3fe5ebac8cd278f5480a783123905e65fae44f0091aac8dbfe161691

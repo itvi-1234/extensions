@@ -28,7 +28,7 @@ Tags and access policy statements are added to the ones that the platform alread
 conflict, the platform reports the problem. It does not quietly change what you asked for.
 
 ```sh
-go get runtimeconditions.io/x/aws/sqs@v0.1.0
+go get runtimeconditions.io/x/aws/sqs@v0.2.0
 ```
 
 Runtime Conditions extension: https://runtimeconditions.io/extensions/aws/sqs/0.2.0/runtimeconditions.extension.yaml

@@ -31,7 +31,7 @@ conflict, the platform reports the problem. It does not quietly change what you 
 <dependency>
   <groupId>io.runtimeconditions.bindings</groupId>
   <artifactId>runtimeconditions-aws-sqs</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 

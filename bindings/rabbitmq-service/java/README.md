@@ -18,7 +18,7 @@ Write the exact names. Patterns are not allowed.
 <dependency>
   <groupId>io.runtimeconditions.bindings</groupId>
   <artifactId>runtimeconditions-rabbitmq-service</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 

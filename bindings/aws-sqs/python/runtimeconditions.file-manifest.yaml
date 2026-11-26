@@ -3,11 +3,11 @@ kind: RuntimeConditionsFileManifest
 files:
     MANIFEST.in: d51e89c4c7c5e16c06d543c7aac32df945dd4f536e578b6ad089b68a6f489fca
     README.md: 149dc8b125ac73e6fe26caba9c9399f71318abc32f98f831dcad9303ccb28988
-    pyproject.toml: 1c23d6efea0c94c4a348570fae65c2af26537a097d4b9d88c24f3fd76e52a9ab
+    pyproject.toml: 413734f9c4aaff98fac2062d1ba431761f4a69864dec6bf33df3dc9c37f2b5f3
     src/runtimeconditions_aws_sqs/__init__.py: 5039e0ee2e3f3171c07f822e1352471af5c0b5caae9611535bac13deed3a07eb
     src/runtimeconditions_aws_sqs/bindings.py: 6075551ff78d83c7a4f65707a67acaf11ed448fdb3c3bf2e642bb364a4ba5399
     src/runtimeconditions_aws_sqs/py.typed: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
     src/runtimeconditions_aws_sqs/runtimeconditions.binding-model.yaml: 91133b6e2fcacadd6a2e05fecf0595b96179dfeb9518b25eb58e5da43ff901e8
-    src/runtimeconditions_aws_sqs/runtimeconditions.binding-release.yaml: b9764ea55f6c9d909817a2b9225cd728525f405bb9640a5dba50ef0694b8851b
-    src/runtimeconditions_aws_sqs/runtimeconditions.bindings.yaml: 5e7969e0238a346c1da7c295db1ac064c6d01b4dae570e451e8a0728917243fa
+    src/runtimeconditions_aws_sqs/runtimeconditions.binding-release.yaml: f35e76ef2c6a59fd98857965eb379348120a138746fb71effd8be57b165cf461
+    src/runtimeconditions_aws_sqs/runtimeconditions.bindings.yaml: 03086598b549f0a4b6cd33bc20d47a4439de19e429680dc9e54f765bb34f17ce
     src/runtimeconditions_aws_sqs/runtimeconditions.extension.yaml: 17ef39f5104d63de7dfd84f5878573eb5ea40a445212402d8a9d2bb518b343af

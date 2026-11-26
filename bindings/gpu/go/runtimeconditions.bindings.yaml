@@ -17,7 +17,7 @@ package:
     language: go
     coordinate: runtimeconditions.io/x/rc/gpu
     name: gpu
-    version: v0.1.0
+    version: v0.2.0
     minimumGoVersion: "1.25"
 declarations:
     - modelRef:

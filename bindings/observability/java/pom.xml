@@ -6,7 +6,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.runtimeconditions.bindings</groupId>
   <artifactId>runtimeconditions-observability</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <packaging>jar</packaging>
   <name>runtimeconditions-observability</name>
   <description>Use this extension to say how the platform can see what your workload is doing: its traces, metrics and logs.</description>

@@ -1,8 +1,8 @@
 apiVersion: runtimeconditions.io/file-manifest/v1alpha1
 kind: RuntimeConditionsFileManifest
 files:
-    README.md: 7289ffce69116e85e29d1d3359384f93fdf8715732023b4501ac24136f2e4408
-    pom.xml: 333452b2f05b0f611b84fd0d17dde826aa98f4520ec16904e52bf6de5a4383c2
+    README.md: 4bc88c51da9770dab57b238d7bc84fa6f7b92095f9b77e001c689b4efeede14d
+    pom.xml: 75f8f6bae49ea2a6ff9db6744608233c5bc7464391b1a4c5cfb25fd90f1c7ef7
     src/main/java/io/runtimeconditions/bindings/awssqs/AccessPolicy.java: e6ef87212144a383fef4622f735fe0cbee99509ad2f6cae1f194b0e9798a33a7
     src/main/java/io/runtimeconditions/bindings/awssqs/AwsSqsField.java: 0c6c7c05544158adc478eef13098bcfbfa44c9f6f414bf95d26f0886e1129d71
     src/main/java/io/runtimeconditions/bindings/awssqs/Bindings.java: bc84189f8a69aab14607f5c28bc06be9b8c8c6f98770657a9100a6def8a3f752
@@ -38,6 +38,6 @@ files:
     src/main/java/io/runtimeconditions/bindings/awssqs/StatementsItemOperationsItemName.java: 829a276e8b62d72b4123733aa8cd49082479a5b912199ee206651c2c3efb2bd5
     src/main/java/io/runtimeconditions/bindings/awssqs/Tags.java: 6ee8cc9dce0203a70e4d2b43170aa4a3cf9e1aaa38e36baba75787c684b604e6
     src/main/resources/runtimeconditions/runtimeconditions.binding-model.yaml: 91133b6e2fcacadd6a2e05fecf0595b96179dfeb9518b25eb58e5da43ff901e8
-    src/main/resources/runtimeconditions/runtimeconditions.bindings.yaml: e2f8e1215aeacd4fa986b08c02eded54cb6dbc13201082ea830b837b2db1ce91
+    src/main/resources/runtimeconditions/runtimeconditions.bindings.yaml: 7740679f9a19ffbb50ec889f7e072e34a91cf8186238fdd97e794c73177a6095
     src/main/resources/runtimeconditions/runtimeconditions.extension.yaml: 17ef39f5104d63de7dfd84f5878573eb5ea40a445212402d8a9d2bb518b343af
-    src/main/resources/runtimeconditions/runtimeconditions.file-manifest.yaml: d204064c3b2dfc9ab386fbd6c3c3b3273cdbbbb171a8f7685b7db1ef8864c67c
+    src/main/resources/runtimeconditions/runtimeconditions.file-manifest.yaml: 6a6adc717a51aa5ef2751521d0280201d77aa1d6e78fd9f07e43f8e7de3d8463

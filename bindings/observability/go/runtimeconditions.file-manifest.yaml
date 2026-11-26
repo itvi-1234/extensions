@@ -1,10 +1,10 @@
 apiVersion: runtimeconditions.io/file-manifest/v1alpha1
 kind: RuntimeConditionsFileManifest
 files:
-    README.md: f8a4a9787ef3be1ca32567897518a86b69f847c5c0353f247149a105d18c2f23
+    README.md: 341c29a8b3a20f7afab0d8d1f4808751d4b91d8251050114420da6ea97908813
     bindings.go: c08c3dd02a9c567f65b4b6609e8bb572f386f70b2c3391c4c8c323f3131274b9
     go.mod: e945b12e3b3605cbd9ef1ba0852c4832c3deb39f3fd90f9ce38bfa2159a9664e
     runtimeconditions.binding-model.yaml: 21312d6d704deea0bef59641334b05bd07515aeeb96dd2bd0d313f3a6e6633a6
-    runtimeconditions.binding-release.yaml: 65431520c559f7b41615853e3c0d4f05ac221340a4183949b79359d5f3663c6c
-    runtimeconditions.bindings.yaml: 15448c2797250bd1f100b0251dd6a7b1d465509a7c212d5b9a33d5dd00c58796
+    runtimeconditions.binding-release.yaml: 1a5382449d05325db09e873dde64357d2f04bfbfc37f79afa01624fe2a17cdfb
+    runtimeconditions.bindings.yaml: 6bfa75d3eec93efc156807ca94fe4b7fe1adb222a288692ad9281850a59ee392
     runtimeconditions.extension.yaml: ca40af3f41193f01d0eec2c60361babb5d2a51b6e11a1530b2ecb0a853e9eed4

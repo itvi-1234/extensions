@@ -15,7 +15,7 @@ every queue that it reads from. The platform then creates them or gives your wor
 Write the exact names. Patterns are not allowed.
 
 ```sh
-go get runtimeconditions.io/x/rabbitmq/service@v0.1.0
+go get runtimeconditions.io/x/rabbitmq/service@v0.2.0
 ```
 
 Runtime Conditions extension: https://runtimeconditions.io/extensions/rabbitmq/service/0.2.0/runtimeconditions.extension.yaml

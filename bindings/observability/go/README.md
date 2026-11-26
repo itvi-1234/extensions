@@ -15,7 +15,7 @@ There are two ways, and each one is an interface type:
 If your workload does both, add one Condition for each.
 
 ```sh
-go get runtimeconditions.io/x/rc/observability@v0.1.0
+go get runtimeconditions.io/x/rc/observability@v0.2.0
 ```
 
 Runtime Conditions extension: https://runtimeconditions.io/extensions/rc/observability/0.2.0/runtimeconditions.extension.yaml

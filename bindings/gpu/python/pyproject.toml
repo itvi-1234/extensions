@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "runtimeconditions-gpu"
-version = "0.1.0"
+version = "0.2.0"
 requires-python = ">=3.12"
 description = "Use this extension when your workload needs one or more GPUs, for example to run a machine learning model."
 readme = "README.md"

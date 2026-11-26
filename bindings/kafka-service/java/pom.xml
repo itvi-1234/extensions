@@ -6,7 +6,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.runtimeconditions.bindings</groupId>
   <artifactId>runtimeconditions-kafka-service</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <packaging>jar</packaging>
   <name>runtimeconditions-kafka-service</name>
   <description>Use this extension when your workload talks to Kafka.</description>

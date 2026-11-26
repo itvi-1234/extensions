@@ -3,11 +3,11 @@ kind: RuntimeConditionsFileManifest
 files:
     MANIFEST.in: d51e89c4c7c5e16c06d543c7aac32df945dd4f536e578b6ad089b68a6f489fca
     README.md: 0e339ee89160d21c17d1fb579bf09e5e7d17f2d0a00eb6ac62d73aa0f2df779c
-    pyproject.toml: bb4d7bf12ec91605822ab42b589299a5fbee9ae93dcc00577f06f083cdb0e5e0
+    pyproject.toml: f8770ad9f56c7f3a912cba680aac839ef83b2225664f9c409847ce8359843b73
     src/runtimeconditions_observability/__init__.py: 4ac577c7d12ab7058a8c737c106816127265d7e4bd5708997ea93a21581c71d7
     src/runtimeconditions_observability/bindings.py: 7ad7ed9b043f92d3fba3f1cd4f18e53b040da4fe4a764150711b2644ad153b65
     src/runtimeconditions_observability/py.typed: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
     src/runtimeconditions_observability/runtimeconditions.binding-model.yaml: 21312d6d704deea0bef59641334b05bd07515aeeb96dd2bd0d313f3a6e6633a6
-    src/runtimeconditions_observability/runtimeconditions.binding-release.yaml: a803c638e57ea44f381e931bf1f731e631607be34e65ee7a2cef506c256e9c59
-    src/runtimeconditions_observability/runtimeconditions.bindings.yaml: bf7eeaac496ef6f417635da6cae0c9a7160332b159e873740ca82b115f9ef855
+    src/runtimeconditions_observability/runtimeconditions.binding-release.yaml: 988fc35ac2e0c1df7db0b450de63272fed6f0c1d232376cbd22683fb1502acc8
+    src/runtimeconditions_observability/runtimeconditions.bindings.yaml: dfe09df3acdd765997073c953353a618a407b3b00f7360bee765de33d568b057
     src/runtimeconditions_observability/runtimeconditions.extension.yaml: ca40af3f41193f01d0eec2c60361babb5d2a51b6e11a1530b2ecb0a853e9eed4

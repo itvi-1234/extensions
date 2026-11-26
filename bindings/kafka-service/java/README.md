@@ -19,7 +19,7 @@ a consumer group, so if your workload uses a group, add the group as its own lin
 <dependency>
   <groupId>io.runtimeconditions.bindings</groupId>
   <artifactId>runtimeconditions-kafka-service</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 

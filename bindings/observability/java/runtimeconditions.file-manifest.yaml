@@ -1,8 +1,8 @@
 apiVersion: runtimeconditions.io/file-manifest/v1alpha1
 kind: RuntimeConditionsFileManifest
 files:
-    README.md: 48508df4db8cf55c09a7200748e8f4ad6b25dbc3ccecff3522f44c42088c0fa8
-    pom.xml: 3c7a3b3573b485006519a785d5154ad033465f690334085aeedb905913c7ca76
+    README.md: fa56f72d349fa7dbdc427174974dd2623fe6c1707be37ba7e08d95636690e544
+    pom.xml: fd647ad0a691762e86e7e16b31741bcdde6671e0ec7fa16afdfc112b7c5bb63e
     src/main/java/io/runtimeconditions/bindings/observability/Bindings.java: 566fbeec791d28e15fcd8fadefcd98dfcaf4da7e772291e67abdb7a6522f293b
     src/main/java/io/runtimeconditions/bindings/observability/Declaration.java: 05f26c32939939dad27edac3301e7f076c73c70d9a90d8daaff590505317d623
     src/main/java/io/runtimeconditions/bindings/observability/OtlpExport.java: 7c654cbe36ce5e45cede593a8ba1beee2d1d720a8dd10dfd1f5cce726e2f42b0
@@ -13,6 +13,6 @@ files:
     src/main/java/io/runtimeconditions/bindings/observability/SignalsItem.java: 965cf1539a323763adca6c6edc9f830606a8f4474ccd8d6a7e44b932f41301dd
     src/main/java/io/runtimeconditions/bindings/observability/Transport.java: 671fbf28523e2022ed5f3445076303e00c76a63f9a2e8c221671323904172cec
     src/main/resources/runtimeconditions/runtimeconditions.binding-model.yaml: 21312d6d704deea0bef59641334b05bd07515aeeb96dd2bd0d313f3a6e6633a6
-    src/main/resources/runtimeconditions/runtimeconditions.bindings.yaml: 500e3ca3d16682b8804818705c320672ab137607745419c641210e607c855e1a
+    src/main/resources/runtimeconditions/runtimeconditions.bindings.yaml: d2e4b208e2eaa781fd075544df361b24f925cda8b5c945ddf81d021e920b9ba3
     src/main/resources/runtimeconditions/runtimeconditions.extension.yaml: ca40af3f41193f01d0eec2c60361babb5d2a51b6e11a1530b2ecb0a853e9eed4
-    src/main/resources/runtimeconditions/runtimeconditions.file-manifest.yaml: b128b89d8213a4be62e6495599fbb7babc201cca2fc7908f2ce66405b1f8ea97
+    src/main/resources/runtimeconditions/runtimeconditions.file-manifest.yaml: cf361f2255f617f5d93060a5b089bd5db2f14d2c05deb32216badf007e8c69c4

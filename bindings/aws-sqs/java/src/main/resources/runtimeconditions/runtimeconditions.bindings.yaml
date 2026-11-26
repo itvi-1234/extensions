@@ -15,7 +15,7 @@ package:
   language: java
   coordinate: io.runtimeconditions.bindings:runtimeconditions-aws-sqs
   name: io.runtimeconditions.bindings.awssqs
-  version: 0.1.0
+  version: 0.2.0
   minimumJavaVersion: '17'
 declarations:
   - modelRef:

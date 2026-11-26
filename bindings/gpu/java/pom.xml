@@ -6,7 +6,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.runtimeconditions.bindings</groupId>
   <artifactId>runtimeconditions-gpu</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <packaging>jar</packaging>
   <name>runtimeconditions-gpu</name>
   <description>Use this extension when your workload needs one or more GPUs, for example to run a machine learning model.</description>

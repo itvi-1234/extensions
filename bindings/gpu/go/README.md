@@ -13,7 +13,7 @@ A GPU here always means a whole GPU. You cannot ask for part of a GPU. This exte
 which driver or CUDA version the machine must have.
 
 ```sh
-go get runtimeconditions.io/x/rc/gpu@v0.1.0
+go get runtimeconditions.io/x/rc/gpu@v0.2.0
 ```
 
 Runtime Conditions extension: https://runtimeconditions.io/extensions/rc/gpu/0.2.0/runtimeconditions.extension.yaml

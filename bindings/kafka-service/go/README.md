@@ -16,7 +16,7 @@ Write the exact names. Patterns like orders-* are not allowed. Reading a topic d
 a consumer group, so if your workload uses a group, add the group as its own line.
 
 ```sh
-go get runtimeconditions.io/x/kafka/service@v0.1.0
+go get runtimeconditions.io/x/kafka/service@v0.2.0
 ```
 
 Runtime Conditions extension: https://runtimeconditions.io/extensions/kafka/service/0.2.0/runtimeconditions.extension.yaml

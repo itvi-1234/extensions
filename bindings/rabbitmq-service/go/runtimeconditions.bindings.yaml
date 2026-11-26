@@ -17,7 +17,7 @@ package:
     language: go
     coordinate: runtimeconditions.io/x/rabbitmq/service
     name: service
-    version: v0.1.0
+    version: v0.2.0
     minimumGoVersion: "1.25"
 declarations:
     - modelRef:
