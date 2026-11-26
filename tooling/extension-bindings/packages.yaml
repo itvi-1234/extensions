@@ -45,14 +45,14 @@ packages:
       go:
         coordinate: runtimeconditions.io/x/aws/sqs
         name: sqs
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/aws-sqs/go
         languageVersion: 1.25.0
         publicationMode: github-tag
       python:
         coordinate: runtimeconditions-aws-sqs
         name: runtimeconditions_aws_sqs
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/aws-sqs/python
         languageVersion: 3.12.10
         publicationMode: registry
@@ -60,7 +60,7 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/aws-sqs'
         name: '@runtimeconditions/aws-sqs'
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/aws-sqs/typescript
         languageVersion: 20.19.6
         publicationMode: registry
@@ -68,7 +68,7 @@ packages:
       java:
         coordinate: io.runtimeconditions.bindings:runtimeconditions-aws-sqs
         name: io.runtimeconditions.bindings.awssqs
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/aws-sqs/java
         languageVersion: 21.0.12
         publicationMode: registry
@@ -150,14 +150,14 @@ packages:
       go:
         coordinate: runtimeconditions.io/x/rc/filesystem
         name: filesystem
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/file-system/go
         languageVersion: 1.25.0
         publicationMode: github-tag
       python:
         coordinate: runtimeconditions-file-system
         name: runtimeconditions_file_system
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/file-system/python
         languageVersion: 3.12.10
         publicationMode: registry
@@ -165,7 +165,7 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/file-system'
         name: '@runtimeconditions/file-system'
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/file-system/typescript
         languageVersion: 20.19.6
         publicationMode: registry
@@ -173,7 +173,7 @@ packages:
       java:
         coordinate: io.runtimeconditions.bindings:runtimeconditions-file-system
         name: io.runtimeconditions.bindings.filesystem
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/file-system/java
         languageVersion: 21.0.12
         publicationMode: registry
@@ -220,14 +220,14 @@ packages:
       go:
         coordinate: runtimeconditions.io/x/rc/gpu
         name: gpu
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/gpu/go
         languageVersion: 1.25.0
         publicationMode: github-tag
       python:
         coordinate: runtimeconditions-gpu
         name: runtimeconditions_gpu
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/gpu/python
         languageVersion: 3.12.10
         publicationMode: registry
@@ -235,7 +235,7 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/gpu'
         name: '@runtimeconditions/gpu'
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/gpu/typescript
         languageVersion: 20.19.6
         publicationMode: registry
@@ -243,7 +243,7 @@ packages:
       java:
         coordinate: io.runtimeconditions.bindings:runtimeconditions-gpu
         name: io.runtimeconditions.bindings.gpu
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/gpu/java
         languageVersion: 21.0.12
         publicationMode: registry
@@ -255,14 +255,14 @@ packages:
       go:
         coordinate: runtimeconditions.io/x/kafka/service
         name: service
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/kafka-service/go
         languageVersion: 1.25.0
         publicationMode: github-tag
       python:
         coordinate: runtimeconditions-kafka-service
         name: runtimeconditions_kafka_service
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/kafka-service/python
         languageVersion: 3.12.10
         publicationMode: registry
@@ -270,7 +270,7 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/kafka-service'
         name: '@runtimeconditions/kafka-service'
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/kafka-service/typescript
         languageVersion: 20.19.6
         publicationMode: registry
@@ -278,7 +278,7 @@ packages:
       java:
         coordinate: io.runtimeconditions.bindings:runtimeconditions-kafka-service
         name: io.runtimeconditions.bindings.kafkaservice
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/kafka-service/java
         languageVersion: 21.0.12
         publicationMode: registry
@@ -360,14 +360,14 @@ packages:
       go:
         coordinate: runtimeconditions.io/x/rc/observability
         name: observability
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/observability/go
         languageVersion: 1.25.0
         publicationMode: github-tag
       python:
         coordinate: runtimeconditions-observability
         name: runtimeconditions_observability
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/observability/python
         languageVersion: 3.12.10
         publicationMode: registry
@@ -375,7 +375,7 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/observability'
         name: '@runtimeconditions/observability'
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/observability/typescript
         languageVersion: 20.19.6
         publicationMode: registry
@@ -383,7 +383,7 @@ packages:
       java:
         coordinate: io.runtimeconditions.bindings:runtimeconditions-observability
         name: io.runtimeconditions.bindings.observability
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/observability/java
         languageVersion: 21.0.12
         publicationMode: registry
@@ -395,14 +395,14 @@ packages:
       go:
         coordinate: runtimeconditions.io/x/rabbitmq/service
         name: service
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/rabbitmq-service/go
         languageVersion: 1.25.0
         publicationMode: github-tag
       python:
         coordinate: runtimeconditions-rabbitmq-service
         name: runtimeconditions_rabbitmq_service
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/rabbitmq-service/python
         languageVersion: 3.12.10
         publicationMode: registry
@@ -410,7 +410,7 @@ packages:
       typescript:
         coordinate: '@runtimeconditions/rabbitmq-service'
         name: '@runtimeconditions/rabbitmq-service'
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/rabbitmq-service/typescript
         languageVersion: 20.19.6
         publicationMode: registry
@@ -418,7 +418,7 @@ packages:
       java:
         coordinate: io.runtimeconditions.bindings:runtimeconditions-rabbitmq-service
         name: io.runtimeconditions.bindings.rabbitmqservice
-        version: 0.1.0
+        version: 0.2.0
         sourceDirectory: bindings/rabbitmq-service/java
         languageVersion: 21.0.12
         publicationMode: registry
