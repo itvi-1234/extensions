@@ -99,6 +99,44 @@ class NpmPublicationTests(RepoTestCase):
         )
         self.assertTrue(str(publishes[0].args[1]).endswith("node_modules/@example/owner"))
 
+    def test_an_unselected_dependency_is_built_but_not_published(self) -> None:
+        def run(command, cwd, **options):
+            return SimpleNamespace(stdout="11.6.0\n")
+
+        targets = select_targets(self.catalog, "owner:typescript")
+        with patch.object(script, "run", side_effect=run) as runner, patch.object(
+            script, "already_published", return_value=False
+        ) as published:
+            script.publish(self.root, targets, True)
+        commands = self.commands(runner.call_args_list)
+        builds = [command[3] for command in commands if command[0] == "node"]
+        self.assertEqual(len(builds), 2)
+        self.assertTrue(builds[0].endswith("node_modules/@example/addon/tsconfig.json"))
+        self.assertTrue(builds[1].endswith("node_modules/@example/owner/tsconfig.json"))
+        publishes = [
+            call for call in runner.call_args_list if call.args[0][:2] == ["npm", "publish"]
+        ]
+        self.assertEqual(len(publishes), 1)
+        self.assertTrue(str(publishes[0].args[1]).endswith("node_modules/@example/owner"))
+        published.assert_called_once_with("@example/owner", "0.1.0")
+
+    def test_local_build_output_is_not_copied(self) -> None:
+        self.write("bindings/addon/typescript/node_modules/stale/package.json", "{}")
+        self.write("bindings/addon/typescript/dist/index.js", "")
+        copied = []
+
+        def run(command, cwd, **options):
+            if command[0] == "node":
+                directory = Path(command[3]).parent
+                copied.append(sorted(path.name for path in directory.iterdir()))
+            return SimpleNamespace(stdout="11.6.0\n")
+
+        with patch.object(script, "run", side_effect=run):
+            script.publish(self.root, self.targets, False)
+        for names in copied:
+            self.assertNotIn("node_modules", names)
+            self.assertNotIn("dist", names)
+
     def test_publication_refuses_an_old_npm(self) -> None:
         with patch.object(
             script, "run", return_value=SimpleNamespace(stdout="10.8.2\n")
