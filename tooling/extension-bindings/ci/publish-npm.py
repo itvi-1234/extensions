@@ -56,6 +56,30 @@ def publication_order(packages: dict[str, dict]) -> list[str]:
     return ordered
 
 
+def add_unselected_dependencies(
+    root: Path, catalog: dict, packages: dict[str, dict], directories: dict[str, Path]
+) -> set[str]:
+    """Add the packages from this repository that the selection depends on but did not select.
+
+    A selected package can depend on one that is not selected, for example
+    because that version is already on npm. It is built from the committed tree
+    next to its dependents, so they compile, but it is not published.
+    """
+    available: dict[str, tuple[dict, Path]] = {}
+    for target in select_targets(root / TOOLING / "packages.yaml", "all", (LANGUAGE,)):
+        package = read_package(root, catalog, target)
+        available[package["name"]] = (package, root / target[1])
+    added: set[str] = set()
+    pending = list(packages)
+    while pending:
+        for dependency in sorted(packages[pending.pop()].get("dependencies", {})):
+            if dependency in available and dependency not in packages:
+                packages[dependency], directories[dependency] = available[dependency]
+                added.add(dependency)
+                pending.append(dependency)
+    return added
+
+
 def check_npm_version(version: str) -> None:
     numbers = tuple(int(part) for part in version.strip().split("-")[0].split(".")[:3])
     if numbers < MINIMUM_NPM:
@@ -96,6 +120,7 @@ def publish(root: Path, targets: list[Target], execute: bool) -> None:
         package = read_package(root, catalog, target)
         packages[package["name"]] = package
         directories[package["name"]] = root / target[1]
+    build_only = add_unselected_dependencies(root, catalog, packages, directories)
     published = []
     with tempfile.TemporaryDirectory(prefix="npm-bindings-") as name:
         # Each package is built where its dependencies resolve, from the same
@@ -103,10 +128,19 @@ def publish(root: Path, targets: list[Target], execute: bool) -> None:
         workspace = Path(name)
         for package_name in publication_order(packages):
             destination = workspace / "node_modules" / package_name
-            shutil.copytree(directories[package_name], destination)
+            # Local build output is never part of the committed tree.
+            shutil.copytree(
+                directories[package_name], destination, ignore=shutil.ignore_patterns("node_modules", "dist")
+            )
             run(["node", str(tsc), "-p", str(destination / "tsconfig.json")], root)
-            run(["npm", "pack", "--dry-run", "--ignore-scripts"], destination, capture_output=True)
             version = packages[package_name]["version"]
+            if package_name in build_only:
+                summarize(
+                    f"Built {package_name}@{version} for the packages that depend on it; "
+                    "not selected, so not published."
+                )
+                continue
+            run(["npm", "pack", "--dry-run", "--ignore-scripts"], destination, capture_output=True)
             if not execute:
                 summarize(f"Built and checked {package_name}@{version}; dry run, nothing was published.")
             elif already_published(package_name, version):
