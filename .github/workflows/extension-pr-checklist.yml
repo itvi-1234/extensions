@@ -1,0 +1,38 @@
+name: Extension PR checklist
+
+on:
+  pull_request:
+    paths:
+      - "catalog/**"
+      - ".github/workflows/extension-pr-checklist.yml"
+      - "tooling/common/check_extension_pr.py"
+      - "tooling/common/requirements.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  checklist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out the PR head and history for comparison
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install prerequisites
+        run: python -m pip install --disable-pip-version-check --no-deps -r tooling/common/requirements.txt
+
+      - name: Check the changed extension folders
+        env:
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: python tooling/common/check_extension_pr.py --base "$PR_BASE" --head "$PR_HEAD"

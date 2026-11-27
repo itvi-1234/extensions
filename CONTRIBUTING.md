@@ -55,6 +55,33 @@ running `pytest catalog/nats/service/tests`.
 3. Add the extension to the table in the README and, to generate bindings, to
    `tooling/extension-bindings/packages.yaml`.
 
+The extension PR checklist runs when a pull request opens or is updated with
+changes under `catalog/`. It checks only the affected
+`catalog/<namespace>/<name>/` folders, including changes to their documentation
+or examples. Fully deleted extension folders are skipped.
+
+Each condition field and interface field declaration, and every property in
+their JSON Schemas, must have a string `description` of at least five characters
+after trimming whitespace. Nested properties are checked through arrays,
+compositions and local schema definitions. The newest definition and any
+definitions changed by the PR are checked, for both release directories and
+legacy top-level definitions. Unchanged historical definitions are preserved.
+
+Each extension folder must also contain a `README.md` with at least two Markdown
+code blocks, in usage/output pairs. The total number of blocks must be
+even. Authors and reviewers should verify that each usage example matches its
+resulting profile; the checklist only checks the block count.
+
+To run the same checklist against a PR branch locally:
+
+```sh
+python tooling/common/check_extension_pr.py --base <target-branch> --head HEAD
+```
+
+The comparison uses the merge base, so changes made only on the target branch
+are excluded. Commit the candidate changes on your local branch before running
+this comparison; uncommitted changes are not included in the changed-file list.
+
 ## Adding a binding emitter
 
 An emitter lives in `tooling/extension-bindings/emitters/<language>/` and should
